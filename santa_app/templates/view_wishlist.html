@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header {% if is_own_wishlist %}bg-info{% else %}bg-warning{% endif %} text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-gift me-2"></i>
+                    {% if is_own_wishlist %}
+                    Мой виш-лист
+                    {% else %}
+                    Пожелания {{ participant.user.get_full_name|default:participant.user.phone }}
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if is_own_wishlist %}
+                <div class="alert alert-info">
+                    <i class="fas fa-eye me-2"></i>
+                    Это ваши пожелания. Их видит только ваш Тайный Санта.
+                </div>
+                {% else %}
+                <div class="alertnew alert-warning">
+                    <i class="fas fa-santa me-2"></i>
+                    Вы - Тайный Санта для этого участника! Используйте эту информацию для выбора подарка.
+                </div>
+                {% endif %}
+                
+                <div class="wishlist-content">
+                    {% if participant.wishlist %}
+                    <div class="bg-light p-4 rounded">
+                        {{ participant.wishlist|linebreaks }}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">
+                            {% if is_own_wishlist %}
+                            Вы еще не добавили пожелания к подарку
+                            {% else %}
+                            Этот участник еще не добавил пожелания к подарку
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-4">
+                    {% if is_own_wishlist %}
+                    <a href="{% url 'edit_wishlist' room.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i>Редактировать пожелания
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Назад к комнате
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

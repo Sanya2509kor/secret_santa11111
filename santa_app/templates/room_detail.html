@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>{{ room.name }}</h2>
+            <span class="badge bg-secondary">Код: {{ room.code }}</span>
+        </div>
+
+        {% if room.draw_completed %}
+        <div class="alertnew alert-success">
+            <h5>🎉 Жеребьёвка завершена!</h5>
+            {% comment %} {% if my_santa %}
+            <p>Ваш Тайный Санта: <strong>{{ my_santa.get_full_name|default:my_santa.phone }}</strong></p>
+            {% endif %} {% endcomment %}
+            {% if my_receiver %}
+            <p>Вы - Тайный Санта для: <strong>{{ my_receiver.get_full_name|default:my_receiver.phone }}</strong></p>
+            {% endif %}
+        </div>
+        {% elif room.admin == user %}
+        <div class="alertnew alert-warning">
+            <p>Жеребьёвка еще не проведена. Когда все участники присоединятся, нажмите кнопку ниже.</p>
+            <form method="post" action="{% url 'start_draw' room.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Провести жеребьёвку</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="alertnew alert-info">
+            Ожидаем проведения жеребьёвки администратором комнаты.
+        </div>
+        {% endif %}
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Мои чаты</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_chats %}
+                    <div class="list-group">
+                        {% for chat in user_chats %}
+                        <a href="{% url 'chat_detail' chat.id %}" class="list-group-item list-group-item-action">
+                            {% if chat.chat_type == 'my_santa' %}
+                            🎅 Чат с моим Сантой
+                            {% else %}
+                            🎁 Чат с моим получателем
+                            {% endif %}
+                            <br>
+                            {% comment %} <small class="text-muted">{{ chat.participant.get_full_name|default:chat.participant.phone }}</small> {% endcomment %}
+                            {% if chat.get_unread_count > 0 %}
+                            <span class="position-absolute top-50 end-0 translate-middle-y badge rounded-pill bg-danger me-2">
+                                {{ chat.get_unread_count }}
+                                <span class="visually-hidden">непрочитанных сообщений</span>
+                            </span>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Чаты появятся после жеребьёвки</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        
+
+        
+        
+        
+        <div class="row mt-4">
+
+            {% if room.draw_completed and my_receiver and my_receiver_wishlist %}
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="card-title mb-0"><i class="fas fa-santa me-2"></i>Пожелания получателя</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Вы - Тайный Санта для: 
+                            <strong>{{ my_receiver.get_full_name|default:my_receiver.phone }}</strong>
+                        </p>
+                        {% if my_receiver_wishlist.wishlist %}
+                        <div class="mb-3">
+                            <p>{{ my_receiver_wishlist.wishlist|truncatewords:30 }}</p>
+                        </div>
+                        <a href="{% url 'view_wishlist' room.id my_receiver_wishlist.id %}" class="btn btn-warning btn-sm text-white">
+                            <i class="fas fa-eye me-1"></i>Посмотреть полный список
+                        </a>
+                        {% else %}
+                        <p class="text-muted">Этот участник еще не добавил пожелания</p>
+                        <a href="{% url 'view_wishlist' room.id my_receiver_wishlist.id %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-eye me-1"></i>Посмотреть страницу участника
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% elif room.draw_completed and my_receiver %}
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="card-title mb-0"><i class="fas fa-santa me-2"></i>Пожелания получателя</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Вы - Тайный Санта для: 
+                            <strong>{{ my_receiver.get_full_name|default:my_receiver.phone }}</strong>
+                        </p>
+                        <p class="text-muted">Информация о пожеланиях временно недоступна</p>
+                        <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-refresh me-1"></i>Обновить страницу
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0"><i class="fas fa-gift me-2"></i>Мои пожелания</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if participant.wishlist %}
+                        <div class="mb-3">
+                            <p class="card-text">{{ participant.wishlist|truncatewords:30 }}</p>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">Вы еще не добавили пожелания к подарку</p>
+                        {% endif %}
+                        <a href="{% url 'edit_wishlist' room.id %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-edit me-1"></i>
+                            {% if participant.wishlist %}Редактировать{% else %}Добавить{% endif %} пожелания
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h4>Участники ({{ participants.count }})</h4>
+        
+        <button class="btn btn-outline-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#participantsList">
+            <i class="fas fa-users me-2"></i>Показать участников
+        </button>
+
+        <div class="collapse" id="participantsList">
+            <div class="list-group">
+                {% for participant in participants %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ participant.user.get_full_name|default:participant.user.phone }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.list-group-item {
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.badge {
+    font-size: 0.75rem;
+    min-width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %}

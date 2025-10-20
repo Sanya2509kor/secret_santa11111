@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Регистрация</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="id_phone" class="form-label">Номер телефона *</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.phone.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Введите ваш номер телефона</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_first_name" class="form-label">Никнейм *</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.first_name.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_password1" class="form-label">Пароль *</label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.password1.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Пароль должен содержать как минимум 8 символов.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_password2" class="form-label">Подтверждение пароля *</label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.password2.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <small>Уже есть аккаунт? <a href="{% url 'login' %}">Войдите</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

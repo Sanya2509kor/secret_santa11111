@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="hero-section text-center text-white">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4 pulse">🎄 Тайный Санта 🎅</h1>
+                <p class="lead mb-4 fs-5">Организуйте волшебный обмен подарками с друзьями и коллегами!</p>
+                
+                <div class="row g-4 mb-5">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0">
+                            <div class="card-body text-dark p-4">
+                                <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title fw-bold">Создайте комнату</h5>
+                                <p class="card-text">Создайте новую комнату и пригласите друзей по коду</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0">
+                            <div class="card-body text-dark p-4">
+                                <i class="fas fa-users fa-3x text-success mb-3"></i>
+                                <h5 class="card-title fw-bold">Присоединяйтесь</h5>
+                                <p class="card-text">Войдите в существующую комнату по коду приглашения</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if not user.is_authenticated %}
+                <div class="d-grid gap-2 d-md-flex justify-content-center">
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 me-md-2 fw-bold">
+                        <i class="fas fa-rocket me-2"></i>Начать сейчас
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-sign-in-alt me-2"></i>Войти
+                    </a>
+                </div>
+                {% else %}
+                <div class="d-grid gap-2 d-md-flex justify-content-center">
+                    <a href="{% url 'dashboard' %}" class="btn btn-light btn-lg px-4 fw-bold">
+                        <i class="fas fa-tachometer-alt me-2"></i>Перейти в дашборд
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row g-4">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">Как это работает?</h2>
+        </div>
+        <div class="col-md-3 col-6 text-center">
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="fw-bold fs-5">1</span>
+                    </div>
+                    <h6>Создайте комнату</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 text-center">
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="bg-success text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="fw-bold fs-5">2</span>
+                    </div>
+                    <h6>Пригласите друзей</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 text-center">
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="bg-warning text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="fw-bold fs-5">3</span>
+                    </div>
+                    <h6>Проведите жеребьевку</h6>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 text-center">
+            <div class="card border-0">
+                <div class="card-body">
+                    <div class="bg-danger text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <span class="fw-bold fs-5">4</span>
+                    </div>
+                    <h6>Обменивайтесь подарками!</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

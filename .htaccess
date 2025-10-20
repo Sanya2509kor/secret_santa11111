@@ -1,0 +1,5 @@
+Options +ExecCGI
+AddHandler wsgi-script .py
+ 
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ /wsgi.py/$1 [QSA,PT]
