@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card">
+        <div class="card card-elevated">
             <div class="card-header {% if is_own_wishlist %}bg-info{% else %}bg-warning{% endif %} text-white">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-gift me-2"></i>
@@ -30,25 +30,36 @@
                 <div class="wishlist-content">
                     {% if participant.wishlist %}
                     <div class="bg-light p-4 rounded">
-                        {{ participant.wishlist|linebreaks }}
+                        <div class="wishlist-text">
+                            {{ participant.wishlist|linebreaks }}
+                        </div>
                     </div>
                     {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                    <div class="text-center py-5">
+                        <div class="empty-wishlist-icon mb-4">
+                            <i class="fas fa-question-circle fa-4x text-muted"></i>
+                        </div>
+                        <h5 class="text-muted mb-3">
+                            {% if is_own_wishlist %}
+                            Вы еще не добавили пожелания
+                            {% else %}
+                            Участник еще не добавил пожелания
+                            {% endif %}
+                        </h5>
                         <p class="text-muted">
                             {% if is_own_wishlist %}
-                            Вы еще не добавили пожелания к подарку
+                            Расскажите о своих предпочтениях, чтобы помочь Санте выбрать идеальный подарок!
                             {% else %}
-                            Этот участник еще не добавил пожелания к подарку
+                            Как только участник добавит пожелания, они появятся здесь.
                             {% endif %}
                         </p>
                     </div>
                     {% endif %}
                 </div>
                 
-                <div class="mt-4">
+                <div class="mt-4 d-flex gap-2 flex-wrap">
                     {% if is_own_wishlist %}
-                    <a href="{% url 'edit_wishlist' room.id %}" class="btn btn-primary">
+                    <a href="{% url 'edit_wishlist' room.id %}" class="btn btn-primary btn-shine">
                         <i class="fas fa-edit me-1"></i>Редактировать пожелания
                     </a>
                     {% endif %}
@@ -56,8 +67,61 @@
                         <i class="fas fa-arrow-left me-1"></i>Назад к комнате
                     </a>
                 </div>
+
+                {% if not participant.wishlist and is_own_wishlist %}
+                <div class="mt-4">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">💡 Примеры хороших пожеланий:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled small">
+                                        <li>• 📚 Люблю книги в жанре фэнтези</li>
+                                        <li>• 👕 Размер одежды: M</li>
+                                        <li>• 🎨 Увлекаюсь рисованием</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled small">
+                                        <li>• ☕ Коллекционирую кружки</li>
+                                        <li>• 🍫 Обожаю темный шоколад</li>
+                                        <li>• 🎵 Слушаю рок-музыку</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.wishlist-text {
+    line-height: 1.8;
+    font-size: 1.05rem;
+}
+
+.empty-wishlist-icon {
+    opacity: 0.6;
+}
+
+.card.bg-light {
+    border-left: 4px solid var(--secondary);
+}
+
+@media (max-width: 768px) {
+    .wishlist-text {
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
 {% endblock %}

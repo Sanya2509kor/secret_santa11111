@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Room, Participant, SantaPair, Chat, Message
+from .models import SupportMessage, User, Room, Participant, SantaPair, Chat, Message
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -24,7 +24,7 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ['name', 'code', 'admin', 'created_at', 'is_active', 'draw_completed']
+    list_display = ['name', 'code', 'admin', 'created_at', 'is_active', 'draw_completed', 'show_participants']
     list_filter = ['is_active', 'draw_completed', 'created_at']
     search_fields = ['name', 'code']
     actions = ['delete_selected_rooms']
@@ -63,3 +63,15 @@ class MessageAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('sender', 'chat')
+    
+
+
+@admin.register(SupportMessage)
+class SupportMessageAdmin(admin.ModelAdmin):
+    list_display = ['email', 'user', 'created_at', 'is_processed']
+    list_filter = ['is_processed', 'created_at']
+    search_fields = ['email', 'message']
+    readonly_fields = ['created_at']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')

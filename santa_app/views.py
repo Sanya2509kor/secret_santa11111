@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Q
 import random
-from .models import Room, Participant, SantaPair, Chat, Message, User
+from .models import Room, Participant, SantaPair, Chat, Message, SupportMessage, User
 from .forms import ParticipantNameForm, PhoneUserCreationForm, PhoneAuthenticationForm, RoomForm, JoinRoomForm, MessageForm, WishlistForm
 from django.core.files.storage import FileSystemStorage
 import os
@@ -504,3 +504,88 @@ def join_room_with_name(request, room_id):
         return redirect('room_detail', room_id=room.id)
     
     return redirect('dashboard')
+
+
+def support_page(request):
+    """Страница поддержки"""
+    if request.method == 'POST':
+        message_text = request.POST.get('message', '').strip()
+        email = request.POST.get('email', '').strip()
+        
+        if message_text:
+            # Сохраняем сообщение в базу данных
+            SupportMessage.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                email=email,
+                message=message_text
+            )
+            
+            # # Можно добавить отправку email администратору
+            # try:
+            #     send_mail(
+            #         'Новое сообщение поддержки - Тайный Санта',
+            #         f'Сообщение: {message_text}\nEmail: {email}\nПользователь: {request.user if request.user.is_authenticated else "Аноним"}',
+            #         'noreply@secretsanta.ru',
+            #         ['admin@secretsanta.ru'],  # Ваш email
+            #         fail_silently=True,
+            #     )
+            # except Exception as e:
+            #     print(f"Ошибка отправки email: {e}")
+            
+            messages.success(request, '✅ Ваше сообщение отправлено! Спасибо за обратную связь.')
+            return redirect('support')
+        else:
+            messages.error(request, '❌ Пожалуйста, напишите ваше сообщение')
+    
+    return render(request, 'support.html')
+
+
+from django.http import JsonResponse
+
+@login_required
+def get_user_chats(request):
+    """Получение списка чатов пользователя для мобильного приложения"""
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        user_chats = Chat.objects.filter(user=request.user).select_related('room', 'participant')
+        
+        chats_data = []
+        for chat in user_chats:
+            last_message = chat.message_set.last()
+            unread_count = chat.message_set.filter(is_read=False).exclude(sender=request.user).count()
+            
+            chats_data.append({
+                'id': chat.id,
+                'chat_type': chat.chat_type,
+                'room_name': chat.room.name,  # Убедитесь, что это поле есть
+                'url': f'/chat/{chat.id}/',
+                'last_message': {
+                    'content': last_message.content if last_message else None,
+                    'timestamp': last_message.timestamp.isoformat() if last_message else None
+                } if last_message else None,
+                'unread_count': unread_count
+            })
+        
+        return JsonResponse({'chats': chats_data})
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def toggle_participants_visibility(request, room_id):
+    """Переключение видимости списка участников"""
+    room = get_object_or_404(Room, id=room_id)
+    
+    # Проверяем, что пользователь - администратор комнаты
+    if room.admin != request.user:
+        return JsonResponse({'error': 'No permission'}, status=403)
+    
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        room.show_participants = not room.show_participants
+        room.save()
+        
+        return JsonResponse({
+            'success': True,
+            'show_participants': room.show_participants,
+            'message': 'Настройки сохранены'
+        })
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)

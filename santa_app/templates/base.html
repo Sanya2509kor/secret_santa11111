@@ -3,26 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>{% block title %}🎅 Тайный Санта{% endblock %}</title>
+    <title>{% block title %}🎅 Тайный Санта | Премиум сервис{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #e74c3c;
-            --primary-dark: #c0392b;
-            --primary-light: #ff6b6b;
-            --secondary: #3498db;
-            --success: #27ae60;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --dark: #2c3e50;
-            --light: #ecf0f1;
-            --white: #ffffff;
-            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-primary: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
-            --border-radius: 16px;
+            --primary: #8B4513;
+            --primary-dark: #654321;
+            --primary-light: #A0522D;
+            --secondary: #D4AF37;
+            --success: #228B22;
+            --warning: #FFD700;
+            --danger: #B22222;
+            --dark: #2C2C2C;
+            --light: #F8F8F8;
+            --white: #FFFFFF;
+            --gradient: linear-gradient(135deg, #8B4513 0%, #D4AF37 100%);
+            --gradient-primary: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.12);
+            --border-radius: 20px;
             --border-radius-sm: 12px;
         }
 
@@ -33,27 +34,30 @@
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #fefefe 0%, #f8f6f4 100%);
             min-height: 100vh;
-            line-height: 1.6;
+            line-height: 1.7;
             color: var(--dark);
+            font-weight: 300;
         }
 
-        /* Навбар */
+        /* Премиум навбар */
         .navbar-brand {
-            font-weight: 800;
-            font-size: 1.5rem;
+            font-weight: 700;
+            font-size: 1.6rem;
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: -0.5px;
         }
 
         .navbar {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px);
             box-shadow: var(--shadow);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
         }
 
         .nav-link {
@@ -61,6 +65,7 @@
             padding: 0.5rem 1rem !important;
             border-radius: var(--border-radius-sm);
             transition: all 0.3s ease;
+            color: var(--dark) !important;
         }
 
         .nav-link:hover {
@@ -69,36 +74,51 @@
             transform: translateY(-2px);
         }
 
-        /* Карточки */
+        /* Элегантные карточки */
         .card {
             border: none;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             margin-top: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            overflow: hidden;
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
             box-shadow: var(--shadow-lg);
         }
 
-        .room-card {
-            background: linear-gradient(135deg, var(--white) 0%, #f8f9fa 100%);
-            border-left: 4px solid var(--primary);
+        .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-bottom: none;
+            padding: 1.5rem;
+            font-weight: 600;
         }
 
-        /* Кнопки */
+        .card-header.bg-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important; }
+        .card-header.bg-success { background: linear-gradient(135deg, #228B22 0%, #006400 100%) !important; }
+        .card-header.bg-info { background: linear-gradient(135deg, #4169E1 0%, #191970 100%) !important; }
+        .card-header.bg-warning { background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%) !important; }
+
+        .room-card {
+            background: linear-gradient(135deg, var(--white) 0%, #f8f9fa 100%);
+            border-left: 4px solid var(--secondary);
+        }
+
+        /* Премиум кнопки */
         .btn {
             border-radius: var(--border-radius-sm);
             font-weight: 600;
-            padding: 0.75rem 1.5rem;
+            padding: 0.875rem 2rem;
             transition: all 0.3s ease;
             border: none;
             position: relative;
             overflow: hidden;
+            letter-spacing: 0.5px;
         }
 
         .btn::before {
@@ -118,19 +138,19 @@
 
         .btn-primary {
             background: var(--gradient-primary);
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
         }
 
-        /* Герой секция */
+        /* Герой секция премиум класса */
         .hero-section {
             background: var(--gradient);
             color: white;
-            padding: 4rem 0;
+            padding: 6rem 0;
             border-radius: 0 0 var(--border-radius) var(--border-radius);
             position: relative;
             overflow: hidden;
@@ -143,43 +163,45 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="rgba(255,255,255,0.05)" points="0,1000 1000,0 1000,1000"/></svg>');
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="rgba(255,255,255,0.03)" points="0,1000 1000,0 1000,1000"/></svg>');
         }
 
-        /* Формы */
+        /* Элегантные формы */
         .form-control {
             border-radius: var(--border-radius-sm);
-            border: 2px solid #e1e8ed;
-            padding: 0.75rem 1rem;
+            border: 2px solid #e8e8e8;
+            padding: 0.875rem 1.25rem;
             font-size: 1rem;
             transition: all 0.3s ease;
             background: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
         }
 
         .form-control:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.15);
+            transform: translateY(-1px);
         }
 
-        /* Чат */
+        /* Премиум чат */
         .chat-container {
             height: 70vh;
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--shadow-lg);
             background: white;
+            border: 1px solid rgba(212, 175, 55, 0.1);
         }
 
         .chat-messages {
             height: calc(100% - 80px);
             overflow-y: auto;
-            padding: 1rem;
-            background: #f8f9fa;
+            padding: 1.5rem;
+            background: #fafafa;
         }
 
         .message {
-            max-width: 80%;
+            max-width: 70%;
             margin-bottom: 1rem;
             animation: messageSlide 0.3s ease;
         }
@@ -199,14 +221,16 @@
             margin-left: auto;
             background: var(--gradient-primary);
             color: white;
-            border-radius: 18px 18px 4px 18px;
+            border-radius: 20px 20px 5px 20px;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.2);
         }
 
         .message-other {
-            background: white;
+            background: #f8f8f8;
             color: var(--dark);
-            border-radius: 18px 18px 18px 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 20px 20px 20px 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid rgba(212, 175, 55, 0.1);
         }
 
         /* Мобильная навигация */
@@ -219,6 +243,7 @@
             box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
             z-index: 1000;
             display: none;
+            border-top: 1px solid rgba(212, 175, 55, 0.1);
         }
 
         .nav-item-mobile {
@@ -248,7 +273,7 @@
             }
 
             .hero-section {
-                padding: 3rem 0;
+                padding: 4rem 0;
                 border-radius: 0;
             }
 
@@ -285,25 +310,25 @@
 
         @media (max-width: 576px) {
             .hero-section h1 {
-                font-size: 2rem;
+                font-size: 2.2rem;
             }
 
             .card-body {
-                padding: 1rem;
+                padding: 1.25rem;
             }
 
             .message {
-                max-width: 90%;
+                max-width: 85%;
             }
         }
 
-        /* Анимации */
+        /* Анимации премиум класса */
         .fade-in {
-            animation: fadeIn 0.5s ease;
+            animation: fadeIn 0.6s ease;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -323,6 +348,8 @@
             border-radius: var(--border-radius-sm);
             box-shadow: var(--shadow);
             backdrop-filter: blur(10px);
+            border-left: 4px solid;
+            font-weight: 400;
         }
 
         .alertnew {
@@ -330,21 +357,11 @@
             box-shadow: var(--shadow);
             backdrop-filter: blur(10px);
             position: relative;
-            padding: 1rem 1rem;
+            padding: 1.25rem 1.5rem;
             margin-bottom: 1rem;
-            
-            /* Границы и скругления */
-            border: 1px solid transparent;
-            
-            
-            /* Текст */
-            font-size: 1rem;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            border-left: 4px solid var(--secondary);
             font-weight: 400;
-            line-height: 1.5;
-            
-            /* Другое */
-            box-sizing: border-box;
-
         }
 
         /* Загрузка */
@@ -363,27 +380,197 @@
             100% { transform: rotate(360deg); }
         }
 
-    .loading-spinner {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        border: 2px solid #ffffff;
-        border-radius: 50%;
-        border-top-color: transparent;
-        animation: spin 1s ease-in-out infinite;
-    }
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
 
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Дополнительные премиум эффекты */
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-shine {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-shine::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.1) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            transform: rotate(30deg);
+            transition: all 0.6s ease;
+        }
+
+        .btn-shine:hover::after {
+            animation: shine 1.5s ease;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(30deg); }
+        }
+
+        .card-elevated {
+            box-shadow: 
+                0 2.8px 2.2px rgba(0, 0, 0, 0.02),
+                0 6.7px 5.3px rgba(0, 0, 0, 0.028),
+                0 12.5px 10px rgba(0, 0, 0, 0.035),
+                0 22.3px 17.9px rgba(0, 0, 0, 0.042),
+                0 41.8px 33.4px rgba(0, 0, 0, 0.05),
+                0 100px 80px rgba(0, 0, 0, 0.07);
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.3) 50%, transparent 100%);
+            margin: 2rem 0;
+        }
+
+        /* Стили для модального окна чатов */
+        .chat-list-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .chat-list-item:hover {
+            background: rgba(139, 69, 19, 0.1);
+            transform: translateX(5px);
+        }
+
+        .chat-list-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .chat-santa-avatar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .chat-receiver-avatar {
+            background: linear-gradient(135deg, var(--warning) 0%, #FFD700 100%);
+            color: #2C2C2C;
+        }
+
+        .chat-list-info {
+            flex: 1;
+        }
+
+        .chat-list-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .chat-list-preview {
+            font-size: 0.85rem;
+            color: #6c757d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-unread-badge {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .no-chats-message {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .no-chats-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .chat-list-room {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .chat-list-preview {
+            font-size: 0.8rem;
+            color: #6c757d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Убедимся, что всё хорошо вписывается */
+        .chat-list-info {
+            flex: 1;
+            min-width: 0; /* Важно для правильного обрезания текста */
+        }
+
+        .chat-list-name {
+            font-weight: 600;
+            margin-bottom: 0.1rem;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
-    <!-- Навбар -->
+    <!-- Премиум навбар -->
     <nav class="navbar navbar-expand-lg navbar-light sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fas fa-gift me-2"></i>Тайный Санта
+                <i class="fas fa-gift me-2" style="color: var(--secondary);"></i>Тайный Санта
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -398,6 +585,9 @@
                     </span>
                     <a class="nav-link" href="{% url 'dashboard' %}">
                         <i class="fas fa-tachometer-alt me-1"></i>Дашборд
+                    </a>
+                    <a class="nav-link" href="{% url 'support' %}">
+                        <i class="fas fa-headset me-1"></i>Поддержка
                     </a>
                     <a class="nav-link text-danger" href="{% url 'logout' %}">
                         <i class="fas fa-sign-out-alt me-1"></i>Выйти
@@ -420,16 +610,39 @@
     <!-- Мобильная нижняя навигация -->
     {% if user.is_authenticated %}
     <nav class="mobile-bottom-nav">
-        <a href="{% url 'home' %}" class="nav-item-mobile {% if request.path == '/dashboard/' %}active{% endif %}">
+        <a href="{% url 'dashboard' %}" class="nav-item-mobile {% if request.path == '/dashboard/' %}active{% endif %}">
             <i class="fas fa-tachometer-alt"></i>Главная
         </a>
-        <a href="#" class="nav-item-mobile">
+        <a href="{% url 'support'%}" class="nav-item-mobile">
             <i class="fas fa-headset"></i>Поддержка
+        </a>
+        <a href="#" class="nav-item-mobile" id="mobile-chats-btn">
+            <i class="fas fa-comments"></i>Чаты
         </a>
         <a href="{% url 'logout' %}" class="nav-item-mobile text-danger">
             <i class="fas fa-sign-out-alt"></i>Выйти
         </a>
     </nav>
+    <!-- Модальное окно для выбора чатов -->
+    <div class="modal fade" id="chatsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Мои чаты</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="mobile-chats-list">
+                        <!-- Список чатов будет загружен здесь -->
+                        <div class="text-center py-4">
+                            <div class="loading-spinner"></div>
+                            <p class="text-muted mt-2">Загрузка чатов...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     {% endif %}
 
     <div class="main-content">
@@ -510,6 +723,162 @@
                     submitBtn.innerHTML = '<div class="loading-spinner"></div> Загрузка...';
                     submitBtn.disabled = true;
                 }
+            });
+        });
+
+        function toggleReveal(inputId, buttonId) {
+            const input = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+            const hint = document.getElementById(inputId.replace('-input', '-hint'));
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                button.classList.remove('btn-outline-warning');
+                button.classList.add('btn-warning');
+                if (hint) hint.textContent = 'Реквизиты видны • Скопируйте и закройте';
+            } else {
+                input.type = 'password';
+                button.innerHTML = '<i class="fas fa-eye"></i>';
+                button.classList.remove('btn-warning');
+                button.classList.add('btn-outline-warning');
+                if (hint) hint.textContent = 'Нажмите 👁️ чтобы показать';
+            }
+        }
+
+
+        // Функция для загрузки списка чатов
+        function loadMobileChats() {
+            const chatsList = document.getElementById('mobile-chats-list');
+            if (!chatsList) return;
+
+            // Показываем индикатор загрузки
+            chatsList.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="loading-spinner"></div>
+                    <p class="text-muted mt-2">Загрузка чатов...</p>
+                </div>
+            `;
+
+            // Загружаем список чатов
+            fetch('/get_user_chats/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.chats && data.chats.length > 0) {
+                    renderChatsList(data.chats);
+                } else {
+                    showNoChatsMessage();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading chats:', error);
+                showErrorLoadingChats();
+            });
+        }
+
+        // Функция для отображения списка чатов
+        function renderChatsList(chats) {
+            const chatsList = document.getElementById('mobile-chats-list');
+            
+            let html = '';
+            chats.forEach(chat => {
+                const lastMessage = chat.last_message ? 
+                    (chat.last_message.content ? 
+                        chat.last_message.content.substring(0, 30) + (chat.last_message.content.length > 30 ? '...' : '') : 
+                        '📎 Медиа') : 
+                    'Начните общение';
+                
+                const unreadCount = chat.unread_count > 0 ? 
+                    `<span class="chat-unread-badge">${chat.unread_count}</span>` : 
+                    '';
+                
+                const avatarClass = chat.chat_type === 'my_santa' ? 'chat-santa-avatar' : 'chat-receiver-avatar';
+                const icon = chat.chat_type === 'my_santa' ? 'fa-gift' : 'fa-user';
+                const title = chat.chat_type === 'my_santa' ? 'Чат с моим Сантой' : 'Чат с моим получателем';
+                
+                html += `
+                    <a href="${chat.url}" class="chat-list-item" data-bs-dismiss="modal">
+                        <div class="chat-list-avatar ${avatarClass}">
+                            <i class="fas ${icon}"></i>
+                        </div>
+                        <div class="chat-list-info">
+                            <div class="chat-list-name">${title}</div>
+                            <div class="chat-list-room">${chat.room_name}</div>
+                            <div class="chat-list-preview">${lastMessage}</div>
+                        </div>
+                        ${unreadCount}
+                    </a>
+                `;
+            });
+            
+            chatsList.innerHTML = html;
+        }
+
+        // Функция для показа сообщения "Нет чатов"
+        function showNoChatsMessage() {
+            const chatsList = document.getElementById('mobile-chats-list');
+            chatsList.innerHTML = `
+                <div class="no-chats-message">
+                    <div class="no-chats-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h6>Нет активных чатов</h6>
+                    <p class="text-muted">Чаты появятся после жеребьёвки в комнатах</p>
+                </div>
+            `;
+        }
+
+        // Функция для показа ошибки загрузки
+        function showErrorLoadingChats() {
+            const chatsList = document.getElementById('mobile-chats-list');
+            chatsList.innerHTML = `
+                <div class="no-chats-message">
+                    <div class="no-chats-icon text-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h6>Ошибка загрузки</h6>
+                    <p class="text-muted">Не удалось загрузить список чатов</p>
+                    <button class="btn btn-primary btn-sm mt-2" onclick="loadMobileChats()">
+                        <i class="fas fa-redo me-1"></i>Повторить
+                    </button>
+                </div>
+            `;
+        }
+
+        // Обработчик открытия модального окна чатов
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatsBtn = document.getElementById('mobile-chats-btn');
+            const chatsModal = document.getElementById('chatsModal');
+            
+            if (chatsBtn && chatsModal) {
+                chatsBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const modal = new bootstrap.Modal(chatsModal);
+                    modal.show();
+                    
+                    // Загружаем чаты при открытии модального окна
+                    loadMobileChats();
+                });
+            }
+            
+            // Закрытие модального окна при переходе в чат
+            chatsModal.addEventListener('hidden.bs.modal', function() {
+                const chatsList = document.getElementById('mobile-chats-list');
+                chatsList.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="loading-spinner"></div>
+                        <p class="text-muted mt-2">Загрузка чатов...</p>
+                    </div>
+                `;
             });
         });
     </script>

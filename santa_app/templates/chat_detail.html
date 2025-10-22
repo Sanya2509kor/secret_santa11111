@@ -1,146 +1,418 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="chat-container d-flex flex-column">
-    <!-- Заголовок чата -->
-    <div class="chat-header bg-primary text-white p-3">
-        <div class="d-flex align-items-center">
-            <a href="{% url 'room_detail' chat.room.id %}" class="btn btn-light btn-sm me-3">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <div class="flex-grow-1">
-                <h6 class="mb-0">{{ chat_title }}</h6>
-                <small class="opacity-75">
-                    {% if chat.chat_type == 'my_santa' %}
-                    Ваш Тайный Санта
+<div class="chat-app-container">
+    <!-- Боковая панель для десктопа -->
+    <div class="chat-sidebar d-none d-lg-block">
+        <div class="sidebar-header">
+            <h6><i class="fas fa-comments me-2"></i>Мои чаты</h6>
+        </div>
+        <div class="sidebar-chats">
+            {% for user_chat in user.chats.all %}
+            {% if user_chat.room == chat.room %}
+            <a href="{% url 'chat_detail' user_chat.id %}" class="sidebar-chat-item {% if user_chat.id == chat.id %}active{% endif %}">
+                <div class="chat-avatar">
+                    {% if user_chat.chat_type == 'my_santa' %}
+                    <i class="fas fa-santa"></i>
                     {% else %}
-                    Ваш получатель
+                    <i class="fas fa-gift"></i>
                     {% endif %}
-                </small>
-            </div>
-        </div>
-    </div>
-
-    <!-- Сообщения -->
-    <div class="chat-messages flex-grow-1 p-3" id="chat-messages">
-        {% for message in messages %}
-        <div class="message {% if message.sender == user %}message-own{% else %}message-other{% endif %} p-3 mb-2" data-message-id="{{ message.id }}">
-            <div class="message-content">
-                {% if message.image %}
-                    <img src="{{ message.image.url }}" alt="Изображение" class="img-fluid rounded" style="max-height: 300px; cursor: pointer;" onclick="openMediaModal('{{ message.image.url }}', 'image')">
-                {% elif message.video %}
-                    <video controls class="img-fluid rounded" style="max-height: 300px;">
-                        <source src="{{ message.video.url }}" type="video/mp4">
-                        Ваш браузер не поддерживает видео.
-                    </video>
-                {% else %}
-                    {{ message.content }}
-                {% endif %}
-            </div>
-            <div class="message-time small mt-1 opacity-75 text-end">
-                {% if message.timestamp|date:"Y-m-d" == now|date:"Y-m-d" %}
-                    Сегодня {{ message.timestamp|date:"H:i" }}
-                {% elif message.timestamp|date:"Y-m-d" == yesterday|date:"Y-m-d" %}
-                    Вчера {{ message.timestamp|date:"H:i" }}
-                {% else %}
-                    {{ message.timestamp|date:"d.m.Y H:i" }}
-                {% endif %}
-            </div>
-        </div>
-        {% empty %}
-        <div class="text-center text-muted py-5" id="empty-state">
-            <i class="fas fa-comments fa-3x mb-3"></i>
-            <p>Пока нет сообщений</p>
-            <small>Начните общение первым!</small>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Поле ввода с emoji picker -->
-    <div class="telegram-input-container">
-        <form method="post" id="message-form" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="input-wrapper">
-                <!-- Поле ввода -->
-                <div class="input-field">
-                    <textarea name="content" id="id_content" class="form-control" placeholder="Введите сообщение..." rows="1"></textarea>
                 </div>
-                
-                <!-- Кнопки справа -->
-                <div class="input-actions right">
-                    <button type="button" class="action-btn" id="image-attach">
-                        <i class="fas fa-image"></i>
-                    </button>
-                    <button type="button" class="action-btn" id="video-attach">
-                        <i class="fas fa-video"></i>
-                    </button>
+                <div class="chat-info">
+                    <div class="chat-name">
+                        {% if user_chat.chat_type == 'my_santa' %}
+                        Мой Тайный Санта
+                        {% else %}
+                        Мой получатель
+                        {% endif %}
+                    </div>
+                    <div class="chat-preview">
+                        {% with last_message=user_chat.message_set.last %}
+                        {% if last_message %}
+                        {{ last_message.content|truncatewords:8|default:"📎 Медиа" }}
+                        {% else %}
+                        Начните общение
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+                {% if user_chat.get_unread_count > 0 %}
+                <span class="unread-badge">{{ user_chat.get_unread_count }}</span>
+                {% endif %}
+            </a>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
 
-                    <input type="file" id="image-input" name="image" accept="image/*" class="d-none">
-                    <input type="file" id="video-input" name="video" accept="video/*" class="d-none">
+    <!-- Основной чат -->
+    <div class="chat-main">
+        <!-- Заголовок чата -->
+        <div class="chat-header">
+            <div class="header-content">
+                <div class="back-button">
+                    <a href="{% url 'room_detail' chat.room.id %}" class="btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                </div>
+                <div class="chat-user-info">
+                    <div class="user-avatar">
+                        {% if chat.chat_type == 'my_santa' %}
+                        <i class="fas fa-santa"></i>
+                        {% else %}
+                        <i class="fas fa-user"></i>
+                        {% endif %}
+                    </div>
+                    <div class="user-details">
+                        <h6>{{ chat_title }}</h6>
+                        <span class="user-status">
+                            {% if chat.chat_type == 'my_santa' %}
+                            Ваш Тайный Санта
+                            {% else %}
+                            Ваш получатель подарка
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button class="btn-action" title="Информация">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Сообщения -->
+        <div class="chat-messages" id="chat-messages">
+            {% for message in messages %}
+            <div class="message-wrapper {% if message.sender == user %}own-message{% else %}other-message{% endif %}" data-message-id="{{ message.id }}">
+                <div class="message-bubble">
                     
-                    <!-- Кнопка смайлика с выпадающим списком -->
-                    <div class="emoji-picker-container position-relative">
-                        <button type="button" class="action-btn emoji-toggle" id="emoji-toggle">
-                            <i class="fas fa-smile"></i>
-                        </button>
-                        
-                        <!-- Выпадающий список смайликов -->
-                        <div class="emoji-picker" id="emoji-picker">
-                            <div class="emoji-categories">
-                                <button type="button" class="emoji-category active" data-category="smileys">😀</button>
-                                <button type="button" class="emoji-category" data-category="animals">🐻</button>
-                                <button type="button" class="emoji-category" data-category="food">🍕</button>
-                                <button type="button" class="emoji-category" data-category="travel">🚗</button>
-                                <button type="button" class="emoji-category" data-category="objects">💡</button>
-                                <button type="button" class="emoji-category" data-category="symbols">❤️</button>
+                    <div class="message-content">
+                        {% if message.image %}
+                            <div class="media-container">
+                                <img src="{{ message.image.url }}" alt="Изображение" class="chat-media" onclick="openMediaModal('{{ message.image.url }}', 'image')">
+                                <div class="media-overlay">
+                                    <i class="fas fa-expand"></i>
+                                </div>
                             </div>
-                            
-                            <div class="emoji-grid" id="emoji-grid">
-                                <!-- Смайлики будут добавляться через JavaScript -->
+                        {% elif message.video %}
+                            <div class="media-container">
+                                <video controls class="chat-media">
+                                    <source src="{{ message.video.url }}" type="video/mp4">
+                                    Ваш браузер не поддерживает видео.
+                                </video>
+                                <div class="media-overlay">
+                                    <i class="fas fa-play"></i>
+                                </div>
                             </div>
-                        </div>
+                        {% else %}
+                            <div class="text-content">{{ message.content|linebreaksbr }}</div>
+                        {% endif %}
                     </div>
                     
-                    <button type="button" class="action-btn voice-btn" id="voice-btn">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                    <button type="submit" class="send-btn" id="send-button">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
+                    <div class="message-meta">
+                        <span class="message-time">
+                            {% if message.timestamp|date:"Y-m-d" == now|date:"Y-m-d" %}
+                                Сегодня {{ message.timestamp|date:"H:i" }}
+                            {% elif message.timestamp|date:"Y-m-d" == yesterday|date:"Y-m-d" %}
+                                Вчера {{ message.timestamp|date:"H:i" }}
+                            {% else %}
+                                {{ message.timestamp|date:"d.m.Y H:i" }}
+                            {% endif %}
+                        </span>
+                        {% if message.sender == user %}
+                        <span class="message-status">
+                            {% if message.is_read %}
+                            <i class="fas fa-check-double text-primary"></i>
+                            {% else %}
+                            <i class="fas fa-check text-muted"></i>
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </form>
+            {% empty %}
+            <div class="empty-chat" id="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h5>Начните общение</h5>
+                <p class="text-muted">Отправьте первое сообщение вашему {% if chat.chat_type == 'my_santa' %}Тайному Санте{% else %}получателю{% endif %}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Поле ввода - ЗАКРЕПЛЕНО ВНИЗУ -->
+        <div class="chat-input-container fixed-bottom">
+            <form method="post" id="message-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="input-wrapper">
+                    <!-- Кнопки вложений слева -->
+                    <div class="input-actions left">
+                        <button type="button" class="action-btn" id="image-attach" title="Фото">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <button type="button" class="action-btn" id="video-attach" title="Видео">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <input type="file" id="image-input" name="image" accept="image/*" class="d-none">
+                        <input type="file" id="video-input" name="video" accept="video/*" class="d-none">
+                    </div>
+
+                    <!-- Поле ввода -->
+                    <div class="input-field">
+                        <textarea name="content" id="id_content" class="form-control" placeholder="Введите сообщение..." rows="1"></textarea>
+                    </div>
+
+                    <!-- Кнопки справа -->
+                    <div class="input-actions right">
+                        <!-- Emoji Picker -->
+                        <div class="emoji-picker-container">
+                            <button type="button" class="action-btn emoji-toggle" id="emoji-toggle" title="Смайлики">
+                                <i class="fas fa-smile"></i>
+                            </button>
+                            
+                            <div class="emoji-picker" id="emoji-picker">
+                                <div class="emoji-header">
+                                    <span>Смайлики</span>
+                                    <button type="button" class="emoji-close" id="emoji-close">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="emoji-categories">
+                                    <button type="button" class="emoji-category active" data-category="smileys">😀</button>
+                                    <button type="button" class="emoji-category" data-category="animals">🐻</button>
+                                    <button type="button" class="emoji-category" data-category="food">🍕</button>
+                                    <button type="button" class="emoji-category" data-category="travel">🚗</button>
+                                    <button type="button" class="emoji-category" data-category="objects">💡</button>
+                                    <button type="button" class="emoji-category" data-category="symbols">❤️</button>
+                                </div>
+                                
+                                <div class="emoji-grid" id="emoji-grid">
+                                    <!-- Смайлики будут добавляться через JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Кнопка отправки -->
+                        <button type="submit" class="send-btn" id="send-button" title="Отправить">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <style>
-.chat-container {
-    height: calc(100vh - 140px);
+.chat-app-container {
+    display: flex;
+    height: 100vh;
+    background: #f8f9fa;
+    overflow: hidden;
+}
+
+/* Боковая панель */
+.chat-sidebar {
+    width: 320px;
     background: white;
+    border-right: 1px solid rgba(212, 175, 55, 0.1);
+    display: flex;
+    flex-direction: column;
 }
 
-.chat-messages {
-    overflow-y: auto;
-}
-
-.message-own {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
-    margin-left: auto;
-    border-radius: 18px 18px 4px 18px;
-    max-width: 80%;
 }
 
-.message-other {
-    background: #f1f3f4;
-    color: #333;
-    margin-right: auto;
-    border-radius: 18px 18px 18px 4px;
-    max-width: 80%;
+.sidebar-header h6 {
+    margin: 0;
+    font-weight: 600;
 }
 
-/* Анимация только для новых сообщений */
-.message-new {
+.sidebar-chats {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0;
+}
+
+.sidebar-chat-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    text-decoration: none;
+    color: var(--dark);
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-chat-item:hover {
+    background: rgba(139, 69, 19, 0.05);
+    border-left-color: var(--primary);
+}
+
+.sidebar-chat-item.active {
+    background: rgba(139, 69, 19, 0.1);
+    border-left-color: var(--primary);
+}
+
+.chat-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+    font-size: 1.1rem;
+}
+
+.chat-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.chat-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-preview {
+    font-size: 0.85rem;
+    color: #6c757d;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unread-badge {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Основной чат */
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    position: relative;
+}
+
+/* Заголовок чата */
+.chat-header {
+    background: white;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+    padding: 1rem 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.back-button .btn-back {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(139, 69, 19, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.back-button .btn-back:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateX(-2px);
+}
+
+.chat-user-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    margin: 0 1.5rem;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--secondary) 0%, #FFD700 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2C2C2C;
+    margin-right: 1rem;
+    font-size: 1.3rem;
+}
+
+.user-details h6 {
+    margin: 0;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.user-status {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.chat-actions .btn-action {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    color: var(--primary);
+    transition: all 0.3s ease;
+}
+
+.chat-actions .btn-action:hover {
+    background: rgba(139, 69, 19, 0.1);
+    transform: rotate(15deg);
+}
+
+/* Сообщения */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.03) 0%, transparent 50%),
+        #fafafa;
+    position: relative;
+    margin-bottom: 80px; /* Отступ для фиксированной панели ввода */
+}
+
+.message-wrapper {
+    margin-bottom: 1.5rem;
+    display: flex;
     animation: messageSlideIn 0.3s ease;
 }
 
@@ -155,250 +427,458 @@
     }
 }
 
-/* Telegram Input Styles */
-.telegram-input-container {
-    background: #f0f2f5;
-    padding: 10px 16px;
-    border-top: 1px solid #e6e6e6;
+.own-message {
+    justify-content: flex-end;
+}
+
+.other-message {
+    justify-content: flex-start;
+}
+
+.message-bubble {
+    max-width: 65%;
+    background: white;
+    border-radius: 20px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    border: 1px solid rgba(212, 175, 55, 0.1);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.own-message .message-bubble {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-bottom-right-radius: 5px;
+}
+
+.other-message .message-bubble {
+    border-bottom-left-radius: 5px;
+}
+
+.message-bubble:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+.sender-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--primary);
+}
+
+.own-message .sender-name {
+    display: none;
+}
+
+.message-content {
+    margin-bottom: 0.5rem;
+}
+
+.text-content {
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.media-container {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.chat-media {
+    max-width: 100%;
+    border-radius: 12px;
+    display: block;
+}
+
+.media-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.media-container:hover .media-overlay {
+    opacity: 1;
+}
+
+.message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.message-time {
+    font-size: 0.7rem;
+}
+
+.message-status {
+    font-size: 0.8rem;
+}
+
+/* Пустой чат */
+.empty-chat {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.empty-chat h5 {
+    margin-bottom: 1rem;
+    color: var(--dark);
+}
+
+/* Поле ввода - ФИКСИРОВАННОЕ ВНИЗУ */
+.chat-input-container.fixed-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid rgba(212, 175, 55, 0.1);
+    padding: 1rem 1.5rem;
+    z-index: 1000;
+    box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
+}
+
+/* Для десктопа с боковой панелью */
+@media (min-width: 992px) {
+    .chat-input-container.fixed-bottom {
+        left: 320px; /* Учитываем ширину боковой панели */
+    }
 }
 
 .input-wrapper {
     display: flex;
     align-items: flex-end;
-    background: white;
+    background: #f8f9fa;
     border-radius: 25px;
-    padding: 5px 5px 5px 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    min-height: 52px;
+    padding: 0.75rem;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    max-width: 100%;
 }
 
-.input-field {
-    flex: 1;
-    margin: 0 8px;
-}
-
-#id_content {
-    border: none;
-    outline: none;
-    resize: none;
-    font-size: 15px;
-    line-height: 1.4;
-    min-height: 22px;
-    max-height: 100px;
-    width: 100%;
-    background: transparent;
-    font-family: inherit;
+.input-wrapper:focus-within {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.1);
 }
 
 .input-actions {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 0.5rem;
+}
+
+.input-actions.left {
+    margin-right: 1rem;
+}
+
+.input-actions.right {
+    margin-left: 1rem;
 }
 
 .action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     background: none;
     border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    color: #6c757d;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #707579;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .action-btn:hover {
-    background-color: #f0f2f5;
+    background: rgba(139, 69, 19, 0.1);
+    color: var(--primary);
+    transform: scale(1.1);
+}
+
+.input-field {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+}
+
+#id_content {
+    border: none;
+    background: none;
+    resize: none;
+    font-size: 1rem;
+    line-height: 1.5;
+    min-height: 24px;
+    max-height: 120px;
+    width: 100%;
+    padding: 0;
+    font-family: inherit;
+    outline: none;
+}
+
+#id_content:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.input-hint {
+    position: absolute;
+    bottom: -1.5rem;
+    left: 0;
+    font-size: 0.75rem;
+    color: #6c757d;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+}
+
+.input-wrapper:focus-within .input-hint {
+    opacity: 1;
 }
 
 .send-btn {
-    background: #007bff;
-    border: none;
-    width: 36px;
-    height: 36px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    transition: all 0.2s;
-    margin-left: 4px;
+    transition: all 0.3s ease;
     cursor: pointer;
+    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+    flex-shrink: 0;
 }
 
 .send-btn:hover {
-    background: #0056b3;
-    transform: scale(1.05);
+    transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
 }
 
-.voice-btn {
-    display: none;
+.send-btn:disabled {
+    opacity: 0.6;
+    transform: none;
+    cursor: not-allowed;
 }
 
-/* Показываем кнопку микрофона когда поле пустое */
-#id_content:placeholder-shown ~ .input-actions.right .voice-btn {
-    display: flex;
-}
-
-#id_content:placeholder-shown ~ .input-actions.right .send-btn {
-    display: none;
-}
-
-/* Emoji Picker Styles */
+/* Emoji Picker */
 .emoji-picker-container {
-    display: inline-block;
+    position: relative;
 }
 
 .emoji-picker {
     position: absolute;
     bottom: 100%;
     right: 0;
-    width: 300px;
-    height: 350px;
+    width: 320px;
+    height: 380px;
     background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    padding: 12px;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 1rem;
     display: none;
     flex-direction: column;
-    z-index: 1000;
+    z-index: 1001;
 }
 
 .emoji-picker.show {
     display: flex;
-    animation: emojiSlideUp 0.2s ease;
+    animation: emojiSlideUp 0.3s ease;
 }
 
 @keyframes emojiSlideUp {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(10px) scale(0.95);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
     }
+}
+
+.emoji-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.emoji-header span {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.emoji-close {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.emoji-close:hover {
+    background: rgba(139, 69, 19, 0.1);
+    color: var(--primary);
 }
 
 .emoji-categories {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
 }
 
 .emoji-category {
     background: none;
     border: none;
-    font-size: 1.2rem;
-    padding: 4px 8px;
-    border-radius: 6px;
+    font-size: 1.4rem;
+    padding: 0.5rem;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
+    flex: 1;
 }
 
 .emoji-category:hover,
 .emoji-category.active {
-    background-color: #f0f2f5;
+    background: rgba(139, 69, 19, 0.1);
+    transform: scale(1.1);
 }
 
 .emoji-grid {
     flex: 1;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 4px;
+    gap: 0.5rem;
     overflow-y: auto;
-    padding: 4px;
+    padding: 0.5rem;
 }
 
 .emoji-item {
     background: none;
     border: none;
-    font-size: 1.4rem;
-    padding: 6px;
-    border-radius: 6px;
+    font-size: 1.6rem;
+    padding: 0.5rem;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .emoji-item:hover {
-    background-color: #f0f2f5;
-    transform: scale(1.1);
-}
-
-/* Scrollbar для emoji grid */
-.emoji-grid::-webkit-scrollbar {
-    width: 6px;
-}
-
-.emoji-grid::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.emoji-grid::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.emoji-grid::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+    background: rgba(139, 69, 19, 0.1);
+    transform: scale(1.2);
 }
 
 /* Мобильная адаптация */
 @media (max-width: 768px) {
-    .chat-container {
-        height: calc(100vh - 80px);
-        border-radius: 0;
+    .chat-app-container {
+        height: 100vh;
     }
     
-    .message-own,
-    .message-other {
-        max-width: 90%;
+    .chat-sidebar {
+        display: none;
     }
-
-    .telegram-input-container {
-        padding: 8px 12px;
+    
+    .chat-header {
+        padding: 1rem;
+    }
+    
+    .chat-user-info {
+        margin: 0 1rem;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+    
+    .chat-messages {
+        padding: 1rem;
+        margin-bottom: 70px;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+        padding: 0.875rem 1rem;
+    }
+    
+    .chat-input-container.fixed-bottom {
+        padding: 0.75rem 1rem;
     }
     
     .input-wrapper {
-        min-height: 48px;
-        padding: 4px 4px 4px 10px;
+        padding: 0.5rem;
     }
     
     .action-btn, .send-btn {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
     }
     
-    #id_content {
-        font-size: 14px;
+    .send-btn {
+        width: 38px;
+        height: 38px;
     }
-
+    
     .emoji-picker {
         width: 280px;
-        height: 300px;
-        right: 0px;
+        height: 320px;
+        right: 0;
     }
     
     .emoji-grid {
         grid-template-columns: repeat(7, 1fr);
+    }
+    
+    .input-hint {
+        font-size: 0.7rem;
+        bottom: -1.25rem;
     }
 }
 
 @media (max-width: 576px) {
     .emoji-picker {
         width: 260px;
-        height: 280px;
-        right: 0px;
+        height: 300px;
+        right: 0;
     }
     
     .emoji-grid {
@@ -406,39 +886,94 @@
     }
     
     .emoji-item {
-        font-size: 1.2rem;
-        padding: 4px;
+        font-size: 1.4rem;
+        padding: 0.375rem;
+    }
+    
+    .input-actions.left,
+    .input-actions.right {
+        gap: 0.25rem;
+    }
+    
+    .action-btn {
+        width: 32px;
+        height: 32px;
     }
 }
 
-/* Добавьте в секцию CSS */
+/* Кастомный скроллбар */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary) 100%);
+}
+
+.sidebar-chats::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-chats::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+.sidebar-chats::-webkit-scrollbar-thumb {
+    background: rgba(139, 69, 19, 0.3);
+    border-radius: 2px;
+}
+
+.sidebar-chats::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 69, 19, 0.5);
+}
+
+/* Анимации для новых сообщений */
+.message-new {
+    animation: messageHighlight 1s ease;
+}
+
+@keyframes messageHighlight {
+    0% {
+        background: rgba(212, 175, 55, 0.2);
+    }
+    100% {
+        background: transparent;
+    }
+}
+
+/* Индикатор загрузки медиа */
 .media-uploading {
     opacity: 0.7;
+    position: relative;
 }
 
-.message img, .message video {
-    max-width: 100%;
-    border-radius: 8px;
+.media-uploading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-.message img:hover {
-    opacity: 0.9;
-}
-
-.action-btn:active {
-    transform: scale(0.95);
-    background-color: #e0e0e0 !important;
-}
-
-.action-btn.active {
-    background-color: #007bff !important;
-    color: white !important;
-}
-
-/* Автоматическое изменение высоты textarea */
-.auto-resize {
-    overflow: hidden;
-    resize: none;
+/* Скрываем нижнюю навигацию на странице чата */
+body.chat-page .mobile-bottom-nav {
+    display: none !important;
 }
 </style>
 
@@ -449,7 +984,12 @@ let refreshInterval;
 let lastMessageId = 0;
 let isInitialized = false;
 
-// Emoji данные по категориям (заполнишь самостоятельно)
+// Добавляем класс к body для скрытия нижней навигации
+document.addEventListener('DOMContentLoaded', function() {
+    document.body.classList.add('chat-page');
+});
+
+// Emoji данные по категориям
 const emojiData = {
     smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯'],
     animals: ['🐵', '🐒', '🦍', '🦧', '🐶', '🐕', '🦮', '🐕‍🦺', '🐩', '🐺', '🦊', '🦝', '🐱', '🐈', '🐈‍⬛', '🦁', '🐯', '🐅', '🐆', '🐴', '🐎', '🦄', '🦓', '🦌', '🐮', '🐂', '🐃', '🐄', '🐷', '🐖', '🐗', '🐽', '🐏', '🐑', '🐐', '🐪', '🐫', '🦙', '🦒', '🐘', '🦏', '🦛', '🐭', '🐁', '🐀', '🐹', '🐰', '🐇', '🐿️', '🦔', '🦇'],
@@ -464,13 +1004,10 @@ function initializeEmojiPicker() {
     const emojiToggle = document.getElementById('emoji-toggle');
     const emojiPicker = document.getElementById('emoji-picker');
     const emojiGrid = document.getElementById('emoji-grid');
+    const emojiClose = document.getElementById('emoji-close');
     const messageInput = document.getElementById('id_content');
     
-    console.log('Initializing emoji picker...');
-    
-    // Проверяем, что все элементы существуют
     if (!emojiToggle || !emojiPicker || !emojiGrid || !messageInput) {
-        console.error('Emoji elements not found!');
         return;
     }
     
@@ -481,9 +1018,17 @@ function initializeEmojiPicker() {
     emojiToggle.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Emoji toggle clicked');
         emojiPicker.classList.toggle('show');
     });
+    
+    // Закрытие emoji picker при клике на кнопку закрытия
+    if (emojiClose) {
+        emojiClose.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            emojiPicker.classList.remove('show');
+        });
+    }
     
     // Закрытие emoji picker при клике вне его
     document.addEventListener('click', function(e) {
@@ -506,7 +1051,6 @@ function initializeEmojiPicker() {
             e.stopPropagation();
             
             const category = this.getAttribute('data-category');
-            console.log('Category selected:', category);
             
             // Убираем активный класс у всех кнопок
             document.querySelectorAll('.emoji-category').forEach(btn => {
@@ -523,11 +1067,9 @@ function initializeEmojiPicker() {
     
     // Функция показа emoji категории
     function showEmojiCategory(category) {
-        console.log('Showing category:', category);
         emojiGrid.innerHTML = '';
         
         if (!emojiData[category]) {
-            console.error('Category not found:', category);
             return;
         }
         
@@ -539,7 +1081,6 @@ function initializeEmojiPicker() {
             emojiButton.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Emoji selected:', emoji);
                 insertEmoji(emoji);
             });
             emojiGrid.appendChild(emojiButton);
@@ -550,11 +1091,8 @@ function initializeEmojiPicker() {
     function insertEmoji(emoji) {
         const messageInput = document.getElementById('id_content');
         if (!messageInput) {
-            console.error('Message input not found');
             return;
         }
-        
-        console.log('Inserting emoji:', emoji);
         
         // Фокусируемся на поле ввода перед вставкой
         messageInput.focus();
@@ -582,25 +1120,20 @@ function initializeEmojiPicker() {
         // Обновляем состояние кнопок отправки
         updateSendButtonState();
     }
-    
-    console.log('Emoji picker initialized successfully');
 }
 
 // Функция для обновления состояния кнопки отправки
 function updateSendButtonState() {
     const messageInput = document.getElementById('id_content');
     const sendButton = document.getElementById('send-button');
-    const voiceButton = document.getElementById('voice-btn');
     
-    if (messageInput && sendButton && voiceButton) {
+    if (messageInput && sendButton) {
         const hasContent = messageInput.value.trim().length > 0;
         
         if (hasContent) {
             sendButton.style.display = 'flex';
-            voiceButton.style.display = 'none';
         } else {
-            sendButton.style.display = 'none';
-            voiceButton.style.display = 'flex';
+            sendButton.style.display = 'flex';
         }
     }
 }
@@ -610,7 +1143,7 @@ function autoResizeTextarea() {
     const textarea = document.getElementById('id_content');
     if (textarea) {
         textarea.style.height = 'auto';
-        textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
     }
 }
 
@@ -621,18 +1154,14 @@ function initializeMediaUpload() {
     const imageInput = document.getElementById('image-input');
     const videoInput = document.getElementById('video-input');
     
-    console.log('Initializing media upload...');
-    
     if (imageAttach && imageInput) {
         imageAttach.addEventListener('click', () => {
-            console.log('Image attach clicked');
             imageInput.click();
         });
     }
     
     if (videoAttach && videoInput) {
         videoAttach.addEventListener('click', () => {
-            console.log('Video attach clicked');
             videoInput.click();
         });
     }
@@ -649,13 +1178,11 @@ function initializeMediaUpload() {
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
-        // Проверяем размер файла (20MB)
         if (file.size > 100 * 1024 * 1024) {
-            alert('Изображение слишком большое. Максимальный размер: 100MB');
+            showNotification('Изображение слишком большое. Максимальный размер: 100MB', 'error');
             return;
         }
         
-        // Создаем превью и отправляем
         createMediaPreview(file, 'image');
         sendMediaMessage(file, 'image');
     }
@@ -664,13 +1191,11 @@ function handleImageUpload(event) {
 function handleVideoUpload(event) {
     const file = event.target.files[0];
     if (file) {
-        // Проверяем размер файла (20MB)
         if (file.size > 100 * 1024 * 1024) {
-            alert('Видео слишком большое. Максимальный размер: 100MB');
+            showNotification('Видео слишком большое. Максимальный размер: 100MB', 'error');
             return;
         }
         
-        // Создаем превью и отправляем
         createMediaPreview(file, 'video');
         sendMediaMessage(file, 'video');
     }
@@ -679,16 +1204,17 @@ function handleVideoUpload(event) {
 function createMediaPreview(file, type) {
     const container = document.getElementById('chat-messages');
     
-    // Удаляем пустое состояние
     const emptyState = document.getElementById('empty-state');
     if (emptyState) emptyState.remove();
     
     const previewDiv = document.createElement('div');
-    previewDiv.className = 'message message-own message-new p-2 mb-2 media-uploading';
+    previewDiv.className = 'message-wrapper own-message media-uploading';
     previewDiv.innerHTML = `
-        <div class="message-content text-center">
-            <div class="loading-spinner mb-2"></div>
-            <small>Загрузка ${type === 'image' ? 'изображения' : 'видео'}...</small>
+        <div class="message-bubble">
+            <div class="message-content text-center">
+                <div class="loading-spinner mb-2"></div>
+                <small>Загрузка ${type === 'image' ? 'изображения' : 'видео'}...</small>
+            </div>
         </div>
     `;
     
@@ -705,7 +1231,6 @@ function sendMediaMessage(file, fileType) {
     formData.append(fileType, file);
     formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
     
-    // Временно отключаем автообновление
     clearInterval(refreshInterval);
     
     fetch("{% url 'send_message' chat.id %}", {
@@ -718,13 +1243,9 @@ function sendMediaMessage(file, fileType) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Удаляем превью загрузки
             document.querySelector('.media-uploading')?.remove();
-            
-            // Добавляем сообщение в чат
             addMessageToChat(data, true);
             
-            // Очищаем input
             if (fileType === 'image') {
                 document.getElementById('image-input').value = '';
             } else {
@@ -733,13 +1254,13 @@ function sendMediaMessage(file, fileType) {
         } else {
             console.error('Error sending media:', data.error);
             document.querySelector('.media-uploading')?.remove();
-            alert('Ошибка при загрузке файла: ' + data.error);
+            showNotification('Ошибка при загрузке файла: ' + data.error, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
         document.querySelector('.media-uploading')?.remove();
-        alert('Ошибка при загрузке файла');
+        showNotification('Ошибка при загрузке файла', 'error');
     })
     .finally(() => {
         resetSendButton();
@@ -782,80 +1303,90 @@ function addMessageToChat(messageData, isOwn = false) {
     const container = document.getElementById('chat-messages');
     if (!container) return;
     
-    // Удаляем пустое состояние
     const emptyState = document.getElementById('empty-state');
     if (emptyState) emptyState.remove();
     
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isOwn ? 'message-own' : 'message-other'} message-new p-3 mb-2`;
-    messageDiv.setAttribute('data-message-id', messageData.id);
+    const messageWrapper = document.createElement('div');
+    messageWrapper.className = `message-wrapper ${isOwn ? 'own-message' : 'other-message'} message-new`;
+    messageWrapper.setAttribute('data-message-id', messageData.id);
     
     let contentHtml = '';
     
     if (messageData.message_type === 'image' && messageData.image_url) {
         contentHtml = `
-            <div class="message-content">
+            <div class="media-container">
                 <img src="${messageData.image_url}" 
                      alt="Изображение" 
-                     class="img-fluid rounded"
-                     style="max-height: 300px; cursor: pointer;"
+                     class="chat-media"
                      onclick="openMediaModal('${messageData.image_url}', 'image')">
+                <div class="media-overlay">
+                    <i class="fas fa-expand"></i>
+                </div>
             </div>
         `;
     } else if (messageData.message_type === 'video' && messageData.video_url) {
         contentHtml = `
-            <div class="message-content">
-                <video controls class="img-fluid rounded" style="max-height: 300px;">
+            <div class="media-container">
+                <video controls class="chat-media">
                     <source src="${messageData.video_url}" type="video/mp4">
                     Ваш браузер не поддерживает видео.
                 </video>
+                <div class="media-overlay">
+                    <i class="fas fa-play"></i>
+                </div>
             </div>
         `;
     } else {
         contentHtml = `
-            <div class="message-content">${messageData.content || ''}</div>
+            <div class="text-content">${messageData.content || ''}</div>
         `;
     }
     
-    contentHtml += `
-        <div class="message-time small mt-1 opacity-75 text-end">${messageData.timestamp}</div>
+    const messageHtml = `
+        <div class="message-bubble">
+            ${!isOwn ? `<div class="sender-name">${messageData.sender}</div>` : ''}
+            <div class="message-content">
+                ${contentHtml}
+            </div>
+            <div class="message-meta">
+                <span class="message-time">${messageData.timestamp}</span>
+                ${isOwn ? `
+                <span class="message-status">
+                    <i class="fas fa-check${messageData.is_read ? '-double text-primary' : ' text-muted'}"></i>
+                </span>
+                ` : ''}
+            </div>
+        </div>
     `;
     
-    messageDiv.innerHTML = contentHtml;
-    container.appendChild(messageDiv);
+    messageWrapper.innerHTML = messageHtml;
+    container.appendChild(messageWrapper);
     scrollToBottom();
     
-    // Обновляем lastMessageId
+    setTimeout(() => {
+        messageWrapper.classList.add('message-new');
+    }, 100);
+    
     lastMessageId = Math.max(lastMessageId, messageData.id);
 }
 
 // Функция для открытия медиа в модальном окне
 function openMediaModal(url, type) {
+    const modalImage = document.getElementById('modalImage');
+    const modalVideo = document.getElementById('modalVideo');
+    
     if (type === 'image') {
-        const modalHtml = `
-            <div class="modal fade" id="mediaModal" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-center">
-                            <img src="${url}" class="img-fluid" alt="Изображение">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        const modal = new bootstrap.Modal(document.getElementById('mediaModal'));
-        modal.show();
-        
-        // Удаляем модальное окно после закрытия
-        document.getElementById('mediaModal').addEventListener('hidden.bs.modal', function() {
-            this.remove();
-        });
+        modalImage.src = url;
+        modalImage.style.display = 'block';
+        modalVideo.style.display = 'none';
+    } else {
+        modalVideo.innerHTML = `<source src="${url}" type="video/mp4">`;
+        modalVideo.style.display = 'block';
+        modalImage.style.display = 'none';
     }
+    
+    const modal = new bootstrap.Modal(document.getElementById('mediaModal'));
+    modal.show();
 }
 
 // Функция для добавления только новых сообщений (при обновлении)
@@ -867,60 +1398,74 @@ function addNewMessages(messages) {
         const currentScroll = container.scrollTop;
         const isScrolledToBottom = container.scrollHeight - container.clientHeight <= currentScroll + 10;
         
-        // Удаляем пустое состояние, если есть новые сообщения
         const emptyState = document.getElementById('empty-state');
         if (emptyState) {
             emptyState.remove();
         }
         
         messages.forEach(message => {
-            // Проверяем, что сообщение новое
             if (message.id > lastMessageId) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${message.is_own ? 'message-own' : 'message-other'} message-new p-3 mb-2`;
-                messageDiv.setAttribute('data-message-id', message.id);
+                const messageWrapper = document.createElement('div');
+                messageWrapper.className = `message-wrapper ${message.is_own ? 'own-message' : 'other-message'} message-new`;
+                messageWrapper.setAttribute('data-message-id', message.id);
                 
                 let contentHtml = '';
                 
                 if (message.message_type === 'image' && message.image_url) {
                     contentHtml = `
-                        <div class="message-content">
+                        <div class="media-container">
                             <img src="${message.image_url}" 
                                  alt="Изображение" 
-                                 class="img-fluid rounded"
-                                 style="max-height: 300px; cursor: pointer;"
+                                 class="chat-media"
                                  onclick="openMediaModal('${message.image_url}', 'image')">
+                            <div class="media-overlay">
+                                <i class="fas fa-expand"></i>
+                            </div>
                         </div>
                     `;
                 } else if (message.message_type === 'video' && message.video_url) {
                     contentHtml = `
-                        <div class="message-content">
-                            <video controls class="img-fluid rounded" style="max-height: 300px;">
+                        <div class="media-container">
+                            <video controls class="chat-media">
                                 <source src="${message.video_url}" type="video/mp4">
                                 Ваш браузер не поддерживает видео.
                             </video>
+                            <div class="media-overlay">
+                                <i class="fas fa-play"></i>
+                            </div>
                         </div>
                     `;
                 } else {
                     contentHtml = `
-                        <div class="message-content">${message.content || ''}</div>
+                        <div class="text-content">${message.content || ''}</div>
                     `;
                 }
                 
-                contentHtml += `
-                    <div class="message-time small mt-1 opacity-75 text-end">${message.timestamp}</div>
+                const messageHtml = `
+                    <div class="message-bubble">
+                        ${!message.is_own ? `<div class="sender-name">${message.sender}</div>` : ''}
+                        <div class="message-content">
+                            ${contentHtml}
+                        </div>
+                        <div class="message-meta">
+                            <span class="message-time">${message.timestamp}</span>
+                            ${message.is_own ? `
+                            <span class="message-status">
+                                <i class="fas fa-check${message.is_read ? '-double text-primary' : ' text-muted'}"></i>
+                            </span>
+                            ` : ''}
+                        </div>
+                    </div>
                 `;
                 
-                messageDiv.innerHTML = contentHtml;
-                container.appendChild(messageDiv);
+                messageWrapper.innerHTML = messageHtml;
+                container.appendChild(messageWrapper);
                 
-                // Обновляем lastMessageId
                 lastMessageId = Math.max(lastMessageId, message.id);
                 hasNewMessages = true;
             }
         });
         
-        // Прокручиваем только если пользователь был внизу
         if (hasNewMessages && isScrolledToBottom) {
             scrollToBottom();
         }
@@ -962,7 +1507,6 @@ function startAutoRefresh() {
 
 // Функция для первоначальной установки lastMessageId
 function initializeChat() {
-    // Находим все существующие сообщения и устанавливаем lastMessageId
     const messageElements = document.querySelectorAll('[data-message-id]');
     if (messageElements.length > 0) {
         const ids = Array.from(messageElements).map(msg => parseInt(msg.getAttribute('data-message-id')));
@@ -971,11 +1515,7 @@ function initializeChat() {
         lastMessageId = 0;
     }
     
-    console.log('Установлен lastMessageId:', lastMessageId);
-    
-    // Прокручиваем к последнему сообщению
     scrollToBottom();
-    
     isInitialized = true;
 }
 
@@ -989,7 +1529,6 @@ document.getElementById('message-form').addEventListener('submit', function(e) {
     const imageInput = document.getElementById('image-input');
     const videoInput = document.getElementById('video-input');
     
-    // Проверяем, что есть хотя бы текст или медиа
     if (!content && (!imageInput.files[0] && !videoInput.files[0])) {
         return;
     }
@@ -998,7 +1537,6 @@ document.getElementById('message-form').addEventListener('submit', function(e) {
     
     const formData = new FormData(this);
     
-    // Временно отключаем автообновление
     clearInterval(refreshInterval);
     
     fetch("{% url 'send_message' chat.id %}", {
@@ -1011,27 +1549,24 @@ document.getElementById('message-form').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Очищаем поле ввода только если это текстовое сообщение
             if (content) {
                 document.getElementById('id_content').value = '';
                 autoResizeTextarea();
                 updateSendButtonState();
             }
             
-            // Добавляем сообщение сразу в чат
             addMessageToChat(data, true);
             
-            // Очищаем файловые инпуты
             if (imageInput) imageInput.value = '';
             if (videoInput) videoInput.value = '';
         } else {
             console.error('Error sending message:', data.error);
-            alert('Ошибка при отправке сообщения: ' + data.error);
+            showNotification('Ошибка при отправке сообщения: ' + data.error, 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Ошибка при отправке сообщения');
+        showNotification('Ошибка при отправке сообщения', 'error');
     })
     .finally(() => {
         resetSendButton();
@@ -1041,20 +1576,35 @@ document.getElementById('message-form').addEventListener('submit', function(e) {
     });
 });
 
+// Функция показа уведомлений
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" 
+             style="z-index: 1060; min-width: 300px;" role="alert">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 3000);
+}
+
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing chat...');
-    
-    // Инициализируем чат (сообщения уже есть на странице)
     initializeChat();
-    
-    // Инициализируем emoji picker
     initializeEmojiPicker();
-    
-    // Инициализируем медиа-загрузку
     initializeMediaUpload();
     
-    // Автоматическое изменение высоты textarea
     const textarea = document.getElementById('id_content');
     if (textarea) {
         textarea.addEventListener('input', function() {
@@ -1062,18 +1612,19 @@ document.addEventListener('DOMContentLoaded', function() {
             updateSendButtonState();
         });
         
-        // Инициализируем высоту
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('message-form').dispatchEvent(new Event('submit'));
+            }
+        });
+        
         autoResizeTextarea();
         updateSendButtonState();
     }
     
-    // Запускаем автообновление
     startAutoRefresh();
-    
-    // Фокусируемся на поле ввода
     document.getElementById('id_content').focus();
-    
-    console.log('Chat initialized successfully');
 });
 
 // Очистка при закрытии страницы
@@ -1089,14 +1640,12 @@ document.addEventListener('visibilitychange', function() {
         clearInterval(refreshInterval);
     } else {
         startAutoRefresh();
-        // При возвращении на вкладку сразу проверяем новые сообщения
         setTimeout(updateMessages, 500);
     }
 });
 
 // Пометить все сообщения как прочитанные при загрузке чата
 document.addEventListener('DOMContentLoaded', function() {
-    // Отправляем запрос на сервер чтобы пометить сообщения как прочитанные
     fetch("{% url 'mark_messages_read' chat.id %}", {
         method: 'POST',
         headers: {
@@ -1105,5 +1654,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }).catch(error => console.error('Error marking messages as read:', error));
 });
+</script>
+
+<!-- Модальное окно для медиа -->
+<div class="modal fade" id="mediaModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img id="modalImage" src="" class="img-fluid" alt="Изображение" style="display: none;">
+                <video id="modalVideo" controls class="img-fluid" style="display: none;">
+                    Ваш браузер не поддерживает видео.
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openMediaModal(url, type) {
+    const modalImage = document.getElementById('modalImage');
+    const modalVideo = document.getElementById('modalVideo');
+    
+    if (type === 'image') {
+        modalImage.src = url;
+        modalImage.style.display = 'block';
+        modalVideo.style.display = 'none';
+    } else {
+        modalVideo.innerHTML = `<source src="${url}" type="video/mp4">`;
+        modalVideo.style.display = 'block';
+        modalImage.style.display = 'none';
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('mediaModal'));
+    modal.show();
+}
 </script>
 {% endblock %}
