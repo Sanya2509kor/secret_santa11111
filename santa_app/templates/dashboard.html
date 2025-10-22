@@ -60,6 +60,7 @@
                 <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="join_room">
+                    
                     <div class="mb-3">
                         <label for="{{ join_form.code.id_for_label }}" class="form-label">Код комнаты</label>
                         {{ join_form.code }}
@@ -71,13 +72,28 @@
                         </div>
                         {% endif %}
                     </div>
+                    
+                    <div class="mb-3">
+                        <label for="join_display_name" class="form-label">Ваше имя в комнате</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="join_display_name"
+                               name="display_name" 
+                               value="{{ user.get_display_name }}"
+                               placeholder="Как вас называть в этой комнате?"
+                               maxlength="30">
+                        <div class="form-text">
+                            Это имя увидят другие участники. Нельзя изменить после присоединения.
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="btn btn-info w-100 text-white">
                         <i class="fas fa-users me-1"></i>Присоединиться
                     </button>
                 </form>
             </div>
         </div>
-
+        
         <div class="card mb-4">
             <div class="card-header bg-success text-white">
                 <h5 class="card-title mb-0"><i class="fas fa-plus-circle me-2"></i>Создать комнату</h5>
@@ -86,6 +102,7 @@
                 <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="create_room">
+                    
                     <div class="mb-3">
                         <label for="{{ room_form.name.id_for_label }}" class="form-label">Название комнаты</label>
                         {{ room_form.name }}
@@ -97,6 +114,32 @@
                         </div>
                         {% endif %}
                     </div>
+                    <div class="mb-3">
+                        {% comment %} <label for="{{ room_form.name.id_for_label }}" class="form-label">Название комнаты</label> {% endcomment %}
+                        {{ room_form.description }}
+                        {% if room_form.description.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in room_form.description.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="create_display_name" class="form-label">Ваше имя в комнате</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="create_display_name"
+                               name="display_name" 
+                               value="{{ user.get_display_name }}"
+                               placeholder="Как вас называть в этой комнате?"
+                               maxlength="30">
+                        <div class="form-text">
+                            Это имя увидят другие участники. Нельзя изменить после создания.
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="btn btn-success w-100">
                         <i class="fas fa-plus me-1"></i>Создать комнату
                     </button>

@@ -10,7 +10,7 @@
                     {% if is_own_wishlist %}
                     Мой виш-лист
                     {% else %}
-                    Пожелания {{ participant.user.get_full_name|default:participant.user.phone }}
+                    Пожелания {{ participant.get_display_name }}
                     {% endif %}
                 </h5>
             </div>
@@ -21,7 +21,7 @@
                     Это ваши пожелания. Их видит только ваш Тайный Санта.
                 </div>
                 {% else %}
-                <div class="alertnew alert-warning">
+                <div class="alert alert-warning">
                     <i class="fas fa-santa me-2"></i>
                     Вы - Тайный Санта для этого участника! Используйте эту информацию для выбора подарка.
                 </div>

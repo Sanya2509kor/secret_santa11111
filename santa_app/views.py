@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
@@ -6,7 +7,7 @@ from django.http import JsonResponse
 from django.db.models import Q
 import random
 from .models import Room, Participant, SantaPair, Chat, Message, User
-from .forms import PhoneUserCreationForm, PhoneAuthenticationForm, RoomForm, JoinRoomForm, MessageForm, WishlistForm
+from .forms import ParticipantNameForm, PhoneUserCreationForm, PhoneAuthenticationForm, RoomForm, JoinRoomForm, MessageForm, WishlistForm
 from django.core.files.storage import FileSystemStorage
 import os
 from datetime import datetime, timedelta
@@ -62,7 +63,19 @@ def dashboard(request):
                 room = room_form.save(commit=False)
                 room.admin = request.user
                 room.save()
-                Participant.objects.create(user=request.user, room=room)
+                
+                # Запрашиваем имя для создателя комнаты
+                display_name = request.POST.get('display_name', '').strip()
+                if not display_name:
+                    # Если имя не указано, используем имя пользователя
+                    display_name = request.user.get_display_name()
+                
+                # Создаем участника с указанным именем
+                Participant.objects.create(
+                    user=request.user, 
+                    room=room, 
+                    display_name=display_name
+                )
                 return redirect('room_detail', room_id=room.id)
                 
         elif form_type == 'join_room':
@@ -72,9 +85,27 @@ def dashboard(request):
                 code = join_form.cleaned_data['code'].upper()
                 try:
                     room = Room.objects.get(code=code, is_active=True)
-                    if not Participant.objects.filter(user=request.user, room=room).exists():
-                        Participant.objects.create(user=request.user, room=room)
+                    
+                    # Проверяем, не присоединен ли уже пользователь
+                    if Participant.objects.filter(user=request.user, room=room).exists():
+                        messages.info(request, 'Вы уже присоединены к этой комнате')
+                        return redirect('room_detail', room_id=room.id)
+                    
+                    # Запрашиваем имя для нового участника
+                    display_name = request.POST.get('display_name', '').strip()
+                    if not display_name:
+                        # Если имя не указано, используем имя пользователя
+                        display_name = request.user.get_display_name()
+                    
+                    # Создаем участника с указанным именем
+                    Participant.objects.create(
+                        user=request.user, 
+                        room=room, 
+                        display_name=display_name
+                    )
+                    messages.success(request, f'Вы успешно присоединились к комнате как "{display_name}"')
                     return redirect('room_detail', room_id=room.id)
+                    
                 except Room.DoesNotExist:
                     join_form.add_error('code', 'Комната с таким кодом не найдена')
     
@@ -90,7 +121,10 @@ def room_detail(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     participant = get_object_or_404(Participant, user=request.user, room=room)
     participants = Participant.objects.filter(room=room).order_by('?')
-    
+
+    # Форма для изменения имени в комнате
+    name_form = ParticipantNameForm(instance=participant)
+
     # Получаем информацию о Санте и получателе
     my_santa = None
     my_receiver = None
@@ -114,21 +148,13 @@ def room_detail(request, room_id):
     
     # Получаем чаты пользователя
     user_chats = Chat.objects.filter(user=request.user, room=room)
-    chats_with_unread = []
-    
-    for chat in user_chats:
-        unread_count = chat.get_unread_count()
-        chats_with_unread.append({
-            'chat': chat,
-            'unread_count': unread_count
-        })
     
     context = {
         'room': room,
         'participant': participant,
         'participants': participants,
         'my_santa': my_santa,
-        'my_receiver': my_receiver,
+        'my_receiver': my_receiver_wishlist,
         'my_receiver_wishlist': my_receiver_wishlist,
         'user_chats': user_chats,
     }
@@ -268,7 +294,7 @@ def chat_detail(request, chat_id):
     if chat.chat_type == 'my_santa':
         chat_title = f"🎅 Чат с моим Тайным Сантой"
     else:
-        chat_title = f"🎁 Чат с моим получателем ({chat.participant.get_full_name() or chat.participant.phone})"
+        chat_title = f"🎁 Чат с моим получателем"
     
     now = datetime.now()
     yesterday = now - timedelta(days=1)
@@ -428,3 +454,53 @@ def mark_messages_read(request, chat_id):
         return JsonResponse({'success': True})
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+@login_required
+def delete_room(request, room_id):
+    """Удаление комнаты администратором"""
+    room = get_object_or_404(Room, id=room_id)
+    
+    # Проверяем, что пользователь - администратор комнаты
+    if room.admin != request.user:
+        messages.error(request, 'Вы не можете удалить эту комнату')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        room_name = room.name
+        room.delete_room()
+        messages.success(request, f'Комната "{room_name}" успешно удалена')
+        return redirect('dashboard')
+    
+    return redirect('room_detail', room_id=room.id)
+
+
+
+@login_required
+def join_room_with_name(request, room_id):
+    """Присоединение к комнате с указанием имени"""
+    room = get_object_or_404(Room, id=room_id)
+    
+    if request.method == 'POST':
+        display_name = request.POST.get('display_name', '').strip()
+        
+        if not display_name:
+            messages.error(request, 'Пожалуйста, укажите имя для этой комнаты')
+            return redirect('room_detail', room_id=room.id)
+        
+        # Создаем участника с указанным именем
+        participant, created = Participant.objects.get_or_create(
+            user=request.user,
+            room=room,
+            defaults={'display_name': display_name}
+        )
+        
+        if not created:
+            participant.display_name = display_name
+            participant.save()
+        
+        messages.success(request, f'Вы успешно присоединились к комнате как "{display_name}"')
+        return redirect('room_detail', room_id=room.id)
+    
+    return redirect('dashboard')

@@ -27,6 +27,14 @@ class RoomAdmin(admin.ModelAdmin):
     list_display = ['name', 'code', 'admin', 'created_at', 'is_active', 'draw_completed']
     list_filter = ['is_active', 'draw_completed', 'created_at']
     search_fields = ['name', 'code']
+    actions = ['delete_selected_rooms']
+    
+    def delete_selected_rooms(self, request, queryset):
+        """Кастомное действие для удаления комнат с очисткой связанных объектов"""
+        for room in queryset:
+            room.delete_room()
+        self.message_user(request, f"Успешно удалено {queryset.count()} комнат")
+    delete_selected_rooms.short_description = "Удалить выбранные комнаты (с очисткой)"
 
 @admin.register(Participant)
 class ParticipantAdmin(admin.ModelAdmin):

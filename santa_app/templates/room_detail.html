@@ -5,17 +5,87 @@
     <div class="col-md-8">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>{{ room.name }}</h2>
-            <span class="badge bg-secondary">Код: {{ room.code }}</span>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-secondary">Код: {{ room.code }}</span>
+                {% if room.admin == user %}
+                <!-- Кнопка удаления комнаты -->
+                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteRoomModal">
+                    <i class="fas fa-trash me-1"></i>Удалить комнату
+                </button>
+                {% endif %}
+            </div>
         </div>
+
+
+        <!-- Модальное окно подтверждения удаления -->
+        {% if room.admin == user %}
+        <div class="modal fade" id="deleteRoomModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Подтверждение удаления</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Вы уверены, что хотите удалить комнату <strong>"{{ room.name }}"</strong>?</p>
+                        <p class="text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Это действие нельзя отменить! Все данные комнаты (участники, чаты, сообщения) будут удалены.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <form method="post" action="{% url 'delete_room' room.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i>Удалить комнату
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if room.description %}
+        <div class="d-flex align-items-center mb-4" style="background-color: #00ffddff; padding: 10px; border-radius: 5px;">
+            <h6>{{ room.description }}</h6>
+        </div>
+        {% endif %}
+
+        <!-- Блок информации об имени (только просмотр) -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user me-2"></i>Ваше имя в комнате
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-6">
+                        <p class="mb-0">
+                            <strong>{{ participant.get_display_name }}</strong>
+                        </p>
+                        <small class="text-muted">
+                            Это имя видят другие участники комнаты.
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="badge bg-warning">
+                            <i class="fas fa-lock me-1"></i>Нельзя изменить
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
 
         {% if room.draw_completed %}
         <div class="alertnew alert-success">
             <h5>🎉 Жеребьёвка завершена!</h5>
-            {% comment %} {% if my_santa %}
-            <p>Ваш Тайный Санта: <strong>{{ my_santa.get_full_name|default:my_santa.phone }}</strong></p>
-            {% endif %} {% endcomment %}
             {% if my_receiver %}
-            <p>Вы - Тайный Санта для: <strong>{{ my_receiver.get_full_name|default:my_receiver.phone }}</strong></p>
+            <p>Вы - Тайный Санта для: <strong>{{ my_receiver.get_display_name }}</strong></p>
             {% endif %}
         </div>
         {% elif room.admin == user %}
@@ -48,7 +118,6 @@
                             🎁 Чат с моим получателем
                             {% endif %}
                             <br>
-                            {% comment %} <small class="text-muted">{{ chat.participant.get_full_name|default:chat.participant.phone }}</small> {% endcomment %}
                             {% if chat.get_unread_count > 0 %}
                             <span class="position-absolute top-50 end-0 translate-middle-y badge rounded-pill bg-danger me-2">
                                 {{ chat.get_unread_count }}
@@ -81,7 +150,7 @@
                     <div class="card-body">
                         <p class="card-text">
                             Вы - Тайный Санта для: 
-                            <strong>{{ my_receiver.get_full_name|default:my_receiver.phone }}</strong>
+                            <strong>{{ my_receiver.get_display_name }}</strong>
                         </p>
                         {% if my_receiver_wishlist.wishlist %}
                         <div class="mb-3">
@@ -108,7 +177,7 @@
                     <div class="card-body">
                         <p class="card-text">
                             Вы - Тайный Санта для: 
-                            <strong>{{ my_receiver.get_full_name|default:my_receiver.phone }}</strong>
+                            <strong>{{ my_receiver.get_display_name|default:my_receiver.phone }}</strong>
                         </p>
                         <p class="text-muted">Информация о пожеланиях временно недоступна</p>
                         <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-warning btn-sm">
@@ -142,7 +211,7 @@
         </div>
 
         <h4>Участники ({{ participants.count }})</h4>
-        
+        {% if participants.count > 5 %}
         <button class="btn btn-outline-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#participantsList">
             <i class="fas fa-users me-2"></i>Показать участников
         </button>
@@ -151,11 +220,12 @@
             <div class="list-group">
                 {% for participant in participants %}
                 <div class="list-group-item d-flex justify-content-between align-items-center">
-                    {{ participant.user.get_full_name|default:participant.user.phone }}
+                    {{ participant.get_display_name }}
                 </div>
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 <style>
@@ -164,7 +234,7 @@
 }
 
 .list-group-item:hover {
-    background-color: #f8f9fa;
+    background-color: #f8fafaff;
     transform: translateX(5px);
 }
 

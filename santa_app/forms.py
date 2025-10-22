@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User, Room, Message
+from .models import Participant, User, Room, Message
 
 class PhoneUserCreationForm(UserCreationForm):
     phone = forms.CharField(
@@ -63,12 +63,16 @@ class PhoneAuthenticationForm(AuthenticationForm):
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = ['name']
+        fields = ['name', 'description']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control', 
                 'placeholder': 'Название комнаты'
             }),
+            'description': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Описание'
+            }), 
         }
 
 class JoinRoomForm(forms.Form):
@@ -125,3 +129,26 @@ class WishlistForm(forms.ModelForm):
         }),
         required=False
     )
+
+
+class ParticipantNameForm(forms.ModelForm):
+    class Meta:
+        model = Participant
+        fields = ['display_name']
+        widgets = {
+            'display_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ваше имя в этой комнате',
+                'maxlength': '30'
+            })
+        }
+    
+    def clean_display_name(self):
+        display_name = self.cleaned_data.get('display_name')
+        if display_name:
+            display_name = display_name.strip()
+            if len(display_name) < 2:
+                raise forms.ValidationError('Имя должно содержать минимум 2 символа')
+            if len(display_name) > 30:
+                raise forms.ValidationError('Имя не должно превышать 30 символов')
+        return display_name

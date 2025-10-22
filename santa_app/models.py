@@ -29,6 +29,7 @@ class User(AbstractUser):
     email = models.EmailField(blank=True, null=True)  # Сделать необязательным
     wishlist = models.TextField(blank=True, null=True, verbose_name='Список желаний')
     last_name = models.CharField(max_length=30, blank=True, null=True)  # Сделать необязательным
+    display_name = models.CharField(max_length=30, blank=True, null=True, verbose_name='Отображаемое имя')
     
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []  # Убрать email из обязательных
@@ -38,14 +39,19 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.phone} ({self.first_name or 'No name'})"
     
+    def get_display_name(self):
+        """Возвращает отображаемое имя или телефон"""
+        return self.display_name or self.first_name or self.phone
+    
     def get_full_name(self):
-        return self.first_name or self.phone
+        return self.display_name or self.first_name or self.phone
     
     def get_short_name(self):
         return self.first_name or self.phone
 
 class Room(models.Model):
     name = models.CharField(max_length=100)
+    description = models.TextField(max_length=1000, verbose_name='Описание', blank=True, null=True)
     code = models.CharField(max_length=10, unique=True, blank=True)
     admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_rooms')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -57,6 +63,17 @@ class Room(models.Model):
             self.code = uuid.uuid4().hex[:6].upper()
         super().save(*args, **kwargs)
 
+    def delete_room(self):
+        """Метод для безопасного удаления комнаты"""
+        # Удаляем все связанные объекты
+        SantaPair.objects.filter(room=self).delete()
+        Chat.objects.filter(room=self).delete()
+        Message.objects.filter(chat__room=self).delete()
+        Participant.objects.filter(room=self).delete()
+        # Удаляем саму комнату
+        self.delete()
+    
+
     class Meta:
         verbose_name = 'Комнату'
         verbose_name_plural = 'Комнаты'
@@ -67,6 +84,7 @@ class Room(models.Model):
 class Participant(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    display_name = models.CharField(max_length=30, verbose_name="Имя в комнате", blank=True)
     wishlist = models.TextField(blank=True, null=True, verbose_name="Пожелания к подарку")
     joined_at = models.DateTimeField(auto_now_add=True)
     
@@ -76,7 +94,20 @@ class Participant(models.Model):
         verbose_name_plural = 'Участники'
     
     def __str__(self):
-        return f"{self.user.phone} in {self.room.name}"
+        return f"{self.get_display_name()} в {self.room.name}"
+    
+    def get_display_name(self):
+        """Возвращает имя участника в комнате или основное имя пользователя"""
+        return self.display_name or self.user.get_display_name()
+    
+    def save(self, *args, **kwargs):
+        # Запрещаем изменение имени после создания
+        if self.pk:
+            original = Participant.objects.get(pk=self.pk)
+            if original.display_name != self.display_name:
+                raise ValueError("Имя в комнате нельзя изменить после присоединения")
+        super().save(*args, **kwargs)
+
 
 class SantaPair(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
