@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -6,6 +7,9 @@ from django.db.models import Q
 import random
 from .models import Room, Participant, SantaPair, Chat, Message, User
 from .forms import PhoneUserCreationForm, PhoneAuthenticationForm, RoomForm, JoinRoomForm, MessageForm, WishlistForm
+from django.core.files.storage import FileSystemStorage
+import os
+from datetime import datetime, timedelta
 
 def home(request):
     if request.user.is_authenticated:
@@ -266,12 +270,16 @@ def chat_detail(request, chat_id):
     else:
         chat_title = f"🎁 Чат с моим получателем ({chat.participant.get_full_name() or chat.participant.phone})"
     
+    now = datetime.now()
+    yesterday = now - timedelta(days=1)
+
     context = {
         'chat': chat,
         'chat_title': chat_title,
         'messages': messages,
         'form': form,
         'other_user': chat.participant,
+        'yesterday': yesterday, 
     }
     
     return render(request, 'chat_detail.html', context)
@@ -287,33 +295,69 @@ def send_message(request, chat_id):
             return JsonResponse({'error': 'No access'}, status=403)
         
         content = request.POST.get('content', '').strip()
-        if content:
-            # Создаем сообщение в основном чате
-            message = Message.objects.create(
-                chat=chat,
+        image = request.FILES.get('image')
+        video = request.FILES.get('video')
+        
+        # Проверяем, что есть хотя бы текст или медиа
+        if not content and not image and not video:
+            return JsonResponse({'error': 'Empty message'}, status=400)
+        
+        # Проверяем размер файла
+        if image and image.size > settings.MAX_UPLOAD_SIZE:
+            return JsonResponse({'error': 'Image too large'}, status=400)
+        
+        if video and video.size > settings.MAX_UPLOAD_SIZE:
+            return JsonResponse({'error': 'Video too large'}, status=400)
+        
+        # Создаем сообщение в основном чате
+        message = Message.objects.create(
+            chat=chat,
+            sender=request.user,
+            content=content if content else None,
+            image=image,
+            video=video
+        )
+        
+        # Создаем такое же сообщение в парном чате
+        pair_chat = chat.get_pair_chat()
+        if pair_chat:
+            pair_message = Message.objects.create(
+                chat=pair_chat,
                 sender=request.user,
-                content=content
+                content=content if content else None,
+                is_read=False
             )
             
-            # Создаем такое же сообщение в парном чате
-            pair_chat = chat.get_pair_chat()
-            if pair_chat:
-                Message.objects.create(
-                    chat=pair_chat,
-                    sender=request.user,
-                    content=content,
-                    is_read=False
-                )
+            # Копируем файлы для парного сообщения
+            if image:
+                fs = FileSystemStorage()
+                filename = fs.save(f'chat_images/{image.name}', image)
+                pair_message.image = filename
+                pair_message.save()
             
-            return JsonResponse({
-                'success': True,
-                'id': message.id,  # Добавляем ID сообщения
-                'sender': request.user.get_full_name() or request.user.phone,
-                'content': content,
-                'timestamp': message.timestamp.strftime('%H:%M')
-            })
+            if video:
+                fs = FileSystemStorage()
+                filename = fs.save(f'chat_videos/{video.name}', video)
+                pair_message.video = filename
+                pair_message.save()
         
-        return JsonResponse({'error': 'Empty message'}, status=400)
+        # Подготавливаем данные для ответа
+        response_data = {
+            'success': True,
+            'id': message.id,
+            'sender': request.user.get_full_name() or request.user.phone,
+            'content': content,
+            'timestamp': message.timestamp.strftime('%H:%M'),
+            'message_type': message.message_type
+        }
+        
+        # Добавляем URL медиафайлов если они есть
+        if message.image:
+            response_data['image_url'] = message.image.url
+        if message.video:
+            response_data['video_url'] = message.video.url
+        
+        return JsonResponse(response_data)
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -343,13 +387,22 @@ def get_messages(request, chat_id):
         
         messages_data = []
         for message in messages:
-            messages_data.append({
+            message_data = {
                 'id': message.id,
                 'sender': message.sender.get_full_name() or message.sender.phone,
                 'content': message.content,
                 'timestamp': message.timestamp.strftime('%H:%M'),
                 'is_own': message.sender == request.user,
-            })
+                'message_type': message.message_type
+            }
+            
+            # Добавляем URL медиафайлов
+            if message.image:
+                message_data['image_url'] = message.image.url
+            if message.video:
+                message_data['video_url'] = message.video.url
+                
+            messages_data.append(message_data)
         
         return JsonResponse({'messages': messages_data})
     

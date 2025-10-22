@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -144,3 +145,15 @@ LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/'
 
 AUTH_USER_MODEL = 'santa_app.User'
+
+
+# Добавьте в конец файла
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Максимальный размер файлов (100MB)
+MAX_UPLOAD_SIZE = 104857600
+
+# Разрешенные типы файлов
+ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi', 'mkv']

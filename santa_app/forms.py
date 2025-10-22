@@ -81,16 +81,35 @@ class JoinRoomForm(forms.Form):
     )
 
 class MessageForm(forms.ModelForm):
+    content = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control', 
+            'rows': 3, 
+            'placeholder': 'Введите сообщение...',
+            'id': 'message-content'
+        }),
+    )
+    image = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'd-none',
+            'id': 'image-input',
+            'accept': 'image/*'
+        })
+    )
+    video = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'd-none',
+            'id': 'video-input',
+            'accept': 'video/*'
+        })
+    )
+    
     class Meta:
         model = Message
-        fields = ['content']
-        widgets = {
-            'content': forms.Textarea(attrs={
-                'class': 'form-control', 
-                'rows': 3, 
-                'placeholder': 'Введите сообщение...'
-            }),
-        }
+        fields = ['content', 'image', 'video']
 
 
 class WishlistForm(forms.ModelForm):

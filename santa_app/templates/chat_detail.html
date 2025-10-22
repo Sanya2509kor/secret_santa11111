@@ -26,10 +26,25 @@
         {% for message in messages %}
         <div class="message {% if message.sender == user %}message-own{% else %}message-other{% endif %} p-3 mb-2" data-message-id="{{ message.id }}">
             <div class="message-content">
-                {{ message.content }}
+                {% if message.image %}
+                    <img src="{{ message.image.url }}" alt="Изображение" class="img-fluid rounded" style="max-height: 300px; cursor: pointer;" onclick="openMediaModal('{{ message.image.url }}', 'image')">
+                {% elif message.video %}
+                    <video controls class="img-fluid rounded" style="max-height: 300px;">
+                        <source src="{{ message.video.url }}" type="video/mp4">
+                        Ваш браузер не поддерживает видео.
+                    </video>
+                {% else %}
+                    {{ message.content }}
+                {% endif %}
             </div>
             <div class="message-time small mt-1 opacity-75 text-end">
-                {{ message.timestamp|date:"H:i" }}
+                {% if message.timestamp|date:"Y-m-d" == now|date:"Y-m-d" %}
+                    Сегодня {{ message.timestamp|date:"H:i" }}
+                {% elif message.timestamp|date:"Y-m-d" == yesterday|date:"Y-m-d" %}
+                    Вчера {{ message.timestamp|date:"H:i" }}
+                {% else %}
+                    {{ message.timestamp|date:"d.m.Y H:i" }}
+                {% endif %}
             </div>
         </div>
         {% empty %}
@@ -43,16 +58,26 @@
 
     <!-- Поле ввода с emoji picker -->
     <div class="telegram-input-container">
-        <form method="post" id="message-form">
+        <form method="post" id="message-form" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="input-wrapper">
                 <!-- Поле ввода -->
                 <div class="input-field">
-                    {{ form.content }}
+                    <textarea name="content" id="id_content" class="form-control" placeholder="Введите сообщение..." rows="1"></textarea>
                 </div>
                 
                 <!-- Кнопки справа -->
                 <div class="input-actions right">
+                    <button type="button" class="action-btn" id="image-attach">
+                        <i class="fas fa-image"></i>
+                    </button>
+                    <button type="button" class="action-btn" id="video-attach">
+                        <i class="fas fa-video"></i>
+                    </button>
+
+                    <input type="file" id="image-input" name="image" accept="image/*" class="d-none">
+                    <input type="file" id="video-input" name="video" accept="video/*" class="d-none">
+                    
                     <!-- Кнопка смайлика с выпадающим списком -->
                     <div class="emoji-picker-container position-relative">
                         <button type="button" class="action-btn emoji-toggle" id="emoji-toggle">
@@ -76,8 +101,8 @@
                         </div>
                     </div>
                     
-                    <button type="button" class="action-btn voice-btn">
-                        <i class="fas fa-microphone"></i>
+                    <button type="button" class="action-btn voice-btn" id="voice-btn">
+                        <i class="fas fa-paper-plane"></i>
                     </button>
                     <button type="submit" class="send-btn" id="send-button">
                         <i class="fas fa-paper-plane"></i>
@@ -162,6 +187,7 @@
     max-height: 100px;
     width: 100%;
     background: transparent;
+    font-family: inherit;
 }
 
 .input-actions {
@@ -181,6 +207,7 @@
     justify-content: center;
     color: #707579;
     transition: background-color 0.2s;
+    cursor: pointer;
 }
 
 .action-btn:hover {
@@ -199,6 +226,7 @@
     color: white;
     transition: all 0.2s;
     margin-left: 4px;
+    cursor: pointer;
 }
 
 .send-btn:hover {
@@ -382,6 +410,36 @@
         padding: 4px;
     }
 }
+
+/* Добавьте в секцию CSS */
+.media-uploading {
+    opacity: 0.7;
+}
+
+.message img, .message video {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+.message img:hover {
+    opacity: 0.9;
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+    background-color: #e0e0e0 !important;
+}
+
+.action-btn.active {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+/* Автоматическое изменение высоты textarea */
+.auto-resize {
+    overflow: hidden;
+    resize: none;
+}
 </style>
 
 <script>
@@ -391,7 +449,7 @@ let refreshInterval;
 let lastMessageId = 0;
 let isInitialized = false;
 
-// Emoji данные по категориям
+// Emoji данные по категориям (заполнишь самостоятельно)
 const emojiData = {
     smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯'],
     animals: ['🐵', '🐒', '🦍', '🦧', '🐶', '🐕', '🦮', '🐕‍🦺', '🐩', '🐺', '🦊', '🦝', '🐱', '🐈', '🐈‍⬛', '🦁', '🐯', '🐅', '🐆', '🐴', '🐎', '🦄', '🦓', '🦌', '🐮', '🐂', '🐃', '🐄', '🐷', '🐖', '🐗', '🐽', '🐏', '🐑', '🐐', '🐪', '🐫', '🦙', '🦒', '🐘', '🦏', '🦛', '🐭', '🐁', '🐀', '🐹', '🐰', '🐇', '🐿️', '🦔', '🦇'],
@@ -401,217 +459,6 @@ const emojiData = {
     symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳']
 };
 
-// Автопрокрутка к последнему сообщению
-function scrollToBottom() {
-    const container = document.getElementById('chat-messages');
-    container.scrollTop = container.scrollHeight;
-}
-
-// Функция для сброса состояния кнопки
-function resetSendButton() {
-    const sendButton = document.getElementById('send-button');
-    sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
-    sendButton.disabled = false;
-    isSending = false;
-}
-
-// Функция для показа состояния загрузки
-function setLoadingState() {
-    const sendButton = document.getElementById('send-button');
-    sendButton.innerHTML = '<div class="loading-spinner"></div>';
-    sendButton.disabled = true;
-    isSending = true;
-}
-
-// Функция для добавления сообщения в чат (при отправке)
-function addMessageToChat(messageData, isOwn = false) {
-    const container = document.getElementById('chat-messages');
-    
-    // Удаляем пустое состояние, если оно есть
-    const emptyState = document.getElementById('empty-state');
-    if (emptyState) {
-        emptyState.remove();
-    }
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isOwn ? 'message-own' : 'message-other'} message-new p-3 mb-2`;
-    messageDiv.setAttribute('data-message-id', messageData.id);
-    messageDiv.innerHTML = `
-        <div class="message-content">${messageData.content}</div>
-        <div class="message-time small mt-1 opacity-75 text-end">${messageData.timestamp}</div>
-    `;
-    
-    container.appendChild(messageDiv);
-    
-    // Обновляем lastMessageId
-    lastMessageId = Math.max(lastMessageId, messageData.id);
-    
-    // Прокручиваем к новому сообщению
-    scrollToBottom();
-}
-
-// Функция для добавления только новых сообщений (при обновлении)
-function addNewMessages(messages) {
-    const container = document.getElementById('chat-messages');
-    let hasNewMessages = false;
-    
-    // Фильтруем только новые сообщения
-    const newMessages = messages.filter(msg => msg.id > lastMessageId);
-    
-    if (newMessages.length > 0) {
-        const currentScroll = container.scrollTop;
-        const isScrolledToBottom = container.scrollHeight - container.clientHeight <= currentScroll + 10;
-        
-        // Удаляем пустое состояние, если есть новые сообщения
-        const emptyState = document.getElementById('empty-state');
-        if (emptyState) {
-            emptyState.remove();
-        }
-        
-        newMessages.forEach(message => {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${message.is_own ? 'message-own' : 'message-other'} message-new p-3 mb-2`;
-            messageDiv.setAttribute('data-message-id', message.id);
-            messageDiv.innerHTML = `
-                <div class="message-content">${message.content}</div>
-                <div class="message-time small mt-1 opacity-75 text-end">${message.timestamp}</div>
-            `;
-            
-            container.appendChild(messageDiv);
-        });
-        
-        // Обновляем lastMessageId
-        lastMessageId = Math.max(lastMessageId, ...newMessages.map(msg => msg.id));
-        
-        // Прокручиваем только если пользователь был внизу
-        if (isScrolledToBottom) {
-            scrollToBottom();
-        }
-        
-        hasNewMessages = true;
-        
-        // Показываем уведомление о новом сообщении (только если не прокручены вниз)
-        if (newMessages.length > 0 && !isScrolledToBottom) {
-            showNewMessageNotification(newMessages.length);
-        }
-    }
-    
-    return hasNewMessages;
-}
-
-// Функция для показа уведомления о новых сообщениях
-function showNewMessageNotification(count) {
-    // Создаем уведомление о новых сообщениях
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-info alert-dismissible fade show position-absolute top-0 start-50 translate-middle-x mt-2';
-    notification.innerHTML = `
-        <i class="fas fa-comment-dots me-2"></i>
-        ${count} нов${count === 1 ? 'ое' : 'ых'} сообщени${count === 1 ? 'е' : 'я'}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    const container = document.getElementById('chat-messages');
-    container.parentNode.appendChild(notification);
-    
-    // Автоматически скрываем через 3 секунды
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
-    }, 3000);
-}
-
-// Отправка сообщения через AJAX
-document.getElementById('message-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    if (isSending) return;
-    
-    const content = document.getElementById('id_content').value.trim();
-    if (!content) return;
-    
-    setLoadingState();
-    
-    const formData = new FormData();
-    formData.append('content', content);
-    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-    
-    // Временно отключаем автообновление
-    clearInterval(refreshInterval);
-    
-    fetch("{% url 'send_message' chat.id %}", {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Очищаем поле ввода
-            document.getElementById('id_content').value = '';
-            
-            // Добавляем сообщение сразу в чат
-            addMessageToChat(data, true);
-        } else {
-            console.error('Error sending message:', data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    })
-    .finally(() => {
-        // Восстанавливаем состояние кнопки
-        resetSendButton();
-        
-        // Перезапускаем автообновление через 1 секунду
-        setTimeout(() => {
-            startAutoRefresh();
-        }, 1000);
-    });
-});
-
-// Обновление сообщений (только новых)
-function updateMessages() {
-    if (isSending) return;
-    
-    fetch("{% url 'get_messages' chat.id %}?last_id=" + lastMessageId, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.messages && data.messages.length > 0) {
-            addNewMessages(data.messages);
-        }
-    })
-    .catch(error => console.error('Error updating messages:', error));
-}
-
-// Функция для первоначальной установки lastMessageId
-function initializeChat() {
-    // Находим все существующие сообщения и устанавливаем lastMessageId
-    const messageElements = document.querySelectorAll('[data-message-id]');
-    if (messageElements.length > 0) {
-        const lastElement = messageElements[messageElements.length - 1];
-        lastMessageId = parseInt(lastElement.getAttribute('data-message-id'));
-    }
-    
-    // Прокручиваем к последнему сообщению
-    scrollToBottom();
-    
-    isInitialized = true;
-    console.log('Чат инициализирован, последнее сообщение ID:', lastMessageId);
-}
-
-// Функция для запуска автообновления
-function startAutoRefresh() {
-    clearInterval(refreshInterval);
-    refreshInterval = setInterval(updateMessages, 3000);
-}
-
 // Инициализация emoji picker
 function initializeEmojiPicker() {
     const emojiToggle = document.getElementById('emoji-toggle');
@@ -619,26 +466,47 @@ function initializeEmojiPicker() {
     const emojiGrid = document.getElementById('emoji-grid');
     const messageInput = document.getElementById('id_content');
     
+    console.log('Initializing emoji picker...');
+    
+    // Проверяем, что все элементы существуют
+    if (!emojiToggle || !emojiPicker || !emojiGrid || !messageInput) {
+        console.error('Emoji elements not found!');
+        return;
+    }
+    
     // Показываем первую категорию
     showEmojiCategory('smileys');
     
     // Обработчик открытия/закрытия emoji picker
     emojiToggle.addEventListener('click', function(e) {
+        e.preventDefault();
         e.stopPropagation();
+        console.log('Emoji toggle clicked');
         emojiPicker.classList.toggle('show');
     });
     
     // Закрытие emoji picker при клике вне его
     document.addEventListener('click', function(e) {
-        if (!emojiPicker.contains(e.target) && e.target !== emojiToggle) {
+        if (emojiPicker.classList.contains('show') && 
+            !emojiPicker.contains(e.target) && 
+            e.target !== emojiToggle) {
             emojiPicker.classList.remove('show');
         }
     });
     
+    // Предотвращаем закрытие при клике внутри emoji picker
+    emojiPicker.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+    
     // Обработчики смены категорий
     document.querySelectorAll('.emoji-category').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
             const category = this.getAttribute('data-category');
+            console.log('Category selected:', category);
             
             // Убираем активный класс у всех кнопок
             document.querySelectorAll('.emoji-category').forEach(btn => {
@@ -655,14 +523,23 @@ function initializeEmojiPicker() {
     
     // Функция показа emoji категории
     function showEmojiCategory(category) {
+        console.log('Showing category:', category);
         emojiGrid.innerHTML = '';
+        
+        if (!emojiData[category]) {
+            console.error('Category not found:', category);
+            return;
+        }
         
         emojiData[category].forEach(emoji => {
             const emojiButton = document.createElement('button');
             emojiButton.type = 'button';
             emojiButton.className = 'emoji-item';
             emojiButton.textContent = emoji;
-            emojiButton.addEventListener('click', function() {
+            emojiButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Emoji selected:', emoji);
                 insertEmoji(emoji);
             });
             emojiGrid.appendChild(emojiButton);
@@ -671,6 +548,17 @@ function initializeEmojiPicker() {
     
     // Функция вставки emoji в поле ввода
     function insertEmoji(emoji) {
+        const messageInput = document.getElementById('id_content');
+        if (!messageInput) {
+            console.error('Message input not found');
+            return;
+        }
+        
+        console.log('Inserting emoji:', emoji);
+        
+        // Фокусируемся на поле ввода перед вставкой
+        messageInput.focus();
+        
         const start = messageInput.selectionStart;
         const end = messageInput.selectionEnd;
         const text = messageInput.value;
@@ -679,39 +567,520 @@ function initializeEmojiPicker() {
         messageInput.value = text.substring(0, start) + emoji + text.substring(end);
         
         // Устанавливаем курсор после вставленного emoji
-        messageInput.selectionStart = messageInput.selectionEnd = start + emoji.length;
+        const newPosition = start + emoji.length;
+        messageInput.selectionStart = messageInput.selectionEnd = newPosition;
         
         // Фокусируемся обратно на поле ввода
         messageInput.focus();
         
         // Закрываем emoji picker после выбора
         emojiPicker.classList.remove('show');
+        
+        // Триггерим события для обновления UI
+        messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Обновляем состояние кнопок отправки
+        updateSendButtonState();
     }
     
-    // Закрытие emoji picker при отправке формы
-    document.getElementById('message-form').addEventListener('submit', function() {
-        emojiPicker.classList.remove('show');
+    console.log('Emoji picker initialized successfully');
+}
+
+// Функция для обновления состояния кнопки отправки
+function updateSendButtonState() {
+    const messageInput = document.getElementById('id_content');
+    const sendButton = document.getElementById('send-button');
+    const voiceButton = document.getElementById('voice-btn');
+    
+    if (messageInput && sendButton && voiceButton) {
+        const hasContent = messageInput.value.trim().length > 0;
+        
+        if (hasContent) {
+            sendButton.style.display = 'flex';
+            voiceButton.style.display = 'none';
+        } else {
+            sendButton.style.display = 'none';
+            voiceButton.style.display = 'flex';
+        }
+    }
+}
+
+// Автоматическое изменение высоты textarea
+function autoResizeTextarea() {
+    const textarea = document.getElementById('id_content');
+    if (textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+    }
+}
+
+// Инициализация медиа-загрузки
+function initializeMediaUpload() {
+    const imageAttach = document.getElementById('image-attach');
+    const videoAttach = document.getElementById('video-attach');
+    const imageInput = document.getElementById('image-input');
+    const videoInput = document.getElementById('video-input');
+    
+    console.log('Initializing media upload...');
+    
+    if (imageAttach && imageInput) {
+        imageAttach.addEventListener('click', () => {
+            console.log('Image attach clicked');
+            imageInput.click();
+        });
+    }
+    
+    if (videoAttach && videoInput) {
+        videoAttach.addEventListener('click', () => {
+            console.log('Video attach clicked');
+            videoInput.click();
+        });
+    }
+    
+    if (imageInput) {
+        imageInput.addEventListener('change', handleImageUpload);
+    }
+    
+    if (videoInput) {
+        videoInput.addEventListener('change', handleVideoUpload);
+    }
+}
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Проверяем размер файла (20MB)
+        if (file.size > 100 * 1024 * 1024) {
+            alert('Изображение слишком большое. Максимальный размер: 100MB');
+            return;
+        }
+        
+        // Создаем превью и отправляем
+        createMediaPreview(file, 'image');
+        sendMediaMessage(file, 'image');
+    }
+}
+
+function handleVideoUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Проверяем размер файла (20MB)
+        if (file.size > 100 * 1024 * 1024) {
+            alert('Видео слишком большое. Максимальный размер: 100MB');
+            return;
+        }
+        
+        // Создаем превью и отправляем
+        createMediaPreview(file, 'video');
+        sendMediaMessage(file, 'video');
+    }
+}
+
+function createMediaPreview(file, type) {
+    const container = document.getElementById('chat-messages');
+    
+    // Удаляем пустое состояние
+    const emptyState = document.getElementById('empty-state');
+    if (emptyState) emptyState.remove();
+    
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'message message-own message-new p-2 mb-2 media-uploading';
+    previewDiv.innerHTML = `
+        <div class="message-content text-center">
+            <div class="loading-spinner mb-2"></div>
+            <small>Загрузка ${type === 'image' ? 'изображения' : 'видео'}...</small>
+        </div>
+    `;
+    
+    container.appendChild(previewDiv);
+    scrollToBottom();
+}
+
+function sendMediaMessage(file, fileType) {
+    if (isSending) return;
+    
+    setLoadingState();
+    
+    const formData = new FormData();
+    formData.append(fileType, file);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    // Временно отключаем автообновление
+    clearInterval(refreshInterval);
+    
+    fetch("{% url 'send_message' chat.id %}", {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Удаляем превью загрузки
+            document.querySelector('.media-uploading')?.remove();
+            
+            // Добавляем сообщение в чат
+            addMessageToChat(data, true);
+            
+            // Очищаем input
+            if (fileType === 'image') {
+                document.getElementById('image-input').value = '';
+            } else {
+                document.getElementById('video-input').value = '';
+            }
+        } else {
+            console.error('Error sending media:', data.error);
+            document.querySelector('.media-uploading')?.remove();
+            alert('Ошибка при загрузке файла: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.querySelector('.media-uploading')?.remove();
+        alert('Ошибка при загрузке файла');
+    })
+    .finally(() => {
+        resetSendButton();
+        setTimeout(() => {
+            startAutoRefresh();
+        }, 1000);
     });
 }
 
+// Автопрокрутка к последнему сообщению
+function scrollToBottom() {
+    const container = document.getElementById('chat-messages');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+// Функция для сброса состояния кнопки
+function resetSendButton() {
+    const sendButton = document.getElementById('send-button');
+    if (sendButton) {
+        sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        sendButton.disabled = false;
+        isSending = false;
+    }
+}
+
+// Функция для показа состояния загрузки
+function setLoadingState() {
+    const sendButton = document.getElementById('send-button');
+    if (sendButton) {
+        sendButton.innerHTML = '<div class="loading-spinner"></div>';
+        sendButton.disabled = true;
+        isSending = true;
+    }
+}
+
+// Функция для добавления сообщения в чат (при отправке)
+function addMessageToChat(messageData, isOwn = false) {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+    
+    // Удаляем пустое состояние
+    const emptyState = document.getElementById('empty-state');
+    if (emptyState) emptyState.remove();
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isOwn ? 'message-own' : 'message-other'} message-new p-3 mb-2`;
+    messageDiv.setAttribute('data-message-id', messageData.id);
+    
+    let contentHtml = '';
+    
+    if (messageData.message_type === 'image' && messageData.image_url) {
+        contentHtml = `
+            <div class="message-content">
+                <img src="${messageData.image_url}" 
+                     alt="Изображение" 
+                     class="img-fluid rounded"
+                     style="max-height: 300px; cursor: pointer;"
+                     onclick="openMediaModal('${messageData.image_url}', 'image')">
+            </div>
+        `;
+    } else if (messageData.message_type === 'video' && messageData.video_url) {
+        contentHtml = `
+            <div class="message-content">
+                <video controls class="img-fluid rounded" style="max-height: 300px;">
+                    <source src="${messageData.video_url}" type="video/mp4">
+                    Ваш браузер не поддерживает видео.
+                </video>
+            </div>
+        `;
+    } else {
+        contentHtml = `
+            <div class="message-content">${messageData.content || ''}</div>
+        `;
+    }
+    
+    contentHtml += `
+        <div class="message-time small mt-1 opacity-75 text-end">${messageData.timestamp}</div>
+    `;
+    
+    messageDiv.innerHTML = contentHtml;
+    container.appendChild(messageDiv);
+    scrollToBottom();
+    
+    // Обновляем lastMessageId
+    lastMessageId = Math.max(lastMessageId, messageData.id);
+}
+
+// Функция для открытия медиа в модальном окне
+function openMediaModal(url, type) {
+    if (type === 'image') {
+        const modalHtml = `
+            <div class="modal fade" id="mediaModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="${url}" class="img-fluid" alt="Изображение">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('mediaModal'));
+        modal.show();
+        
+        // Удаляем модальное окно после закрытия
+        document.getElementById('mediaModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+    }
+}
+
+// Функция для добавления только новых сообщений (при обновлении)
+function addNewMessages(messages) {
+    const container = document.getElementById('chat-messages');
+    let hasNewMessages = false;
+    
+    if (messages && messages.length > 0) {
+        const currentScroll = container.scrollTop;
+        const isScrolledToBottom = container.scrollHeight - container.clientHeight <= currentScroll + 10;
+        
+        // Удаляем пустое состояние, если есть новые сообщения
+        const emptyState = document.getElementById('empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
+        messages.forEach(message => {
+            // Проверяем, что сообщение новое
+            if (message.id > lastMessageId) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${message.is_own ? 'message-own' : 'message-other'} message-new p-3 mb-2`;
+                messageDiv.setAttribute('data-message-id', message.id);
+                
+                let contentHtml = '';
+                
+                if (message.message_type === 'image' && message.image_url) {
+                    contentHtml = `
+                        <div class="message-content">
+                            <img src="${message.image_url}" 
+                                 alt="Изображение" 
+                                 class="img-fluid rounded"
+                                 style="max-height: 300px; cursor: pointer;"
+                                 onclick="openMediaModal('${message.image_url}', 'image')">
+                        </div>
+                    `;
+                } else if (message.message_type === 'video' && message.video_url) {
+                    contentHtml = `
+                        <div class="message-content">
+                            <video controls class="img-fluid rounded" style="max-height: 300px;">
+                                <source src="${message.video_url}" type="video/mp4">
+                                Ваш браузер не поддерживает видео.
+                            </video>
+                        </div>
+                    `;
+                } else {
+                    contentHtml = `
+                        <div class="message-content">${message.content || ''}</div>
+                    `;
+                }
+                
+                contentHtml += `
+                    <div class="message-time small mt-1 opacity-75 text-end">${message.timestamp}</div>
+                `;
+                
+                messageDiv.innerHTML = contentHtml;
+                container.appendChild(messageDiv);
+                
+                // Обновляем lastMessageId
+                lastMessageId = Math.max(lastMessageId, message.id);
+                hasNewMessages = true;
+            }
+        });
+        
+        // Прокручиваем только если пользователь был внизу
+        if (hasNewMessages && isScrolledToBottom) {
+            scrollToBottom();
+        }
+    }
+    
+    return hasNewMessages;
+}
+
+// Обновление сообщений (только новых)
+function updateMessages() {
+    if (isSending) return;
+    
+    const url = "{% url 'get_messages' chat.id %}?last_id=" + lastMessageId;
+    
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.messages && data.messages.length > 0) {
+            addNewMessages(data.messages);
+        }
+    })
+    .catch(error => console.error('Error updating messages:', error));
+}
+
+// Функция для запуска автообновления
+function startAutoRefresh() {
+    clearInterval(refreshInterval);
+    refreshInterval = setInterval(updateMessages, 3000);
+}
+
+// Функция для первоначальной установки lastMessageId
+function initializeChat() {
+    // Находим все существующие сообщения и устанавливаем lastMessageId
+    const messageElements = document.querySelectorAll('[data-message-id]');
+    if (messageElements.length > 0) {
+        const ids = Array.from(messageElements).map(msg => parseInt(msg.getAttribute('data-message-id')));
+        lastMessageId = Math.max(...ids);
+    } else {
+        lastMessageId = 0;
+    }
+    
+    console.log('Установлен lastMessageId:', lastMessageId);
+    
+    // Прокручиваем к последнему сообщению
+    scrollToBottom();
+    
+    isInitialized = true;
+}
+
+// Отправка сообщения через AJAX
+document.getElementById('message-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (isSending) return;
+    
+    const content = document.getElementById('id_content').value.trim();
+    const imageInput = document.getElementById('image-input');
+    const videoInput = document.getElementById('video-input');
+    
+    // Проверяем, что есть хотя бы текст или медиа
+    if (!content && (!imageInput.files[0] && !videoInput.files[0])) {
+        return;
+    }
+    
+    setLoadingState();
+    
+    const formData = new FormData(this);
+    
+    // Временно отключаем автообновление
+    clearInterval(refreshInterval);
+    
+    fetch("{% url 'send_message' chat.id %}", {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Очищаем поле ввода только если это текстовое сообщение
+            if (content) {
+                document.getElementById('id_content').value = '';
+                autoResizeTextarea();
+                updateSendButtonState();
+            }
+            
+            // Добавляем сообщение сразу в чат
+            addMessageToChat(data, true);
+            
+            // Очищаем файловые инпуты
+            if (imageInput) imageInput.value = '';
+            if (videoInput) videoInput.value = '';
+        } else {
+            console.error('Error sending message:', data.error);
+            alert('Ошибка при отправке сообщения: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при отправке сообщения');
+    })
+    .finally(() => {
+        resetSendButton();
+        setTimeout(() => {
+            startAutoRefresh();
+        }, 1000);
+    });
+});
+
 // Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing chat...');
+    
     // Инициализируем чат (сообщения уже есть на странице)
     initializeChat();
     
     // Инициализируем emoji picker
     initializeEmojiPicker();
     
+    // Инициализируем медиа-загрузку
+    initializeMediaUpload();
+    
+    // Автоматическое изменение высоты textarea
+    const textarea = document.getElementById('id_content');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            autoResizeTextarea();
+            updateSendButtonState();
+        });
+        
+        // Инициализируем высоту
+        autoResizeTextarea();
+        updateSendButtonState();
+    }
+    
     // Запускаем автообновление
     startAutoRefresh();
     
     // Фокусируемся на поле ввода
     document.getElementById('id_content').focus();
+    
+    console.log('Chat initialized successfully');
 });
 
-// Обработка закрытия страницы
+// Очистка при закрытии страницы
 window.addEventListener('beforeunload', function() {
-    clearInterval(refreshInterval);
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
 });
 
 // Обработка видимости страницы
@@ -725,6 +1094,7 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
+// Пометить все сообщения как прочитанные при загрузке чата
 document.addEventListener('DOMContentLoaded', function() {
     // Отправляем запрос на сервер чтобы пометить сообщения как прочитанные
     fetch("{% url 'mark_messages_read' chat.id %}", {

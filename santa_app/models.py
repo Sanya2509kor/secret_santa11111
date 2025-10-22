@@ -133,7 +133,7 @@ class Chat(models.Model):
             )
         except Chat.DoesNotExist:
             return None
-
+        
     def get_unread_count(self):
         """Возвращает количество непрочитанных сообщений в чате"""
         return Message.objects.filter(
@@ -144,7 +144,9 @@ class Chat(models.Model):
 class Message(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.TextField()
+    content = models.TextField(blank=True, null=True)  # Сделать необязательным
+    image = models.ImageField(upload_to='chat_images/', blank=True, null=True)
+    video = models.FileField(upload_to='chat_videos/', blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
     
@@ -154,4 +156,13 @@ class Message(models.Model):
         verbose_name_plural = 'Сообщения'
     
     def __str__(self):
-        return f"{self.sender.phone}: {self.content[:20]}"
+        return f"{self.sender.phone}: {self.content[:20] if self.content else 'Медиа'}"
+    
+    @property
+    def message_type(self):
+        if self.image:
+            return 'image'
+        elif self.video:
+            return 'video'
+        else:
+            return 'text'
