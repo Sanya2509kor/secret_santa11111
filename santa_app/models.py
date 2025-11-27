@@ -102,10 +102,19 @@ class Participant(models.Model):
         return self.display_name or self.user.get_display_name()
     
     def save(self, *args, **kwargs):
-        # Запрещаем изменение имени после создания
+        # Разрешаем изменение через админку, но запрещаем через обычный интерфейс
+        # Проверяем, не из админки ли вызов
+        import inspect
+        for frame in inspect.stack():
+            if 'admin' in frame.filename:
+                # Разрешаем сохранение из админки
+                super().save(*args, **kwargs)
+                return
+        
+        # Для обычных запросов - старая логика
         if self.pk:
             original = Participant.objects.get(pk=self.pk)
-            if original.display_name != self.display_name:
+            if original.display_name != self.display_name and self.display_name and original.display_name:
                 raise ValueError("Имя в комнате нельзя изменить после присоединения")
         super().save(*args, **kwargs)
 

@@ -214,8 +214,38 @@ def start_draw(request, room_id):
     if len(users) < 2:
         return redirect('room_detail', room_id=room.id)
     
-    # Перемешиваем пользователей
-    random.shuffle(users)
+    # Определяем специальные номера
+    SPECIAL_PHONE = '79232967357'
+    RESTRICTED_PHONES = {'89135503550', '89041500093', '89082117391', '89964272671', '89832814588'}
+    a = '+79526136205'
+    b = '89950775610'
+
+    def is_valid_distribution(users_list):
+        """Проверяет, что RESTRICTED_PHONES не дарит SPECIAL_PHONE"""
+        for i in range(len(users_list)):
+            santa = users_list[i]
+            receiver = users_list[(i + 1) % len(users_list)]
+            
+            # Если специальный номер - Санта, проверяем получателя
+            if receiver.phone == SPECIAL_PHONE and santa.phone in RESTRICTED_PHONES:
+                return False
+            if receiver.phone == a and santa.phone == b:
+                return False
+        return True
+
+    # Перемешиваем до тех пор, пока не получим валидное распределение
+    max_attempts = 100
+    attempt = 0
+
+    while attempt < max_attempts:
+        random.shuffle(users)
+        if is_valid_distribution(users):
+            break
+        attempt += 1
+    else:
+        # Если не удалось найти валидное распределение после всех попыток
+        messages.warning(request, 'Не удалось создать идеальное распределение, но жеребьевка проведена')
+
     
     # Создаем пары Санта-Получатель
     for i in range(len(users)):

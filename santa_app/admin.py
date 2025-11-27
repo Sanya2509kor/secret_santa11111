@@ -4,8 +4,8 @@ from .models import SupportMessage, User, Room, Participant, SantaPair, Chat, Me
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    list_display = ['phone', 'first_name', 'is_staff', 'date_joined']
-    search_fields = ['phone', 'first_name']
+    list_display = ['phone', 'is_staff', 'date_joined']
+    search_fields = ['phone']
     ordering = ['phone']
     
     fieldsets = (

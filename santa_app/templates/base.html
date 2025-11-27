@@ -805,8 +805,9 @@
                 const icon = chat.chat_type === 'my_santa' ? 'fa-gift' : 'fa-user';
                 const title = chat.chat_type === 'my_santa' ? 'Чат с моим Сантой' : 'Чат с моим получателем';
                 
+                // УБЕРИТЕ data-bs-dismiss="modal" и добавьте правильный URL
                 html += `
-                    <a href="${chat.url}" class="chat-list-item" data-bs-dismiss="modal">
+                    <a href="${chat.url}" class="chat-list-item">
                         <div class="chat-list-avatar ${avatarClass}">
                             <i class="fas ${icon}"></i>
                         </div>
@@ -821,6 +822,14 @@
             });
             
             chatsList.innerHTML = html;
+            
+            // Добавьте обработчик для автоматического закрытия модального окна
+            chatsList.querySelectorAll('.chat-list-item').forEach(link => {
+                link.addEventListener('click', function() {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('chatsModal'));
+                    modal.hide();
+                });
+            });
         }
 
         // Функция для показа сообщения "Нет чатов"
