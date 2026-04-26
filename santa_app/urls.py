@@ -19,4 +19,10 @@ urlpatterns = [
     path('chat/<int:chat_id>/mark_read/', views.mark_messages_read, name='mark_messages_read'),
     path('get_user_chats/', views.get_user_chats, name='get_user_chats'),
     path('room/<int:room_id>/toggle_participants/', views.toggle_participants_visibility, name='toggle_participants'),
+
+    path('security-question/setup/', views.security_question_setup, name='security_question_setup'),
+    path('password-reset/', views.password_reset_request, name='password_reset_request'),
+    path('password-reset/security-question/', views.security_question_verify, name='security_question_verify'),
+    path('password-reset/confirm/<str:token>/', views.password_reset_confirm, name='password_reset_confirm'),
+    path('password-reset/complete/', views.password_reset_complete, name='password_reset_complete'),
 ]

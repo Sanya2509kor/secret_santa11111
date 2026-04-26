@@ -7,10 +7,15 @@ from django.http import JsonResponse
 from django.db.models import Q
 import random
 from .models import Room, Participant, SantaPair, Chat, Message, SupportMessage, User
-from .forms import ParticipantNameForm, PhoneUserCreationForm, PhoneAuthenticationForm, RoomForm, JoinRoomForm, MessageForm, WishlistForm
+from .forms import ParticipantNameForm, PasswordResetForm, PasswordResetRequestForm, PhoneUserCreationForm, PhoneAuthenticationForm, RoomForm, JoinRoomForm, MessageForm, SecurityAnswerForm, SecurityQuestionSetupForm, WishlistForm
 from django.core.files.storage import FileSystemStorage
 import os
 from datetime import datetime, timedelta
+import secrets
+from django.utils import timezone
+from datetime import timedelta
+from .models import PasswordResetToken
+from .forms import SECURITY_QUESTIONS
 
 def home(request):
     if request.user.is_authenticated:
@@ -36,13 +41,17 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            messages.success(request, f'Добро пожаловать, {user.get_display_name()}!')
             return redirect('dashboard')
+        else:
+            messages.error(request, 'Неверный номер телефона или пароль. Попробуйте еще раз.')
     else:
         form = PhoneAuthenticationForm()
     return render(request, 'login.html', {'form': form})
 
 def logout_view(request):
     logout(request)
+    messages.success(request, f'До скорой встречи!')
     return redirect('home')
 
 @login_required
@@ -619,3 +628,183 @@ def toggle_participants_visibility(request, room_id):
         })
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+
+# Добавьте функции для работы с секретными вопросами
+@login_required
+def security_question_setup(request):
+    """
+    Настройка секретного вопроса для восстановления пароля
+    """
+    if request.method == 'POST':
+        form = SecurityQuestionSetupForm(request.POST, instance=request.user)
+        if form.is_valid():
+            # Получаем очищенные данные из формы
+            security_question = form.cleaned_data['security_question']
+            security_question_custom = form.cleaned_data.get('security_question_custom', '')
+            security_answer = form.cleaned_data['security_answer']
+            
+            # Если выбран кастомный вопрос, используем его
+            if security_question == 'custom' and security_question_custom:
+                # Сохраняем кастомный вопрос как текст
+                request.user.security_question = security_question_custom
+            else:
+                # Сохраняем текст стандартного вопроса
+                question_dict = dict(SECURITY_QUESTIONS)
+                request.user.security_question = question_dict.get(security_question)
+            
+            # Сохраняем ответ (в нижнем регистре)
+            request.user.security_answer = security_answer.lower().strip()
+            request.user.save()
+            
+            messages.success(request, 
+                '✅ Секретный вопрос успешно установлен! '
+                'Теперь вы можете использовать его для восстановления пароля.'
+            )
+            return redirect('dashboard')
+    else:
+        form = SecurityQuestionSetupForm(instance=request.user)
+    
+    # Убедитесь, что choices правильно устанавливаются
+    form.fields['security_question'].choices = SECURITY_QUESTIONS
+    
+    return render(request, 'security_question_setup.html', {
+        'form': form,
+    })
+
+def password_reset_request(request):
+    """
+    Первый шаг - запрос сброса пароля по номеру телефона
+    """
+    if request.method == 'POST':
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            phone = form.cleaned_data['phone']
+            try:
+                user = User.objects.get(phone=phone)
+                
+                # Проверяем, установлен ли секретный вопрос
+                if not user.security_question or not user.security_answer:
+                    messages.error(request, 
+                        '❌ Для вашего аккаунта не установлен секретный вопрос. '
+                        'Обратитесь в поддержку для восстановления пароля.'
+                    )
+                    return redirect('support')
+                
+                # Сохраняем информацию в сессии
+                request.session['password_reset_phone'] = phone
+                request.session['password_reset_user_id'] = user.id
+                
+                messages.info(request, 
+                    'Ответьте на ваш секретный вопрос для подтверждения личности.'
+                )
+                return redirect('security_question_verify')
+                    
+            except User.DoesNotExist:
+                messages.error(request, 'Пользователь с таким номером телефона не найден.')
+    else:
+        form = PasswordResetRequestForm()
+    
+    return render(request, 'password_reset_request.html', {'form': form})
+
+def security_question_verify(request):
+    """
+    Второй шаг - ответ на секретный вопрос
+    """
+    # Проверяем, что пользователь прошел первый шаг
+    phone = request.session.get('password_reset_phone')
+    user_id = request.session.get('password_reset_user_id')
+    
+    if not all([phone, user_id]):
+        messages.error(request, 'Сессия истекла. Начните процесс восстановления заново.')
+        return redirect('password_reset_request')
+    
+    try:
+        user = User.objects.get(id=user_id, phone=phone)
+        
+        if request.method == 'POST':
+            form = SecurityAnswerForm(request.POST, user=user)
+            if form.is_valid():
+                # Ответ верный, создаем токен для сброса пароля
+                token = secrets.token_urlsafe(32)
+                expires_at = timezone.now() + timedelta(hours=24)
+                
+                # Делаем недействительными предыдущие токены
+                PasswordResetToken.objects.filter(user=user).update(is_used=True)
+                
+                # Создаем новый токен
+                PasswordResetToken.objects.create(
+                    user=user,
+                    token=token,
+                    expires_at=expires_at
+                )
+                
+                # Очищаем сессию
+                del request.session['password_reset_phone']
+                del request.session['password_reset_user_id']
+                
+                # Перенаправляем на страницу сброса пароля
+                return redirect('password_reset_confirm', token=token)
+        else:
+            form = SecurityAnswerForm(user=user)
+        
+        # Маскируем вопрос для безопасности
+        masked_question = user.security_question
+        # if len(masked_question) > 3:
+        #     masked_question = masked_question[:3] + '...' + masked_question[-3:] if len(masked_question) > 6 else masked_question
+        
+        return render(request, 'security_question_verify.html', {
+            'form': form,
+            'user': user,
+            'masked_question': masked_question
+        })
+        
+    except User.DoesNotExist:
+        messages.error(request, 'Ошибка сессии. Начните процесс восстановления заново.')
+        return redirect('password_reset_request')
+
+def password_reset_confirm(request, token):
+    """
+    Третий шаг - установка нового пароля
+    """
+    try:
+        reset_token = PasswordResetToken.objects.get(token=token, is_used=False)
+        if not reset_token.is_valid():
+            messages.error(request, 'Ссылка для сброса пароля недействительна или устарела.')
+            return redirect('password_reset_request')
+        
+        if request.method == 'POST':
+            form = PasswordResetForm(request.POST)
+            if form.is_valid():
+                # Устанавливаем новый пароль
+                user = reset_token.user
+                new_password = form.cleaned_data['new_password1']
+                user.set_password(new_password)
+                user.save()
+                
+                # Помечаем токен как использованный
+                reset_token.is_used = True
+                reset_token.save()
+                
+                messages.success(request, '✅ Пароль успешно изменен! Теперь вы можете войти с новым паролем.')
+                return redirect('password_reset_complete')
+        else:
+            form = PasswordResetForm()
+        
+        return render(request, 'password_reset_confirm.html', {
+            'form': form,
+            'token': token,
+            'user': reset_token.user
+        })
+        
+    except PasswordResetToken.DoesNotExist:
+        messages.error(request, 'Ссылка для сброса пароля недействительна.')
+        return redirect('password_reset_request')
+
+def password_reset_complete(request):
+    """
+    Завершение процесса сброса пароля
+    """
+    return render(request, 'password_reset_complete.html')

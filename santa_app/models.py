@@ -30,6 +30,21 @@ class User(AbstractUser):
     wishlist = models.TextField(blank=True, null=True, verbose_name='Список желаний')
     last_name = models.CharField(max_length=30, blank=True, null=True)  # Сделать необязательным
     display_name = models.CharField(max_length=30, blank=True, null=True, verbose_name='Отображаемое имя')
+    # Секретный вопрос для восстановления пароля
+    security_question = models.CharField(
+        max_length=200, 
+        blank=True, 
+        null=True,
+        verbose_name='Секретный вопрос',
+        help_text='Выберите вопрос, ответ на который знаете только вы'
+    )
+    security_answer = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True,
+        verbose_name='Ответ на секретный вопрос',
+        help_text='Ответ должен быть запоминающимся'
+    )
     
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []  # Убрать email из обязательных
@@ -48,6 +63,20 @@ class User(AbstractUser):
     
     def get_short_name(self):
         return self.first_name or self.phone
+    
+    def set_security_qa(self, question, answer):
+        """Установка секретного вопроса и ответа"""
+        self.security_question = question
+        # Сохраняем ответ в нижнем регистре для case-insensitive проверки
+        self.security_answer = answer.strip().lower()
+        self.save()
+    
+    def verify_security_answer(self, answer):
+        """Проверка ответа на секретный вопрос"""
+        if not self.security_answer:
+            return False
+        return self.security_answer == answer.strip().lower()
+    
 
 class Room(models.Model):
     name = models.CharField(max_length=100)
@@ -223,3 +252,23 @@ class SupportMessage(models.Model):
     
     def __str__(self):
         return f"Сообщение от {self.email or 'анонима'} ({self.created_at.strftime('%d.%m.%Y %H:%M')})"
+    
+
+# Добавьте в конец models.py
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    class Meta:
+        verbose_name = 'Токен сброса пароля'
+        verbose_name_plural = 'Токены сброса пароля'
+    
+    def __str__(self):
+        return f"Token for {self.user.phone} (expires: {self.expires_at})"
+    
+    def is_valid(self):
+        from django.utils import timezone
+        return not self.is_used and timezone.now() < self.expires_at

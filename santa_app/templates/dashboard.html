@@ -52,6 +52,56 @@
     </div>
     
     <div class="col-lg-4">
+        <!-- В правой колонке dashboard.html, после формы создания комнаты -->
+        <div class="card mb-4 card-elevated">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>Безопасность аккаунта
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-question-circle fa-2x text-info"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Секретный вопрос</h6>
+                        <p class="text-muted small mb-0">
+                            {% if user.security_question %}
+                            <span class="text-success">
+                                <i class="fas fa-check-circle me-1"></i>Настроен
+                            </span>
+                            {% else %}
+                            <span class="text-warning">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Не настроен
+                            </span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <p class="small text-muted mb-3">
+                    Настройте секретный вопрос для восстановления пароля, если забудете его.
+                </p>
+                
+                <a href="{% url 'security_question_setup' %}" class="btn btn-info w-100 btn-sm btn-shine">
+                    <i class="fas fa-cog me-1"></i>
+                    {% if user.security_question %}
+                    Изменить секретный вопрос
+                    {% else %}
+                    Настроить секретный вопрос
+                    {% endif %}
+                </a>
+                
+                {% if not user.security_question %}
+                <div class="mt-2 p-2 bg-warning text-dark rounded small">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>Рекомендуем настроить</strong> для возможности восстановления пароля
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
         <div class="card card-elevated">
             <div class="card-header bg-info text-white">
                 <h5 class="card-title mb-0"><i class="fas fa-sign-in-alt me-2"></i>Присоединиться</h5>

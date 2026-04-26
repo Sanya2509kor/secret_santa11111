@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card card-elevated">
+            <div class="card-header bg-info text-white">
+                <h4 class="card-title mb-0 text-center">
+                    <i class="fas fa-shield-alt me-2"></i>Подтверждение личности
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info">
+                    <i class="fas fa-user-shield me-2"></i>
+                    Ответьте на ваш секретный вопрос для подтверждения.
+                </div>
+                
+                <div class="text-center mb-4">
+                    <div class="bg-light rounded p-3">
+                        <small class="text-muted">Восстановление для:</small>
+                        <br>
+                        <strong>{{ user.get_display_name }}</strong>
+                        <br>
+                        <small class="text-muted">{{ user.phone }}</small>
+                    </div>
+                </div>
+                
+                <div class="mb-4 p-3 bg-warning text-dark rounded">
+                    <h6 class="mb-2">🔒 Ваш секретный вопрос:</h6>
+                    <p class="mb-0 fw-semibold">{{ user.security_question }}</p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="id_security_answer" class="form-label fw-semibold">Ваш ответ</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-key text-muted"></i>
+                            </span>
+                            {{ form.security_answer }}
+                        </div>
+                        {% if form.security_answer.errors %}
+                        <div class="text-danger small mt-2">
+                            {% for error in form.security_answer.errors %}
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-circle me-1"></i>
+                                <span>{{ error }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Регистр букв не имеет значения</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-info w-100 btn-shine py-2 fw-semibold text-white">
+                        <i class="fas fa-check me-2"></i>Подтвердить ответ
+                    </button>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        Не помните ответ? 
+                        <a href="{% url 'password_reset_request' %}" class="text-decoration-none">
+                            Начать заново
+                        </a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.input-group-text {
+    border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm) !important;
+}
+
+#id_security_answer {
+    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0 !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const answerInput = document.getElementById('id_security_answer');
+    if (answerInput) {
+        answerInput.focus();
+    }
+});
+</script>
+{% endblock %}
