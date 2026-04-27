@@ -1,0 +1,644 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% csrf_token %}
+<style>
+    .game-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .player-card {
+        background: #fff;
+        border-radius: 15px;
+        padding: 15px;
+        margin: 10px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid #e0e0e0;
+        color: #333;
+        font-weight: 500;
+    }
+    
+    .player-card:hover {
+        border-color: #D4AF37;
+        transform: translateX(5px);
+        background: #f8f6f4;
+    }
+    
+    .player-card.selected {
+        border-color: #8B4513;
+        background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+        color: white;
+    }
+    
+    .player-card.dead {
+        opacity: 0.5;
+        background: #f0f0f0;
+    }
+    
+    .stage-indicator {
+        background: linear-gradient(135deg, #8B4513 0%, #D4AF37 100%);
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+        color: white;
+    }
+    
+    .game-log {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        max-height: 300px;
+        overflow-y: auto;
+        margin-top: 20px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .log-entry {
+        padding: 8px;
+        border-left: 3px solid #D4AF37;
+        margin: 5px 0;
+        font-size: 0.9rem;
+        color: #333;
+        background: white;
+        border-radius: 4px;
+    }
+    
+    .role-reveal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 30px 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        z-index: 1000;
+        text-align: center;
+        color: #333;
+        min-width: 280px;
+    }
+    
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.8);
+        z-index: 999;
+    }
+    
+    /* Стили для кнопок на светлом фоне */
+    .btn-role {
+        background: white;
+        color: #333;
+        border: 2px solid #e0e0e0;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin: 5px 0;
+    }
+    
+    .btn-role:hover {
+        background: #f8f6f4;
+        border-color: #8B4513;
+        transform: translateY(-2px);
+    }
+    
+    .btn-role:active {
+        transform: translateY(0);
+    }
+    
+    /* Стили для секций */
+    .section-title {
+        color: #333;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+    }
+    
+    .instruction-text {
+        color: #666;
+        margin-bottom: 20px;
+    }
+    
+    /* Тёмная тема только для ночных фаз */
+    .night-mode {
+        background: #1a1a1a;
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+    }
+    
+    .night-mode .section-title {
+        color: white;
+    }
+    
+    .night-mode .instruction-text {
+        color: #aaa;
+    }
+</style>
+
+<div class="game-container">
+    <div class="stage-indicator">
+        <h3 id="stageName">{{ game.get_stage_display }}</h3>
+        <small>Код игры: {{ game.code|slice:":8" }}</small>
+    </div>
+
+    <div id="gameContent">
+        <!-- Динамически обновляется через JS -->
+    </div>
+
+    <div class="game-log mt-4" id="gameLog">
+        <h6 style="color: #333;">📋 Ход игры</h6>
+        <div id="logEntries"></div>
+    </div>
+</div>
+
+<script>
+const gameCode = '{{ game.code }}';
+let currentStage = '{{ game.stage }}';
+let gameData = null;
+let selectedPlayer = null;
+
+// Функция для получения CSRF-токена
+function getCSRFToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    
+    if (!cookieValue) {
+        const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfElement) {
+            cookieValue = csrfElement.value;
+        }
+    }
+    
+    return cookieValue;
+}
+
+// Обновление состояния игры
+function updateGame() {
+    fetch(`/mafia/${gameCode}/api/`)
+        .then(r => r.json())
+        .then(data => {
+            gameData = data;
+            currentStage = data.stage;
+            document.getElementById('stageName').textContent = data.stage_name;
+            renderGameContent();
+            updateLog(data.game_log);
+        })
+        .catch(error => {
+            console.error('Ошибка обновления игры:', error);
+        });
+}
+
+// Отрисовка контента в зависимости от стадии
+function renderGameContent() {
+    const container = document.getElementById('gameContent');
+    if (!container) return;
+    
+    switch(currentStage) {
+        case 'role_distribution':
+            renderRoleDistribution(container);
+            break;
+        case 'night_mafia':
+        case 'night_don':
+        case 'night_sheriff':
+        case 'night_doctor':
+            renderNightAction(container);
+            break;
+        case 'night_results':
+            renderNightResults(container);
+            break;
+        case 'day_intro':
+        case 'day_speech':
+            renderDayIntro(container);
+            break;
+        case 'day_voting':
+            renderDayVoting(container);
+            break;
+        case 'day_voting_results':
+            renderDayResults(container);
+            break;
+        case 'game_over':
+            renderGameOver(container);
+            break;
+        default:
+            container.innerHTML = '<p style="color: #333;">Ожидание...</p>';
+    }
+}
+
+// Показать раздачу ролей
+function renderRoleDistribution(container) {
+    let html = '';
+    html += '<h5 class="section-title text-center mb-3">🎭 Раздача ролей</h5>';
+    html += '<p class="instruction-text text-center">Передавайте телефон игрокам по очереди</p>';
+    html += '<div class="d-grid gap-2">';
+    
+    if (gameData && gameData.players) {
+        gameData.players.forEach((player, index) => {
+            html += '<button class="btn-role" onclick="showRole(' + index + ')">';
+            html += '👤 Показать роль для <strong>' + player.name + '</strong>';
+            html += '</button>';
+        });
+    }
+    
+    html += '</div>';
+    html += '<button class="btn btn-success btn-lg w-100 mt-4" onclick="nextStage()" style="padding: 15px; font-size: 1.2rem;">';
+    html += 'Все посмотрели роли →';
+    html += '</button>';
+    
+    container.innerHTML = html;
+}
+
+// Ночное действие
+function renderNightAction(container) {
+    const titles = {
+        'night_mafia': '🔪 Мафия выбирает жертву',
+        'night_don': '👑 Дон ищет Шерифа',
+        'night_sheriff': '🔍 Шериф проверяет игрока',
+        'night_doctor': '💊 Доктор выбирает кого лечить'
+    };
+    
+    const instructions = {
+        'night_mafia': 'Мафия, выберите кого убить этой ночью',
+        'night_don': 'Дон, выберите игрока для проверки',
+        'night_sheriff': 'Шериф, выберите игрока для проверки',
+        'night_doctor': 'Доктор, выберите кого вылечить'
+    };
+    
+    let html = '<div class="night-mode">';
+    html += '<h5 class="section-title text-center mb-3">' + (titles[currentStage] || 'Ночное действие') + '</h5>';
+    html += '<p class="instruction-text text-center">' + (instructions[currentStage] || '') + '</p>';
+    html += '<p class="text-center mb-2" style="color: #aaa;">Живые игроки:</p>';
+    
+    if (gameData && gameData.alive_players) {
+        gameData.alive_players.forEach(player => {
+            html += '<div class="player-card night-card" onclick="selectPlayer(\'' + player.name + '\', this)" id="player-' + player.name + '">';
+            html += player.icon + ' ' + player.name;
+            html += '</div>';
+        });
+    }
+    
+    html += '<button class="btn btn-primary btn-lg w-100 mt-3" id="confirmBtn" disabled onclick="confirmAction()">';
+    html += 'Подтвердить выбор ✓';
+    html += '</button>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Результаты ночи
+function renderNightResults(container) {
+    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
+    html += '<h5 class="section-title text-center mb-3">🌅 Утро в городе</h5>';
+    html += '<div class="mb-4">';
+    
+    if (gameData && gameData.game_log) {
+        const nightLogs = gameData.game_log.slice(-5);
+        nightLogs.forEach(function(log) {
+            html += '<p class="h6 mb-2" style="color: #333;">' + log.message + '</p>';
+        });
+    }
+    
+    html += '</div>';
+    
+    // Список живых и мёртвых
+    if (gameData && gameData.players) {
+        const alivePlayers = gameData.players.filter(function(p) { return p.alive; });
+        const deadPlayers = gameData.players.filter(function(p) { return !p.alive; });
+        
+        if (alivePlayers.length > 0) {
+            html += '<p class="mb-2" style="color: #2e7d32;"><strong>❤️ В игре:</strong></p>';
+            alivePlayers.forEach(function(p) {
+                html += '<div style="padding: 5px; color: #333;">' + p.icon + ' ' + p.name + '</div>';
+            });
+        }
+        
+        if (deadPlayers.length > 0) {
+            html += '<p class="mb-2 mt-3" style="color: #c62828;"><strong>💀 Выбыли:</strong></p>';
+            deadPlayers.forEach(function(p) {
+                html += '<div style="padding: 5px; color: #666;">' + p.icon + ' ' + p.name + '</div>';
+            });
+        }
+    }
+    
+    if (gameData && !gameData.is_game_over) {
+        html += '<button class="btn btn-success btn-lg w-100 mt-3" onclick="nextStage()" style="font-size: 1.2rem;">';
+        html += 'Начать дневное обсуждение ☀️';
+        html += '</button>';
+    }
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Дневное обсуждение
+function renderDayIntro(container) {
+    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
+    html += '<h5 class="section-title text-center mb-3">☀️ День в городе</h5>';
+    html += '<p class="instruction-text text-center">Время обсуждения</p>';
+    
+    if (gameData && gameData.alive_players) {
+        html += '<div class="d-grid gap-2">';
+        gameData.alive_players.forEach(function(player) {
+            html += '<div class="player-card">' + player.icon + ' ' + player.name + '</div>';
+        });
+        html += '</div>';
+    }
+    
+    html += '<button class="btn btn-warning btn-lg w-100 mt-3" onclick="nextStage()" style="font-size: 1.2rem;">';
+    html += 'Начать голосование 🗳️';
+    html += '</button>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Дневное голосование
+function renderDayVoting(container) {
+    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
+    html += '<h5 class="section-title text-center mb-3">🗳️ Голосование</h5>';
+    html += '<p class="instruction-text text-center">Выберите кого выгнать из города:</p>';
+    
+    if (gameData && gameData.alive_players) {
+        gameData.alive_players.forEach(function(player) {
+            html += '<div class="player-card" onclick="selectPlayer(\'' + player.name + '\', this)" id="player-' + player.name + '">';
+            html += player.icon + ' ' + player.name;
+            html += '</div>';
+        });
+    }
+    
+    html += '<div class="player-card" onclick="selectPlayer(\'воздержался\', this)" id="player-воздержался" style="border-style: dashed;">';
+    html += '🤝 Воздержаться (пропустить)';
+    html += '</div>';
+    
+    html += '<button class="btn btn-danger btn-lg w-100 mt-3" id="confirmBtn" disabled onclick="confirmDayVote()">';
+    html += 'Выгнать из города 👋';
+    html += '</button>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Результаты дня
+function renderDayResults(container) {
+    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
+    html += '<h5 class="section-title text-center mb-3">📊 Итоги голосования</h5>';
+    
+    if (gameData && gameData.game_log) {
+        const dayLogs = gameData.game_log.slice(-3);
+        dayLogs.forEach(function(log) {
+            html += '<p class="h5 text-center" style="color: #333;">' + log.message + '</p>';
+        });
+    }
+    
+    if (gameData && gameData.is_game_over) {
+        html += '<button class="btn btn-primary btn-lg w-100 mt-3" onclick="location.reload()" style="font-size: 1.2rem;">';
+        html += 'Завершить игру';
+        html += '</button>';
+    } else {
+        html += '<button class="btn btn-success btn-lg w-100 mt-3" onclick="nextStage()" style="font-size: 1.2rem;">';
+        html += 'Следующая ночь 🌙';
+        html += '</button>';
+    }
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Конец игры
+function renderGameOver(container) {
+    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
+    html += '<div class="text-center">';
+    html += '<h1 class="mb-4" style="font-size: 3rem;">🏁</h1>';
+    html += '<h2 class="mb-4" style="color: #333;">Игра окончена!</h2>';
+    
+    if (gameData && gameData.game_log && gameData.game_log.length > 0) {
+        const lastLog = gameData.game_log[gameData.game_log.length - 1];
+        const isWin = lastLog.message.indexOf('победили') !== -1;
+        const bgColor = isWin ? '#e8f5e9' : '#ffebee';
+        const textColor = isWin ? '#2e7d32' : '#c62828';
+        
+        html += '<div style="background: ' + bgColor + '; padding: 20px; border-radius: 15px; margin: 20px 0;">';
+        html += '<p class="h4 mb-0" style="color: ' + textColor + ';">' + lastLog.message + '</p>';
+        html += '</div>';
+    }
+    
+    html += '<h5 class="mb-3 mt-4" style="color: #333;">Итоговый состав:</h5>';
+    
+    if (gameData && gameData.players) {
+        gameData.players.forEach(function(player) {
+            const bgColor = player.alive ? '#e8f5e9' : '#ffebee';
+            const statusIcon = player.alive ? '❤️' : '💀';
+            const statusText = player.alive ? 'Выжил' : 'Убит';
+            
+            html += '<div style="background: ' + bgColor + '; padding: 12px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">';
+            html += '<span style="color: #333;">' + player.icon + ' <strong>' + player.name + '</strong> - ' + player.role_name + '</span>';
+            html += '<span>' + statusIcon + ' ' + statusText + '</span>';
+            html += '</div>';
+        });
+    }
+    
+    html += '<div class="d-grid gap-2 mt-4">';
+    html += '<a href="/mafia/" class="btn btn-primary btn-lg" style="font-size: 1.2rem;">🔄 Новая игра</a>';
+    html += '<button class="btn btn-outline-secondary btn-lg" onclick="location.reload()" style="font-size: 1.2rem;">📋 Обновить</button>';
+    html += '</div>';
+    
+    html += '</div>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
+// Вспомогательные функции
+function showRole(index) {
+    fetch('/mafia/' + gameCode + '/role/' + index + '/')
+        .then(r => r.json())
+        .then(data => {
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            overlay.onclick = closeRoleReveal;
+            
+            const roleReveal = document.createElement('div');
+            roleReveal.className = 'role-reveal';
+            roleReveal.id = 'roleReveal';
+            roleReveal.innerHTML = '<h2 class="mb-3" style="font-size: 4rem;">' + data.icon + '</h2>' +
+                '<h2 style="color: #333; margin-bottom: 10px;">' + data.name + '</h2>' +
+                '<p class="h4" style="color: #8B4513; font-weight: bold;">' + data.role + '</p>' +
+                '<small class="text-muted mt-3 d-block">Нажмите в любом месте чтобы закрыть</small>';
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(roleReveal);
+        });
+}
+
+function closeRoleReveal() {
+    const overlay = document.querySelector('.overlay');
+    const roleReveal = document.getElementById('roleReveal');
+    if (overlay) document.body.removeChild(overlay);
+    if (roleReveal) document.body.removeChild(roleReveal);
+}
+
+function selectPlayer(name, element) {
+    document.querySelectorAll('.player-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    element.classList.add('selected');
+    selectedPlayer = name;
+    
+    const confirmBtn = document.getElementById('confirmBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.style.opacity = '1';
+    }
+}
+
+function confirmAction() {
+    if (!selectedPlayer) {
+        alert('Выберите игрока!');
+        return;
+    }
+    
+    let action = '';
+    switch(currentStage) {
+        case 'night_mafia': action = 'mafia_kill'; break;
+        case 'night_sheriff': action = 'sheriff_check'; break;
+        case 'night_doctor': action = 'doctor_heal'; break;
+        case 'night_don': action = 'don_check'; break;
+        default: return;
+    }
+    
+    const csrfToken = getCSRFToken();
+    
+    fetch('/mafia/' + gameCode + '/action/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            action: action,
+            target: selectedPlayer,
+            actor: 'host'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            selectedPlayer = null;
+            nextStage();
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при выполнении действия:', error);
+    });
+}
+
+function confirmDayVote() {
+    if (!selectedPlayer) {
+        alert('Выберите игрока или "воздержаться"!');
+        return;
+    }
+    
+    const csrfToken = getCSRFToken();
+    
+    fetch('/mafia/' + gameCode + '/action/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            action: 'day_vote',
+            target: selectedPlayer,
+            actor: 'host'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            selectedPlayer = null;
+            nextStage();
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при голосовании:', error);
+    });
+}
+
+function nextStage() {
+    console.log('Переход к следующей стадии...');
+    
+    const csrfToken = getCSRFToken();
+    
+    if (!csrfToken) {
+        console.error('CSRF токен не найден!');
+        alert('Ошибка безопасности. Обновите страницу.');
+        return;
+    }
+    
+    fetch('/mafia/' + gameCode + '/next-stage/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        console.log('Результат перехода:', data);
+        selectedPlayer = null;
+        updateGame();
+    })
+    .catch(error => {
+        console.error('Ошибка при переходе на следующую стадию:', error);
+    });
+}
+
+function updateLog(logs) {
+    const logContainer = document.getElementById('logEntries');
+    if (!logContainer) return;
+    
+    if (logs && logs.length > 0) {
+        const recentLogs = gameData && gameData.is_game_over ? logs.slice(-10) : logs.slice(-6);
+        let logHtml = '';
+        recentLogs.forEach(function(log) {
+            logHtml += '<div class="log-entry">' + log.time + ' - ' + log.message + '</div>';
+        });
+        logContainer.innerHTML = logHtml;
+    } else {
+        logContainer.innerHTML = '<p style="color: #999;">Пока событий нет</p>';
+    }
+    
+    if (logContainer) {
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Страница загружена, запуск игры');
+    updateGame();
+});
+
+// Автообновление
+setInterval(updateGame, 5000);
+</script>
+{% endblock %}

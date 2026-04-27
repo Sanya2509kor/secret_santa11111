@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .mafia-setup {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .player-input {
+        border-left: 4px solid #8B4513;
+        transition: all 0.3s ease;
+    }
+    
+    .player-input:hover {
+        border-left-color: #D4AF37;
+        transform: translateX(5px);
+    }
+    
+    .role-select {
+        max-width: 200px;
+    }
+    
+    .role-count {
+        font-size: 0.9rem;
+        padding: 5px 10px;
+        border-radius: 15px;
+        background: rgba(139, 69, 19, 0.1);
+    }
+</style>
+
+<div class="mafia-setup">
+    <div class="text-center mb-4">
+        <h1 class="display-4 fw-bold">🔪 Мафия</h1>
+        <p class="lead">Настройка новой игры</p>
+    </div>
+
+    {% if active_games %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">🔄 Активные игры</h5>
+        </div>
+        <div class="card-body">
+            {% for game in active_games %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <strong>Игра {{ game.code|slice:":8" }}</strong>
+                    <small class="text-muted ms-2">{{ game.get_stage_display }}</small>
+                </div>
+                <a href="{% url 'mafia_host' game.code %}" class="btn btn-primary btn-sm">Продолжить</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">⚙️ Новая игра</h5>
+        </div>
+        <div class="card-body">
+            <form id="gameSetupForm">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Количество игроков</label>
+                    <input type="number" class="form-control" id="playerCount" min="4" max="15" value="6">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Распределение ролей</label>
+                    <div id="roleDistribution">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>🔪 Мафия</span>
+                            <input type="number" class="form-control role-select" id="mafiaCount" min="1" max="5" value="2">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>👑 Дон мафии</span>
+                            <input type="number" class="form-control role-select" id="donCount" min="0" max="1" value="1">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>🔍 Шериф</span>
+                            <input type="number" class="form-control role-select" id="sheriffCount" min="0" max="1" value="1">
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>💊 Доктор</span>
+                            <input type="number" class="form-control role-select" id="doctorCount" min="0" max="1" value="0">
+                        </div>
+                    </div>
+                    <small class="text-muted">Остальные автоматически станут мирными жителями</small>
+                </div>
+
+                <div id="playerNames" class="mb-3"></div>
+
+                <button type="button" class="btn btn-primary btn-lg w-100" onclick="generatePlayerFields()">
+                    Сгенерировать поля для игроков
+                </button>
+                
+                <button type="button" class="btn btn-success btn-lg w-100 mt-3 d-none" id="startGameBtn" onclick="startGame()">
+                    Начать игру 🎮
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function generatePlayerFields() {
+    const count = parseInt(document.getElementById('playerCount').value);
+    const container = document.getElementById('playerNames');
+    container.innerHTML = '';
+    
+    for (let i = 0; i < count; i++) {
+        container.innerHTML += `
+            <div class="player-input card mb-2 p-3">
+                <input type="text" class="form-control" placeholder="Имя игрока ${i + 1}" id="playerName${i}">
+            </div>
+        `;
+    }
+    
+    document.getElementById('startGameBtn').classList.remove('d-none');
+}
+
+function startGame() {
+    const playerCount = parseInt(document.getElementById('playerCount').value);
+    const mafiaCount = parseInt(document.getElementById('mafiaCount').value);
+    const donCount = parseInt(document.getElementById('donCount').value);
+    const sheriffCount = parseInt(document.getElementById('sheriffCount').value);
+    const doctorCount = parseInt(document.getElementById('doctorCount').value);
+    
+    // Проверка на количество ролей
+    const totalRoles = mafiaCount + donCount + sheriffCount + doctorCount;
+    if (totalRoles > playerCount) {
+        alert('Слишком много ролей для такого количества игроков!');
+        return;
+    }
+    
+    // Собираем имена игроков
+    const players = [];
+    for (let i = 0; i < playerCount; i++) {
+        const nameInput = document.getElementById(`playerName${i}`);
+        if (!nameInput || !nameInput.value.trim()) {
+            alert(`Введите имя игрока ${i + 1}`);
+            return;
+        }
+        players.push({name: nameInput.value.trim()});
+    }
+    
+    // Создаём массив ролей
+    let roles = [];
+    for (let i = 0; i < mafiaCount; i++) roles.push('mafia');
+    for (let i = 0; i < donCount; i++) roles.push('don');
+    for (let i = 0; i < sheriffCount; i++) roles.push('sheriff');
+    for (let i = 0; i < doctorCount; i++) roles.push('doctor');
+    
+    // Добавляем мирных жителей
+    const civilianCount = playerCount - roles.length;
+    for (let i = 0; i < civilianCount; i++) roles.push('civilian');
+    
+    // Перемешиваем роли
+    for (let i = roles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [roles[i], roles[j]] = [roles[j], roles[i]];
+    }
+    
+    // Назначаем роли игрокам
+    players.forEach((player, index) => {
+        player.role = roles[index];
+    });
+    
+    // Отправляем на сервер
+    fetch('/mafia/create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ players: players })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        }
+    });
+}
+</script>
+{% endblock %}
