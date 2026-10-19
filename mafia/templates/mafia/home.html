@@ -3,51 +3,247 @@
 {% block content %}
 <style>
     .mafia-setup {
-        max-width: 800px;
+        max-width: 640px;
         margin: 0 auto;
+        padding: 0 10px;
     }
-    
+
+    /* Счётчики */
+    .counter-group {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--surface-2);
+        padding: 12px 15px;
+        border-radius: 60px;
+        margin-bottom: 10px;
+        border: 1px solid var(--border);
+        transition: all 0.2s ease;
+    }
+
+    .counter-group:hover {
+        border-color: var(--border-2);
+    }
+
+    .counter-label {
+        font-size: 1rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text);
+    }
+
+    .counter-label span:first-child {
+        font-size: 1.4rem;
+    }
+
+    .counter-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--surface-3);
+        border-radius: 40px;
+        padding: 5px;
+        border: 1px solid var(--border);
+    }
+
+    .counter-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 40px;
+        border: none;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .counter-btn.minus {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .counter-btn.minus:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+
+    .counter-btn.plus {
+        background: rgba(74, 222, 128, 0.15);
+        color: var(--emerald);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+    }
+
+    .counter-btn.plus:hover {
+        background: rgba(74, 222, 128, 0.25);
+    }
+
+    .counter-btn:active {
+        transform: scale(0.92);
+    }
+
+    .counter-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        min-width: 40px;
+        text-align: center;
+        color: var(--gold);
+    }
+
+    /* Секция ролей */
+    .roles-section {
+        background: var(--surface);
+        border-radius: 24px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+
+    .roles-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 15px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* Поля игроков */
+    .players-section {
+        margin: 20px 0;
+    }
+
     .player-input {
-        border-left: 4px solid #8B4513;
-        transition: all 0.3s ease;
+        background: var(--surface-2);
+        border-radius: 60px;
+        padding: 12px 20px;
+        margin-bottom: 10px;
+        border: 1px solid var(--border);
+        transition: all 0.2s;
     }
-    
-    .player-input:hover {
-        border-left-color: #D4AF37;
-        transform: translateX(5px);
+
+    .player-input:focus-within {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(232, 201, 100, 0.15);
     }
-    
-    .role-select {
-        max-width: 200px;
+
+    .player-input input {
+        width: 100%;
+        border: none;
+        outline: none;
+        font-size: 1rem;
+        background: transparent;
+        color: var(--text);
+        font-family: inherit;
     }
-    
-    .role-count {
-        font-size: 0.9rem;
-        padding: 5px 10px;
-        border-radius: 15px;
-        background: rgba(139, 69, 19, 0.1);
+
+    .player-input input::placeholder {
+        color: var(--text-dim);
+    }
+
+    /* Кнопки */
+    .btn-large {
+        padding: 16px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        border-radius: 60px;
+        margin: 8px 0;
+    }
+
+    /* Предупреждения */
+    .warning-badge {
+        background: rgba(251, 191, 36, 0.12);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 20px;
+        padding: 12px 15px;
+        font-size: 0.85rem;
+        color: var(--amber);
+        margin: 10px 0;
+    }
+
+    .warning-badge.info {
+        background: rgba(96, 165, 250, 0.12);
+        border-color: rgba(96, 165, 250, 0.3);
+        color: #93c5fd;
+    }
+
+    /* Скролл игроков */
+    .players-scroll {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 5px;
+    }
+
+    /* Активные игры */
+    .active-game-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        background: var(--surface-2);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        margin-bottom: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .active-game-item:hover {
+        border-color: var(--border-2);
+        transform: translateX(3px);
+    }
+
+    /* Адаптив */
+    @media (max-width: 480px) {
+        .counter-group {
+            padding: 10px 12px;
+        }
+        .counter-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 1.3rem;
+        }
+        .counter-value {
+            font-size: 1.1rem;
+            min-width: 35px;
+        }
+        .counter-label {
+            font-size: 0.9rem;
+        }
+        .roles-section {
+            padding: 15px;
+        }
     }
 </style>
 
 <div class="mafia-setup">
-    <div class="text-center mb-4">
-        <h1 class="display-4 fw-bold">🔪 Мафия</h1>
-        <p class="lead">Настройка новой игры</p>
+    <div class="text-center mb-4 fade-in">
+        <h1 class="display-font" style="font-size: clamp(2rem, 6vw, 3rem);">🔪 Мафия</h1>
+        <p style="color: var(--text-muted);">Настройка новой игры</p>
     </div>
 
     {% if active_games %}
     <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">🔄 Активные игры</h5>
+        <div class="card__header">
+            <h5><i class="fas fa-play-circle" style="color: var(--gold);"></i>Активные игры</h5>
         </div>
-        <div class="card-body">
+        <div class="card__body">
             {% for game in active_games %}
-            <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="active-game-item">
                 <div>
-                    <strong>Игра {{ game.code|slice:":8" }}</strong>
-                    <small class="text-muted ms-2">{{ game.get_stage_display }}</small>
+                    <strong style="color: var(--text);">Игра {{ game.code|slice:":6" }}</strong>
+                    <div style="color: var(--text-muted); font-size: 0.85rem;">{{ game.get_stage_display }}</div>
                 </div>
-                <a href="{% url 'mafia_host' game.code %}" class="btn btn-primary btn-sm">Продолжить</a>
+                <a href="{% url 'mafia_host' game.code %}" class="btn btn--primary btn--sm">
+                    <i class="fas fa-arrow-right"></i>Продолжить
+                </a>
             </div>
             {% endfor %}
         </div>
@@ -55,115 +251,294 @@
     {% endif %}
 
     <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">⚙️ Новая игра</h5>
+        <div class="card__header">
+            <h5><i class="fas fa-cog" style="color: var(--gold);"></i>Новая игра</h5>
         </div>
-        <div class="card-body">
+        <div class="card__body">
             <form id="gameSetupForm">
                 {% csrf_token %}
                 
-                <div class="mb-3">
-                    <label class="form-label">Количество игроков</label>
-                    <input type="number" class="form-control" id="playerCount" min="4" max="15" value="6">
+                <!-- Количество игроков с удобными кнопками + и - -->
+                <div class="counter-group">
+                    <div class="counter-label">
+                        <span>👥</span> Игроков
+                    </div>
+                    <div class="counter-controls">
+                        <button type="button" class="counter-btn minus" onclick="changePlayerCount(-1)">−</button>
+                        <div class="counter-value">
+                            <span id="playerCount">6</span>
+                        </div>
+                        <button type="button" class="counter-btn plus" onclick="changePlayerCount(1)">+</button>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Распределение ролей</label>
-                    <div id="roleDistribution">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>🔪 Мафия</span>
-                            <input type="number" class="form-control role-select" id="mafiaCount" min="1" max="5" value="2">
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>👑 Дон мафии</span>
-                            <input type="number" class="form-control role-select" id="donCount" min="0" max="1" value="1">
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>🔍 Шериф</span>
-                            <input type="number" class="form-control role-select" id="sheriffCount" min="0" max="1" value="1">
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>💊 Доктор</span>
-                            <input type="number" class="form-control role-select" id="doctorCount" min="0" max="1" value="0">
+                <!-- Роли с удобными счетчиками -->
+                <div class="roles-section">
+                    <div class="roles-title">🎭 Распределение ролей</div>
+                    
+                    <div class="counter-group">
+                        <div class="counter-label"><span>🔪</span> Мафия</div>
+                        <div class="counter-controls">
+                            <button type="button" class="counter-btn minus" onclick="changeRole('mafia', -1)">−</button>
+                            <div class="counter-value" id="mafiaCount">2</div>
+                            <button type="button" class="counter-btn plus" onclick="changeRole('mafia', 1)">+</button>
                         </div>
                     </div>
-                    <small class="text-muted">Остальные автоматически станут мирными жителями</small>
+                    
+                    <div class="counter-group">
+                        <div class="counter-label"><span>👑</span> Дон мафии</div>
+                        <div class="counter-controls">
+                            <button type="button" class="counter-btn minus" onclick="changeRole('don', -1)">−</button>
+                            <div class="counter-value" id="donCount">0</div>
+                            <button type="button" class="counter-btn plus" onclick="changeRole('don', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="counter-group">
+                        <div class="counter-label"><span>🔍</span> Шериф</div>
+                        <div class="counter-controls">
+                            <button type="button" class="counter-btn minus" onclick="changeRole('sheriff', -1)">−</button>
+                            <div class="counter-value" id="sheriffCount">1</div>
+                            <button type="button" class="counter-btn plus" onclick="changeRole('sheriff', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="counter-group">
+                        <div class="counter-label"><span>💊</span> Доктор</div>
+                        <div class="counter-controls">
+                            <button type="button" class="counter-btn minus" onclick="changeRole('doctor', -1)">−</button>
+                            <div class="counter-value" id="doctorCount">1</div>
+                            <button type="button" class="counter-btn plus" onclick="changeRole('doctor', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="counter-group">
+                        <div class="counter-label"><span>🤡</span> Шут</div>
+                        <div class="counter-controls">
+                            <button type="button" class="counter-btn minus" onclick="changeRole('jester', -1)">−</button>
+                            <div class="counter-value" id="jesterCount">0</div>
+                            <button type="button" class="counter-btn plus" onclick="changeRole('jester', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="counter-group">
+                        <div class="counter-label"><span>🔪</span> Маньяк</div>
+                        <div class="counter-controls">
+                            <button type="button" class="counter-btn minus" onclick="changeRole('maniac', -1)">−</button>
+                            <div class="counter-value" id="maniacCount">0</div>
+                            <button type="button" class="counter-btn plus" onclick="changeRole('maniac', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="counter-group">
+                        <div class="counter-label"><span>🛡️</span> Телохранитель</div>
+                        <div class="counter-controls">
+                            <button type="button" class="counter-btn minus" onclick="changeRole('bodyguard', -1)">−</button>
+                            <div class="counter-value" id="bodyguardCount">0</div>
+                            <button type="button" class="counter-btn plus" onclick="changeRole('bodyguard', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="counter-group">
+                        <div class="counter-label"><span>💄</span> Путана</div>
+                        <div class="counter-controls">
+                            <button type="button" class="counter-btn minus" onclick="changeRole('hooker', -1)">−</button>
+                            <div class="counter-value" id="hookerCount">0</div>
+                            <button type="button" class="counter-btn plus" onclick="changeRole('hooker', 1)">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="warning-badge" id="roleWarning" style="display: none;">
+                        ⚠️ Слишком много ролей! Уменьшите количество.
+                    </div>
                 </div>
 
-                <div id="playerNames" class="mb-3"></div>
-
-                <button type="button" class="btn btn-primary btn-lg w-100" onclick="generatePlayerFields()">
-                    Сгенерировать поля для игроков
-                </button>
-                
-                <button type="button" class="btn btn-success btn-lg w-100 mt-3 d-none" id="startGameBtn" onclick="startGame()">
-                    Начать игру 🎮
-                </button>
+                <!-- Поля для ввода имен (появляются после нажатия кнопки) -->
+                <div class="players-section">
+                    <div id="playerNames" class="players-scroll"></div>
+                    
+                    <button type="button" class="btn btn-primary btn-large w-100" id="generateBtn" onclick="generatePlayerFields()">
+                        <i class="fas fa-users me-2"></i>Ввести имена игроков
+                    </button>
+                    
+                    <button type="button" class="btn btn-success btn-large w-100 d-none" id="startGameBtn" onclick="startGame()">
+                        <i class="fas fa-play me-2"></i>Начать игру 🎮
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
 <script>
+let currentPlayerCount = 6;
+let rolesData = {
+    mafia: 2,
+    don: 0,
+    sheriff: 1,
+    doctor: 1,
+    jester: 0,
+    maniac: 0,
+    bodyguard: 0,
+    hooker: 0
+};
+
+function updateDisplay() {
+    document.getElementById('playerCount').innerText = currentPlayerCount;
+    document.getElementById('mafiaCount').innerText = rolesData.mafia;
+    document.getElementById('donCount').innerText = rolesData.don;
+    document.getElementById('sheriffCount').innerText = rolesData.sheriff;
+    document.getElementById('doctorCount').innerText = rolesData.doctor;
+    document.getElementById('jesterCount').innerText = rolesData.jester;
+    document.getElementById('maniacCount').innerText = rolesData.maniac;
+    document.getElementById('bodyguardCount').innerText = rolesData.bodyguard;
+    document.getElementById('hookerCount').innerText = rolesData.hooker;
+    
+    checkRoleBalance();
+}
+
+function checkRoleBalance() {
+    const totalRoles = rolesData.mafia + rolesData.don + rolesData.sheriff + rolesData.doctor + 
+                       rolesData.jester + rolesData.maniac + rolesData.bodyguard + rolesData.hooker;
+    const warning = document.getElementById('roleWarning');
+    
+    if (totalRoles > currentPlayerCount) {
+        warning.style.display = 'block';
+        warning.innerHTML = `⚠️ Слишком много ролей (${totalRoles}) для ${currentPlayerCount} игроков! Уменьшите количество.`;
+        return false;
+    } else if (totalRoles === currentPlayerCount) {
+        warning.style.display = 'block';
+        warning.innerHTML = `ℹ️ Все ${currentPlayerCount} игроков будут иметь особые роли. Мирных жителей не будет.`;
+        warning.style.background = '#e3f2fd';
+        warning.style.color = '#1565c0';
+        return true;
+    } else {
+        warning.style.display = 'none';
+        return true;
+    }
+}
+
+function changePlayerCount(delta) {
+    let newCount = currentPlayerCount + delta;
+    if (newCount >= 4 && newCount <= 20) {
+        currentPlayerCount = newCount;
+        updateDisplay();
+        resetGenerateButton();
+    }
+}
+
+function changeRole(role, delta) {
+    let newValue = rolesData[role] + delta;
+    let maxValue = (role === 'don' || role === 'sheriff' || role === 'doctor' || 
+                    role === 'jester' || role === 'maniac' || role === 'bodyguard' || role === 'hooker') ? 2 : 5;
+    let minValue = 0;
+    
+    if (newValue >= minValue && newValue <= maxValue) {
+        rolesData[role] = newValue;
+        updateDisplay();
+        resetGenerateButton();
+    }
+}
+
+function resetGenerateButton() {
+    const generateBtn = document.getElementById('generateBtn');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const playerNamesContainer = document.getElementById('playerNames');
+    
+    if (generateBtn) {
+        generateBtn.style.display = 'block';
+        generateBtn.disabled = false;
+    }
+    if (startGameBtn) {
+        startGameBtn.classList.add('d-none');
+    }
+    if (playerNamesContainer) {
+        playerNamesContainer.innerHTML = '';
+    }
+}
+
 function generatePlayerFields() {
-    const count = parseInt(document.getElementById('playerCount').value);
+    const totalRoles = rolesData.mafia + rolesData.don + rolesData.sheriff + rolesData.doctor + 
+                       rolesData.jester + rolesData.maniac + rolesData.bodyguard + rolesData.hooker;
+    
+    if (totalRoles > currentPlayerCount) {
+        alert(`Слишком много ролей (${totalRoles}) для ${currentPlayerCount} игроков!\nУменьшите количество ролей.`);
+        return;
+    }
+    
     const container = document.getElementById('playerNames');
     container.innerHTML = '';
     
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < currentPlayerCount; i++) {
         container.innerHTML += `
-            <div class="player-input card mb-2 p-3">
-                <input type="text" class="form-control" placeholder="Имя игрока ${i + 1}" id="playerName${i}">
+            <div class="player-input">
+                <input type="text" class="form-control" placeholder="Имя игрока ${i + 1}" id="playerName${i}" autocomplete="off">
             </div>
         `;
     }
     
-    document.getElementById('startGameBtn').classList.remove('d-none');
+    // Скрываем кнопку генерации и показываем кнопку старта
+    const generateBtn = document.getElementById('generateBtn');
+    const startGameBtn = document.getElementById('startGameBtn');
+    
+    if (generateBtn) {
+        generateBtn.style.display = 'none';
+    }
+    if (startGameBtn) {
+        startGameBtn.classList.remove('d-none');
+    }
+    
+    // Автофокус на первое поле
+    setTimeout(() => {
+        const firstInput = document.getElementById('playerName0');
+        if (firstInput) firstInput.focus();
+    }, 100);
 }
 
 function startGame() {
-    const playerCount = parseInt(document.getElementById('playerCount').value);
-    const mafiaCount = parseInt(document.getElementById('mafiaCount').value);
-    const donCount = parseInt(document.getElementById('donCount').value);
-    const sheriffCount = parseInt(document.getElementById('sheriffCount').value);
-    const doctorCount = parseInt(document.getElementById('doctorCount').value);
+    // Проверяем баланс ролей
+    const totalRoles = rolesData.mafia + rolesData.don + rolesData.sheriff + rolesData.doctor + 
+                       rolesData.jester + rolesData.maniac + rolesData.bodyguard + rolesData.hooker;
     
-    // Проверка на количество ролей
-    const totalRoles = mafiaCount + donCount + sheriffCount + doctorCount;
-    if (totalRoles > playerCount) {
-        alert('Слишком много ролей для такого количества игроков!');
+    if (totalRoles > currentPlayerCount) {
+        alert(`Слишком много ролей (${totalRoles}) для ${currentPlayerCount} игроков!`);
         return;
     }
     
-    // Собираем имена игроков
+    // Собираем имена
     const players = [];
-    for (let i = 0; i < playerCount; i++) {
+    for (let i = 0; i < currentPlayerCount; i++) {
         const nameInput = document.getElementById(`playerName${i}`);
         if (!nameInput || !nameInput.value.trim()) {
             alert(`Введите имя игрока ${i + 1}`);
+            nameInput?.focus();
             return;
         }
         players.push({name: nameInput.value.trim()});
     }
     
-    // Создаём массив ролей
+    // Создаем массив ролей
     let roles = [];
-    for (let i = 0; i < mafiaCount; i++) roles.push('mafia');
-    for (let i = 0; i < donCount; i++) roles.push('don');
-    for (let i = 0; i < sheriffCount; i++) roles.push('sheriff');
-    for (let i = 0; i < doctorCount; i++) roles.push('doctor');
+    for (let i = 0; i < rolesData.mafia; i++) roles.push('mafia');
+    for (let i = 0; i < rolesData.don; i++) roles.push('don');
+    for (let i = 0; i < rolesData.sheriff; i++) roles.push('sheriff');
+    for (let i = 0; i < rolesData.doctor; i++) roles.push('doctor');
+    for (let i = 0; i < rolesData.jester; i++) roles.push('jester');
+    for (let i = 0; i < rolesData.maniac; i++) roles.push('maniac');
+    for (let i = 0; i < rolesData.bodyguard; i++) roles.push('bodyguard');
+    for (let i = 0; i < rolesData.hooker; i++) roles.push('hooker');
     
-    // Добавляем мирных жителей
-    const civilianCount = playerCount - roles.length;
+    // Добавляем мирных
+    const civilianCount = currentPlayerCount - roles.length;
     for (let i = 0; i < civilianCount; i++) roles.push('civilian');
     
-    // Перемешиваем роли
+    // Перемешиваем
     for (let i = roles.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [roles[i], roles[j]] = [roles[j], roles[i]];
     }
     
-    // Назначаем роли игрокам
+    // Назначаем роли
     players.forEach((player, index) => {
         player.role = roles[index];
     });
@@ -181,8 +556,53 @@ function startGame() {
     .then(data => {
         if (data.success) {
             window.location.href = data.redirect_url;
+        } else {
+            alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
         }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при создании игры');
     });
 }
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', function() {
+    updateDisplay();
+});
+
+
+// Предотвращаем масштабирование при двойном тапе на кнопках
+document.addEventListener('DOMContentLoaded', function() {
+    // Находим все кнопки-счетчики
+    const buttons = document.querySelectorAll('.counter-btn, .btn, button');
+    
+    buttons.forEach(button => {
+        // Предотвращаем двойной тап
+        button.addEventListener('touchstart', function(e) {
+            // Если это двойной тап - предотвращаем масштабирование
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        });
+        
+        // Отключаем стандартное поведение при двойном клике
+        button.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+        });
+    });
+    
+    // Также предотвращаем масштабирование на всей странице
+    document.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    
+    // Предотвращаем жест "щипок" для масштабирования
+    document.addEventListener('gesturestart', function(e) {
+        e.preventDefault();
+    });
+});
 </script>
 {% endblock %}

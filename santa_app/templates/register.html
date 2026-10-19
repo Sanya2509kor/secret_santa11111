@@ -1,194 +1,72 @@
 {% extends 'base.html' %}
+{% block title %}Регистрация | Тайный Санта{% endblock %}
+{% block page_modifier %}page--narrow{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card card-elevated">
-            <div class="card-header bg-success text-white">
-                <h4 class="card-title mb-0 text-center">
-                    <i class="fas fa-user-plus me-2"></i>Регистрация
-                </h4>
-            </div>
-            <div class="card-body p-4">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="id_phone" class="form-label fw-semibold">Номер телефона *</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">
-                                <i class="fas fa-phone text-muted"></i>
-                            </span>
-                            {{ form.phone }}
-                        </div>
-                        {% if form.phone.errors %}
-                        <div class="text-danger small mt-2">
-                            {% for error in form.phone.errors %}
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-circle me-1"></i>
-                                <span>{{ error }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-text">Введите ваш номер телефона для входа в систему</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="id_first_name" class="form-label fw-semibold">Имя *</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">
-                                <i class="fas fa-user text-muted"></i>
-                            </span>
-                            {{ form.first_name }}
-                        </div>
-                        {% if form.first_name.errors %}
-                        <div class="text-danger small mt-2">
-                            {% for error in form.first_name.errors %}
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-circle me-1"></i>
-                                <span>{{ error }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-text">Как к вам обращаться?</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="id_password1" class="form-label fw-semibold">Пароль *</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">
-                                <i class="fas fa-lock text-muted"></i>
-                            </span>
-                            {{ form.password1 }}
-                        </div>
-                        {% if form.password1.errors %}
-                        <div class="text-danger small mt-2">
-                            {% for error in form.password1.errors %}
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-circle me-1"></i>
-                                <span>{{ error }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-text">
-                            Пароль должен содержать как минимум 8 символов.
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label for="id_password2" class="form-label fw-semibold">Подтверждение пароля *</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">
-                                <i class="fas fa-lock text-muted"></i>
-                            </span>
-                            {{ form.password2 }}
-                        </div>
-                        {% if form.password2.errors %}
-                        <div class="text-danger small mt-2">
-                            {% for error in form.password2.errors %}
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-circle me-1"></i>
-                                <span>{{ error }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <button type="submit" class="btn btn-success w-100 btn-shine py-2 fw-semibold">
-                        <i class="fas fa-user-plus me-2"></i>Зарегистрироваться
-                    </button>
-                </form>
-                
-                <div class="text-center mt-4 pt-3 border-top">
-                    <small class="text-muted">
-                        Уже есть аккаунт? 
-                        <a href="{% url 'login' %}" class="text-success text-decoration-none fw-semibold">
-                            Войдите
-                        </a>
-                    </small>
-                </div>
-            </div>
-        </div>
+<div class="card fade-in-up">
+    <div class="card__header">
+        <h5><i class="fas fa-user-plus" style="color: var(--emerald);"></i>Регистрация</h5>
+    </div>
+    <div class="card__body" style="padding: 2rem;">
+        <form method="post">
+            {% csrf_token %}
 
-        <!-- Дополнительная информация -->
-        <div class="text-center mt-4">
-            <div class="card bg-light">
-                <div class="card-body py-3">
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <i class="fas fa-shield-alt text-primary mb-2"></i>
-                            <small class="d-block text-muted">Безопасно</small>
-                        </div>
-                        <div class="col-4">
-                            <i class="fas fa-bolt text-warning mb-2"></i>
-                            <small class="d-block text-muted">Быстро</small>
-                        </div>
-                        <div class="col-4">
-                            <i class="fas fa-mobile-alt text-success mb-2"></i>
-                            <small class="d-block text-muted">Удобно</small>
-                        </div>
-                    </div>
+            <div class="mb-3">
+                <label class="form-label form-label--required">Номер телефона</label>
+                <div class="input-group">
+                    <span class="input-group__prefix"><i class="fas fa-phone"></i></span>
+                    {{ form.phone }}
                 </div>
+                {% if form.phone.errors %}
+                <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ form.phone.errors.0 }}</div>
+                {% endif %}
             </div>
+
+            <div class="mb-3">
+                <label class="form-label form-label--required">Имя</label>
+                <div class="input-group">
+                    <span class="input-group__prefix"><i class="fas fa-user"></i></span>
+                    {{ form.first_name }}
+                </div>
+                {% if form.first_name.errors %}
+                <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ form.first_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label form-label--required">Пароль</label>
+                <div class="input-group">
+                    <span class="input-group__prefix"><i class="fas fa-lock"></i></span>
+                    {{ form.password1 }}
+                </div>
+                {% if form.password1.errors %}
+                <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ form.password1.errors.0 }}</div>
+                {% endif %}
+                <div class="form-text">Минимум 8 символов</div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label form-label--required">Подтверждение пароля</label>
+                <div class="input-group">
+                    <span class="input-group__prefix"><i class="fas fa-lock"></i></span>
+                    {{ form.password2 }}
+                </div>
+                {% if form.password2.errors %}
+                <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ form.password2.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn--success btn--lg btn--block btn--shine">
+                <i class="fas fa-user-plus"></i>Создать аккаунт
+            </button>
+        </form>
+
+        <div class="divider"></div>
+
+        <div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+            Уже есть аккаунт?
+            <a href="{% url 'login' %}" style="font-weight: 600;">Войти</a>
         </div>
     </div>
 </div>
-
-<style>
-.input-group-text {
-    border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm) !important;
-}
-
-#id_phone, #id_first_name, #id_password1, #id_password2 {
-    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0 !important;
-}
-
-.card {
-    border: none;
-    box-shadow: var(--shadow-lg);
-}
-
-@media (max-width: 576px) {
-    .card-body {
-        padding: 1.5rem !important;
-    }
-    
-    .btn {
-        padding: 0.75rem 1.5rem !important;
-    }
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Фокусируемся на поле ввода телефона
-    const phoneInput = document.getElementById('id_phone');
-    if (phoneInput) {
-        phoneInput.focus();
-    }
-    
-    // Валидация пароля в реальном времени
-    const password1 = document.getElementById('id_password1');
-    const password2 = document.getElementById('id_password2');
-    
-    function validatePasswords() {
-        if (password1.value && password2.value) {
-            if (password1.value !== password2.value) {
-                password2.style.borderColor = 'var(--danger)';
-            } else {
-                password2.style.borderColor = 'var(--success)';
-            }
-        }
-    }
-    
-    if (password1 && password2) {
-        password1.addEventListener('input', validatePasswords);
-        password2.addEventListener('input', validatePasswords);
-    }
-});
-</script>
 {% endblock %}

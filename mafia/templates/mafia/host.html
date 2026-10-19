@@ -3,159 +3,566 @@
 {% block content %}
 {% csrf_token %}
 <style>
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+
     .game-container {
-        max-width: 600px;
+        max-width: 720px;
         margin: 0 auto;
+        padding: 0 10px 40px;
     }
-    
-    .player-card {
-        background: #fff;
-        border-radius: 15px;
-        padding: 15px;
-        margin: 10px 0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: 2px solid #e0e0e0;
-        color: #333;
-        font-weight: 500;
-    }
-    
-    .player-card:hover {
-        border-color: #D4AF37;
-        transform: translateX(5px);
-        background: #f8f6f4;
-    }
-    
-    .player-card.selected {
-        border-color: #8B4513;
-        background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
-        color: white;
-    }
-    
-    .player-card.dead {
-        opacity: 0.5;
-        background: #f0f0f0;
-    }
-    
+
+    /* ═══ ИНДИКАТОР СТАДИИ ═══ */
     .stage-indicator {
-        background: linear-gradient(135deg, #8B4513 0%, #D4AF37 100%);
-        border-radius: 15px;
-        padding: 20px;
+        background: linear-gradient(135deg, rgba(232, 201, 100, 0.15) 0%, rgba(232, 201, 100, 0.05) 100%);
+        border: 1px solid var(--border-2);
+        border-radius: var(--radius);
+        padding: 16px 20px;
         text-align: center;
-        margin-bottom: 20px;
-        color: white;
+        margin-bottom: 16px;
+        box-shadow: var(--glow-gold);
     }
-    
+
+    .stage-indicator h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.3rem;
+        margin: 0;
+        color: var(--gold);
+        text-shadow: 0 0 20px rgba(232, 201, 100, 0.3);
+    }
+
+    /* ═══ КАРТОЧКИ ИГРОКОВ ═══ */
+    .player-card {
+        background: var(--surface-2);
+        border-radius: 60px;
+        padding: 14px 18px;
+        margin: 8px 0;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1rem;
+        color: var(--text);
+        touch-action: manipulation;
+    }
+
+    .player-card:active {
+        transform: scale(0.98);
+        background: var(--surface-3);
+    }
+
+    .player-card.selected {
+        border-color: var(--gold);
+        background: linear-gradient(135deg, rgba(232, 201, 100, 0.15) 0%, rgba(232, 201, 100, 0.05) 100%);
+        color: var(--gold);
+    }
+
+    /* ═══ ИГРОВОЙ ЛОГ ═══ */
     .game-log {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 15px;
-        max-height: 300px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        max-height: 350px;
         overflow-y: auto;
-        margin-top: 20px;
-        border: 1px solid #e0e0e0;
+        margin-top: 16px;
     }
-    
+
+    .game-log h6 {
+        font-family: 'Playfair Display', serif;
+        color: var(--text);
+        font-size: 1.05rem;
+        margin-bottom: 12px;
+    }
+
     .log-entry {
-        padding: 8px;
-        border-left: 3px solid #D4AF37;
-        margin: 5px 0;
-        font-size: 0.9rem;
-        color: #333;
-        background: white;
-        border-radius: 4px;
+        padding: 10px 14px;
+        border-left: 3px solid var(--gold);
+        margin: 8px 0;
+        background: var(--surface-3);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        word-break: break-word;
+        color: var(--text-soft);
     }
-    
+
+    /* ═══ НОЧНАЯ ФОРМА ═══ */
+    .night-form {
+        background: var(--surface);
+        border: 1px solid var(--border-2);
+        color: var(--text);
+        padding: 22px;
+        border-radius: var(--radius);
+        margin: 15px 0;
+        box-shadow: var(--shadow);
+    }
+
+    .night-form h5 {
+        font-family: 'Playfair Display', serif;
+        color: var(--gold);
+        text-align: center;
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+    }
+
+    .night-form select,
+    .night-form input {
+        background: var(--surface-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 14px 18px;
+        border-radius: 60px;
+        width: 100%;
+        margin: 8px 0;
+        font-size: 1rem;
+        font-family: inherit;
+        -webkit-appearance: none;
+        appearance: none;
+        transition: all 0.2s ease;
+    }
+
+    .night-form select:focus,
+    .night-form input:focus {
+        outline: none;
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(232, 201, 100, 0.15);
+    }
+
+    .night-form select option {
+        background: var(--surface-2);
+        color: var(--text);
+    }
+
+    .night-form label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-left: 8px;
+        color: var(--text-soft);
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .night-form small {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        display: block;
+        margin-left: 8px;
+    }
+
+    /* ═══ ПАНЕЛЬ СТАТИСТИКИ ═══ */
+    .stats-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin: 15px 0;
+        box-shadow: var(--shadow);
+    }
+
+    .stats-panel h5 {
+        font-family: 'Playfair Display', serif;
+        color: var(--text);
+        text-align: center;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .stats-panel p {
+        color: var(--text-soft);
+    }
+
+    .stats-panel strong {
+        color: var(--gold);
+    }
+
+    /* ═══ БЕЙДЖИ СТАТУСОВ ═══ */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin: 4px;
+        white-space: nowrap;
+    }
+
+    .status-alive {
+        background: rgba(74, 222, 128, 0.15);
+        color: var(--emerald);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+    }
+
+    .status-dead {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* ═══ КНОПКИ ═══ */
+    .btn {
+        border-radius: 60px !important;
+        padding: 14px 20px !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:active {
+        transform: scale(0.97);
+    }
+
+    /* ═══ МОДАЛЬНОЕ ОКНО ═══ */
+    .modal.show {
+        display: block !important;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 9999;
+    }
+
+    .modal-dialog {
+        margin: 10px;
+        width: calc(100% - 20px);
+    }
+
+    .modal-content {
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        background: var(--surface);
+        border: 1px solid var(--border-2);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, rgba(232, 201, 100, 0.2) 0%, rgba(232, 201, 100, 0.05) 100%) !important;
+        border-bottom: 1px solid var(--border) !important;
+        color: var(--text) !important;
+        padding: 16px 20px;
+    }
+
+    .modal-title {
+        font-family: 'Playfair Display', serif;
+        color: var(--gold);
+    }
+
+    .modal-body {
+        padding: 20px;
+        max-height: 70vh;
+        overflow-y: auto;
+        background: var(--surface);
+        color: var(--text);
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border) !important;
+        padding: 16px 20px;
+        gap: 10px;
+    }
+
+    /* ═══ РОЛИ В РЕВАНШЕ ═══ */
+    .roles-grid-mobile {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .roles-grid-mobile .role-item {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        text-align: center;
+    }
+
+    .roles-grid-mobile .role-item span {
+        display: block;
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+        color: var(--text-soft);
+    }
+
+    .roles-grid-mobile input {
+        text-align: center;
+        padding: 10px;
+        border-radius: 40px;
+        border: 1px solid var(--border);
+        background: var(--surface-3);
+        color: var(--text);
+        width: 100%;
+        font-family: inherit;
+    }
+
+    /* ═══ ПОВТОР СЧЁТЧИКОВ (для модалки реванша) ═══ */
+    .counter-group {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--surface-2);
+        padding: 12px 15px;
+        border-radius: 60px;
+        margin-bottom: 10px;
+        border: 1px solid var(--border);
+    }
+
+    .counter-label {
+        font-size: 1rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text);
+    }
+
+    .counter-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--surface-3);
+        border-radius: 40px;
+        padding: 5px;
+        border: 1px solid var(--border);
+    }
+
+    .counter-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 40px;
+        border: none;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .counter-btn.minus {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .counter-btn.plus {
+        background: rgba(74, 222, 128, 0.15);
+        color: var(--emerald);
+        border: 1px solid rgba(74, 222, 128, 0.3);
+    }
+
+    .counter-btn:active {
+        transform: scale(0.92);
+    }
+
+    .counter-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        min-width: 40px;
+        text-align: center;
+        color: var(--gold);
+    }
+
+    /* ═══ ПОКАЗ РОЛИ ═══ */
     .role-reveal {
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background: white;
-        padding: 30px 40px;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        z-index: 1000;
+        background: var(--surface);
+        border: 2px solid var(--gold);
+        padding: 32px 24px;
+        border-radius: var(--radius-lg);
         text-align: center;
-        color: #333;
-        min-width: 280px;
+        z-index: 1000;
+        min-width: 260px;
+        width: 85%;
+        max-width: 340px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), var(--glow-gold);
+        color: var(--text);
     }
-    
+
+    .role-reveal h3 {
+        font-family: 'Playfair Display', serif;
+        color: var(--gold);
+        margin: 12px 0;
+    }
+
+    .role-reveal p {
+        color: var(--text-soft);
+    }
+
     .overlay {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.8);
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(6px);
         z-index: 999;
     }
-    
-    /* Стили для кнопок на светлом фоне */
-    .btn-role {
-        background: white;
-        color: #333;
-        border: 2px solid #e0e0e0;
-        padding: 15px;
-        border-radius: 10px;
-        font-size: 1.1rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
+
+    /* ═══ ЖИВЫЕ ИГРОКИ ═══ */
+    .players-scroll {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 12px 0;
+    }
+
+    /* ═══ АЛЕРТЫ ═══ */
+    .alert {
+        background: var(--surface-2) !important;
+        border: 1px solid var(--border) !important;
+        border-left: 3px solid var(--amber) !important;
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        font-size: 0.85rem;
+        color: var(--text-soft);
+    }
+
+    .alert-warning {
+        background: rgba(251, 191, 36, 0.08) !important;
+        border-left-color: var(--amber) !important;
+        color: var(--amber);
+    }
+
+    .alert i {
+        margin-right: 6px;
+    }
+
+    /* ═══ ФИНАЛЬНЫЙ ЭКРАН ═══ */
+    .game-over-box {
+        padding: 24px;
+        border-radius: var(--radius);
+        margin: 20px 0;
+        border: 2px solid;
+    }
+
+    .game-over-box.win-mafia {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .game-over-box.win-town {
+        background: rgba(74, 222, 128, 0.1);
+        border-color: rgba(74, 222, 128, 0.4);
+    }
+
+    .game-over-box h4 {
+        font-family: 'Playfair Display', serif;
+        margin: 0;
+    }
+
+    .game-over-box.win-mafia h4 {
+        color: #fca5a5;
+    }
+
+    .game-over-box.win-town h4 {
+        color: var(--emerald);
+    }
+
+    .final-player-row {
+        padding: 12px 16px;
+        margin: 6px 0;
+        border-radius: 60px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.95rem;
+    }
+
+    .final-player-row.alive {
+        background: rgba(74, 222, 128, 0.12);
+        border: 1px solid rgba(74, 222, 128, 0.25);
+        color: var(--text);
+    }
+
+    .final-player-row.dead {
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        color: var(--text-muted);
+    }
+
+    /* ═══ КНОПКА ПОКАЗА РОЛИ ═══ */
+    .role-show-btn {
+        background: var(--surface-2);
+        border: 1px solid var(--border-2);
+        color: var(--gold);
+        border-radius: 60px;
+        padding: 14px 20px;
+        font-size: 1rem;
+        font-weight: 600;
         width: 100%;
-        margin: 5px 0;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
     }
-    
-    .btn-role:hover {
-        background: #f8f6f4;
-        border-color: #8B4513;
-        transform: translateY(-2px);
+
+    .role-show-btn:hover {
+        border-color: var(--gold);
+        background: rgba(232, 201, 100, 0.08);
     }
-    
-    .btn-role:active {
-        transform: translateY(0);
+
+    .role-show-btn:active {
+        transform: scale(0.97);
     }
-    
-    /* Стили для секций */
-    .section-title {
-        color: #333;
-        font-size: 1.2rem;
-        margin-bottom: 15px;
-    }
-    
-    .instruction-text {
-        color: #666;
-        margin-bottom: 20px;
-    }
-    
-    /* Тёмная тема только для ночных фаз */
-    .night-mode {
-        background: #1a1a1a;
-        color: white;
-        border-radius: 15px;
-        padding: 20px;
-    }
-    
-    .night-mode .section-title {
-        color: white;
-    }
-    
-    .night-mode .instruction-text {
-        color: #aaa;
+
+    /* ═══ АДАПТИВ ═══ */
+    @media (max-width: 480px) {
+        .stage-indicator h3 {
+            font-size: 1.1rem;
+        }
+
+        .stats-panel {
+            padding: 16px;
+        }
+
+        .night-form {
+            padding: 16px;
+        }
+
+        .btn {
+            padding: 12px 16px !important;
+        }
+
+        .status-badge {
+            font-size: 0.72rem;
+            padding: 5px 10px;
+        }
+
+        .log-entry {
+            font-size: 0.78rem;
+            padding: 8px 12px;
+        }
+
+        .counter-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 1.3rem;
+        }
+
+        .counter-value {
+            font-size: 1.1rem;
+            min-width: 35px;
+        }
     }
 </style>
 
 <div class="game-container">
     <div class="stage-indicator">
         <h3 id="stageName">{{ game.get_stage_display }}</h3>
-        <small>Код игры: {{ game.code|slice:":8" }}</small>
     </div>
 
-    <div id="gameContent">
-        <!-- Динамически обновляется через JS -->
-    </div>
+    <div id="gameContent"></div>
 
-    <div class="game-log mt-4" id="gameLog">
-        <h6 style="color: #333;">📋 Ход игры</h6>
+    <div class="game-log">
+        <h6>📋 Ход игры</h6>
         <div id="logEntries"></div>
     </div>
 </div>
@@ -164,36 +571,52 @@
 const gameCode = '{{ game.code }}';
 let currentStage = '{{ game.stage }}';
 let gameData = null;
-let selectedPlayer = null;
+let autoRefreshInterval = null;
+let isInputMode = false;
 
-// Функция для получения CSRF-токена
 function getCSRFToken() {
-    const name = 'csrftoken';
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
         for (let i = 0; i < cookies.length; i++) {
             const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            if (cookie.substring(0, 10) === ('csrftoken' + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
                 break;
             }
         }
     }
-    
-    if (!cookieValue) {
-        const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
-        if (csrfElement) {
-            cookieValue = csrfElement.value;
-        }
-    }
-    
-    return cookieValue;
+    return cookieValue || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 }
 
-// Обновление состояния игры
+function startAutoRefresh() {
+    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    if (!isInputMode) {
+        autoRefreshInterval = setInterval(() => {
+            fetch(`/mafia/${gameCode}/api/`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.stage !== currentStage) {
+                        updateGame();
+                    } else if (!isInputMode) {
+                        gameData = data;
+                        updateLog(data.game_log);
+                    }
+                })
+                .catch(error => console.error('Ошибка автообновления:', error));
+        }, 5000);
+    }
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
+
 function updateGame() {
-    fetch(`/mafia/${gameCode}/api/`)
+    return fetch(`/mafia/${gameCode}/api/`)
         .then(r => r.json())
         .then(data => {
             gameData = data;
@@ -201,444 +624,785 @@ function updateGame() {
             document.getElementById('stageName').textContent = data.stage_name;
             renderGameContent();
             updateLog(data.game_log);
+            startAutoRefresh();
         })
-        .catch(error => {
-            console.error('Ошибка обновления игры:', error);
-        });
+        .catch(error => console.error('Ошибка:', error));
 }
 
-// Отрисовка контента в зависимости от стадии
 function renderGameContent() {
     const container = document.getElementById('gameContent');
     if (!container) return;
-    
-    switch(currentStage) {
-        case 'role_distribution':
-            renderRoleDistribution(container);
-            break;
-        case 'night_mafia':
-        case 'night_don':
-        case 'night_sheriff':
-        case 'night_doctor':
-            renderNightAction(container);
-            break;
-        case 'night_results':
-            renderNightResults(container);
-            break;
-        case 'day_intro':
-        case 'day_speech':
-            renderDayIntro(container);
-            break;
-        case 'day_voting':
-            renderDayVoting(container);
-            break;
-        case 'day_voting_results':
-            renderDayResults(container);
-            break;
-        case 'game_over':
-            renderGameOver(container);
-            break;
-        default:
-            container.innerHTML = '<p style="color: #333;">Ожидание...</p>';
+
+    if (currentStage === 'role_distribution') {
+        renderRoleDistribution(container);
+    } else if (currentStage === 'night_processing') {
+        renderNightProcessing(container);
+    } else if (currentStage === 'night_results') {
+        renderNightResults(container);
+    } else if (currentStage === 'day_discussion') {
+        renderDayDiscussion(container);
+    } else if (currentStage === 'day_voting') {
+        renderDayVoting(container);
+    } else if (currentStage === 'day_results') {
+        renderDayResults(container);
+    } else if (currentStage === 'game_over') {
+        renderGameOver(container);
     }
 }
 
-// Показать раздачу ролей
 function renderRoleDistribution(container) {
-    let html = '';
-    html += '<h5 class="section-title text-center mb-3">🎭 Раздача ролей</h5>';
-    html += '<p class="instruction-text text-center">Передавайте телефон игрокам по очереди</p>';
+    let html = '<div class="stats-panel">';
+    html += '<h5>🎭 Раздача ролей</h5>';
+    html += '<p style="text-align: center; margin-bottom: 1rem;">Передавайте телефон игрокам по очереди</p>';
     html += '<div class="d-grid gap-2">';
-    
-    if (gameData && gameData.players) {
-        gameData.players.forEach((player, index) => {
-            html += '<button class="btn-role" onclick="showRole(' + index + ')">';
-            html += '👤 Показать роль для <strong>' + player.name + '</strong>';
-            html += '</button>';
-        });
-    }
-    
+
+    gameData?.players?.forEach((player, index) => {
+        html += `<button class="role-show-btn" onclick="showRole(${index})">👤 Показать роль для ${player.name}</button>`;
+    });
+
     html += '</div>';
-    html += '<button class="btn btn-success btn-lg w-100 mt-4" onclick="nextStage()" style="padding: 15px; font-size: 1.2rem;">';
-    html += 'Все посмотрели роли →';
-    html += '</button>';
-    
+    html += `<button class="btn btn--success w-100 mt-4" onclick="nextStage()">
+                <i class="fas fa-check"></i>Все посмотрели роли
+             </button>`;
+    html += '</div>';
     container.innerHTML = html;
 }
 
-// Ночное действие
-function renderNightAction(container) {
-    const titles = {
-        'night_mafia': '🔪 Мафия выбирает жертву',
-        'night_don': '👑 Дон ищет Шерифа',
-        'night_sheriff': '🔍 Шериф проверяет игрока',
-        'night_doctor': '💊 Доктор выбирает кого лечить'
-    };
-    
-    const instructions = {
-        'night_mafia': 'Мафия, выберите кого убить этой ночью',
-        'night_don': 'Дон, выберите игрока для проверки',
-        'night_sheriff': 'Шериф, выберите игрока для проверки',
-        'night_doctor': 'Доктор, выберите кого вылечить'
-    };
-    
-    let html = '<div class="night-mode">';
-    html += '<h5 class="section-title text-center mb-3">' + (titles[currentStage] || 'Ночное действие') + '</h5>';
-    html += '<p class="instruction-text text-center">' + (instructions[currentStage] || '') + '</p>';
-    html += '<p class="text-center mb-2" style="color: #aaa;">Живые игроки:</p>';
-    
-    if (gameData && gameData.alive_players) {
-        gameData.alive_players.forEach(player => {
-            html += '<div class="player-card night-card" onclick="selectPlayer(\'' + player.name + '\', this)" id="player-' + player.name + '">';
-            html += player.icon + ' ' + player.name;
-            html += '</div>';
-        });
+function renderNightProcessing(container) {
+    isInputMode = true;
+    stopAutoRefresh();
+
+    const alivePlayers = gameData?.alive_players || [];
+    const playerOptions = `<option value="">— Никого —</option>` +
+        alivePlayers.map(p => `<option value="${p.name}">${p.icon} ${p.name} (${p.role_name})</option>`).join('');
+
+    const sheriffAlive = gameData?.players?.some(p => p.role === 'sheriff' && p.alive);
+    const donAlive = gameData?.players?.some(p => p.role === 'don' && p.alive);
+
+    let html = '<div class="night-form">';
+    html += '<h5>🌙 Ночная фаза</h5>';
+    html += '<p style="text-align: center; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-muted);">Ведущий, опросите игроков и введите их действия</p>';
+
+    // 1. Мафия
+    if ((gameData?.mafia_count || 0) > 0) {
+        html += `<div class="mb-3">
+            <label>🔪 Кого убивает мафия?</label>
+            <select id="mafiaTarget" class="form-control">
+                ${playerOptions}
+            </select>
+            <small>Выберите игрока или оставьте "— Никого —"</small>
+        </div>`;
     }
-    
-    html += '<button class="btn btn-primary btn-lg w-100 mt-3" id="confirmBtn" disabled onclick="confirmAction()">';
-    html += 'Подтвердить выбор ✓';
-    html += '</button>';
+
+    // 2. Дон
+    if (donAlive && sheriffAlive) {
+        html += `<div class="mb-3">
+            <label>👑 Кого проверяет дон мафии?</label>
+            <select id="donCheck" class="form-control">
+                ${playerOptions}
+            </select>
+            <small>Дон проверяет, является ли игрок шерифом</small>
+        </div>`;
+    } else if (donAlive && !sheriffAlive) {
+        html += `<div class="mb-3">
+            <div class="alert alert-warning">
+                <i class="fas fa-info-circle"></i>
+                Шериф мертв, поэтому дон мафии не может никого проверять этой ночью.
+            </div>
+        </div>`;
+    }
+
+    // 3. Шериф
+    if (sheriffAlive) {
+        html += `<div class="mb-3">
+            <label>🔍 Кого проверяет шериф?</label>
+            <select id="sheriffCheck" class="form-control">
+                ${playerOptions}
+            </select>
+            <small>Шериф проверяет, является ли игрок мафией</small>
+        </div>`;
+    }
+
+    // 4. Доктор
+    const hasDoctor = gameData?.players?.some(p => p.role === 'doctor' && p.alive);
+    if (hasDoctor) {
+        html += `<div class="mb-3">
+            <label>💊 Кого лечит доктор?</label>
+            <select id="doctorHeal" class="form-control">
+                ${playerOptions}
+            </select>
+            <small>Доктор может вылечить игрока от убийства</small>
+        </div>`;
+    }
+
+    // 5. Маньяк
+    const hasManiac = gameData?.players?.some(p => p.role === 'maniac' && p.alive);
+    if (hasManiac) {
+        html += `<div class="mb-3">
+            <label>🥷🏻 Кого убивает маньяк?</label>
+            <select id="maniacTarget" class="form-control">
+                ${playerOptions}
+            </select>
+            <small>Маньяк убивает независимо от мафии</small>
+        </div>`;
+    }
+
+    // 6. Телохранитель
+    const hasBodyguard = gameData?.players?.some(p => p.role === 'bodyguard' && p.alive);
+    if (hasBodyguard) {
+        html += `<div class="mb-3">
+            <label>🛡️ Кого защищает телохранитель?</label>
+            <select id="bodyguardProtect" class="form-control">
+                ${playerOptions}
+            </select>
+            <small>Защищает и от мафии, и от маньяка. При нападении погибает сам</small>
+        </div>`;
+    }
+
+    // 7. Путана
+    const hasHooker = gameData?.players?.some(p => p.role === 'hooker' && p.alive);
+    if (hasHooker) {
+        html += `<div class="mb-3">
+            <label>💄 Кого отключает путана?</label>
+            <select id="hookerBlock" class="form-control">
+                ${playerOptions}
+            </select>
+            <small>Заблокированный игрок не может использовать свою способность</small>
+        </div>`;
+    }
+
+    html += `<button class="btn btn--primary w-100 mt-3" onclick="submitNightActions()">
+                <i class="fas fa-check"></i>Завершить ночь
+             </button>`;
+    html += `<button class="btn btn--ghost w-100 mt-2" onclick="cancelNightActions()">
+                <i class="fas fa-undo"></i>Отмена
+             </button>`;
     html += '</div>';
-    
+
     container.innerHTML = html;
 }
 
-// Результаты ночи
+async function submitNightActions() {
+    const actions = [];
+
+    const mafiaTarget = document.getElementById('mafiaTarget')?.value;
+    if (mafiaTarget && mafiaTarget !== '') {
+        actions.push({ action: 'mafia_target', target: mafiaTarget });
+    }
+
+    const donCheck = document.getElementById('donCheck')?.value;
+    if (donCheck && donCheck !== '') {
+        actions.push({ action: 'don_check', target: donCheck });
+    }
+
+    const sheriffCheck = document.getElementById('sheriffCheck')?.value;
+    if (sheriffCheck && sheriffCheck !== '') {
+        actions.push({ action: 'sheriff_check', target: sheriffCheck });
+    }
+
+    const doctorHeal = document.getElementById('doctorHeal')?.value;
+    if (doctorHeal && doctorHeal !== '') {
+        actions.push({ action: 'doctor_heal', target: doctorHeal });
+    }
+
+    const maniacTarget = document.getElementById('maniacTarget')?.value;
+    if (maniacTarget && maniacTarget !== '') {
+        actions.push({ action: 'maniac_target', target: maniacTarget });
+    }
+
+    const bodyguardProtect = document.getElementById('bodyguardProtect')?.value;
+    if (bodyguardProtect && bodyguardProtect !== '') {
+        actions.push({ action: 'bodyguard_protect', target: bodyguardProtect });
+    }
+
+    const hookerBlock = document.getElementById('hookerBlock')?.value;
+    if (hookerBlock && hookerBlock !== '') {
+        actions.push({ action: 'hooker_block', target: hookerBlock });
+    }
+
+    const csrfToken = getCSRFToken();
+
+    for (const actionData of actions) {
+        try {
+            const response = await fetch(`/mafia/${gameCode}/action/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify(actionData)
+            });
+            const result = await response.json();
+            console.log(`Отправлено ${actionData.action}:`, result);
+        } catch (error) {
+            console.error(`Ошибка при отправке ${actionData.action}:`, error);
+        }
+    }
+
+    setTimeout(() => {
+        isInputMode = false;
+        nextStage();
+    }, 500);
+}
+
+function cancelNightActions() {
+    isInputMode = false;
+    startAutoRefresh();
+    updateGame();
+}
+
 function renderNightResults(container) {
-    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
-    html += '<h5 class="section-title text-center mb-3">🌅 Утро в городе</h5>';
-    html += '<div class="mb-4">';
-    
-    if (gameData && gameData.game_log) {
-        const nightLogs = gameData.game_log.slice(-5);
-        nightLogs.forEach(function(log) {
-            html += '<p class="h6 mb-2" style="color: #333;">' + log.message + '</p>';
-        });
-    }
-    
+    isInputMode = false;
+    startAutoRefresh();
+
+    let html = '<div class="stats-panel">';
+    html += '<h5>🌅 Ночные результаты</h5>';
+    html += '<div style="margin-bottom: 1rem;">';
+
+    const recentLogs = gameData?.game_log?.slice(-5) || [];
+    recentLogs.forEach(log => {
+        html += `<div class="log-entry" style="font-size: 0.9rem;">${log.message}</div>`;
+    });
+
     html += '</div>';
-    
-    // Список живых и мёртвых
-    if (gameData && gameData.players) {
-        const alivePlayers = gameData.players.filter(function(p) { return p.alive; });
-        const deadPlayers = gameData.players.filter(function(p) { return !p.alive; });
-        
-        if (alivePlayers.length > 0) {
-            html += '<p class="mb-2" style="color: #2e7d32;"><strong>❤️ В игре:</strong></p>';
-            alivePlayers.forEach(function(p) {
-                html += '<div style="padding: 5px; color: #333;">' + p.icon + ' ' + p.name + '</div>';
-            });
-        }
-        
-        if (deadPlayers.length > 0) {
-            html += '<p class="mb-2 mt-3" style="color: #c62828;"><strong>💀 Выбыли:</strong></p>';
-            deadPlayers.forEach(function(p) {
-                html += '<div style="padding: 5px; color: #666;">' + p.icon + ' ' + p.name + '</div>';
-            });
-        }
-    }
-    
-    if (gameData && !gameData.is_game_over) {
-        html += '<button class="btn btn-success btn-lg w-100 mt-3" onclick="nextStage()" style="font-size: 1.2rem;">';
-        html += 'Начать дневное обсуждение ☀️';
-        html += '</button>';
-    }
+    html += `<button class="btn btn--success w-100" onclick="nextStage()">
+                <i class="fas fa-sun"></i>Начать день
+             </button>`;
     html += '</div>';
-    
     container.innerHTML = html;
 }
 
-// Дневное обсуждение
-function renderDayIntro(container) {
-    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
-    html += '<h5 class="section-title text-center mb-3">☀️ День в городе</h5>';
-    html += '<p class="instruction-text text-center">Время обсуждения</p>';
-    
-    if (gameData && gameData.alive_players) {
-        html += '<div class="d-grid gap-2">';
-        gameData.alive_players.forEach(function(player) {
-            html += '<div class="player-card">' + player.icon + ' ' + player.name + '</div>';
+function renderDayDiscussion(container) {
+    isInputMode = false;
+    startAutoRefresh();
+
+    let html = '<div class="stats-panel">';
+    html += '<h5>☀️ Дневное обсуждение</h5>';
+    html += '<p style="text-align: center; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-muted);">Обсуждение и выдвижение подозрений</p>';
+
+    if (gameData) {
+        html += `<div style="text-align: center; margin-bottom: 1rem; padding: 12px; background: var(--surface-3); border: 1px solid var(--border-2); border-radius: 20px;">
+                    📊 Живых: <strong style="color: var(--gold);">${gameData.alive_players?.length || 0}</strong> |
+                    Мафия: <strong style="color: #fca5a5;">${gameData.mafia_count || 0}</strong> |
+                    Мирных: <strong style="color: var(--emerald);">${(gameData.alive_players?.length || 0) - (gameData.mafia_count || 0)}</strong>
+                </div>`;
+    }
+
+    if (gameData?.alive_players) {
+        html += '<div style="margin-bottom: 1rem;"><strong style="color: var(--emerald);">❤️ Живые:</strong><div class="players-scroll">';
+        gameData.alive_players.forEach(p => {
+            const isMafia = p.team === 'mafia';
+            html += `<span class="status-badge ${isMafia ? 'status-dead' : 'status-alive'}">
+                        ${p.icon} ${p.name}
+                    </span>`;
+        });
+        html += '</div></div>';
+    }
+
+    if (gameData?.dead_players?.length) {
+        html += '<div style="margin-bottom: 1rem;"><strong style="color: #fca5a5;">💀 Погибшие:</strong><div class="players-scroll">';
+        gameData.dead_players.forEach(p => {
+            html += `<span class="status-badge status-dead">${p.icon} ${p.name} (${p.role_name})</span>`;
+        });
+        html += '</div></div>';
+    }
+
+    const allLogs = gameData?.game_log || [];
+    const nightEvents = allLogs.slice(-5).filter(log =>
+        log.message.includes('убил') || log.message.includes('Мафия') ||
+        log.message.includes('Доктор') || log.message.includes('Шериф') ||
+        log.message.includes('Маньяк') || log.message.includes('Телохранитель') ||
+        log.message.includes('Путана') || log.message.includes('спас'));
+
+    if (nightEvents.length > 0) {
+        html += '<div style="margin-top: 1rem; padding: 12px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 20px;">';
+        html += '<small style="color: var(--text-muted);">📋 События прошлой ночи:</small><br>';
+        nightEvents.forEach(log => {
+            let icon = '•';
+            if (log.message.includes('Мафия убила')) icon = '🔪';
+            else if (log.message.includes('Маньяк убил')) icon = '🥷🏻';
+            else if (log.message.includes('Доктор')) icon = '💊';
+            else if (log.message.includes('Шериф')) icon = '🔍';
+            else if (log.message.includes('Телохранитель')) icon = '🛡️';
+            html += `<small style="display: block; margin-top: 4px; color: var(--text-soft);">${icon} ${log.message}</small>`;
         });
         html += '</div>';
     }
-    
-    html += '<button class="btn btn-warning btn-lg w-100 mt-3" onclick="nextStage()" style="font-size: 1.2rem;">';
-    html += 'Начать голосование 🗳️';
-    html += '</button>';
+
+    html += `<button class="btn btn--primary w-100 mt-3" onclick="nextStage()">
+                <i class="fas fa-vote-yea"></i>Начать голосование
+             </button>`;
     html += '</div>';
-    
+
     container.innerHTML = html;
 }
 
-// Дневное голосование
 function renderDayVoting(container) {
-    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
-    html += '<h5 class="section-title text-center mb-3">🗳️ Голосование</h5>';
-    html += '<p class="instruction-text text-center">Выберите кого выгнать из города:</p>';
-    
-    if (gameData && gameData.alive_players) {
-        gameData.alive_players.forEach(function(player) {
-            html += '<div class="player-card" onclick="selectPlayer(\'' + player.name + '\', this)" id="player-' + player.name + '">';
-            html += player.icon + ' ' + player.name;
-            html += '</div>';
-        });
-    }
-    
-    html += '<div class="player-card" onclick="selectPlayer(\'воздержался\', this)" id="player-воздержался" style="border-style: dashed;">';
-    html += '🤝 Воздержаться (пропустить)';
+    isInputMode = true;
+    stopAutoRefresh();
+
+    const alivePlayers = gameData?.alive_players || [];
+    const playerOptions = alivePlayers.map(p => `<option value="${p.name}">${p.icon} ${p.name} (${p.role_name})</option>`).join('');
+
+    let html = '<div class="stats-panel">';
+    html += '<h5>🗳️ Результат голосования</h5>';
+    html += '<div style="margin-bottom: 1rem;">';
+    html += `<select id="voteResult" class="form-control" style="border-radius: 60px; padding: 14px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border);">
+                <option value="никого">— Никого не выгнали —</option>
+                ${playerOptions}
+            </select>`;
     html += '</div>';
-    
-    html += '<button class="btn btn-danger btn-lg w-100 mt-3" id="confirmBtn" disabled onclick="confirmDayVote()">';
-    html += 'Выгнать из города 👋';
-    html += '</button>';
+
+    html += '<div id="jesterVictimBlock" style="display: none; margin-bottom: 1rem;">';
+    html += '<label style="color: var(--text-soft); display: block; margin-bottom: 6px;">🤡 Кого убивает шут?</label>';
+    html += `<select id="jesterVictim" class="form-control" style="border-radius: 60px; padding: 14px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border);">
+                <option value="никого">— Никого —</option>
+                ${playerOptions}
+            </select>`;
     html += '</div>';
-    
+
+    html += `<button class="btn btn--danger w-100 mt-3" onclick="submitDayVote()">
+                <i class="fas fa-check"></i>Подтвердить
+             </button>`;
+    html += `<button class="btn btn--ghost w-100 mt-2" onclick="cancelDayVote()">
+                <i class="fas fa-undo"></i>Отмена
+             </button>`;
+    html += '</div>';
+
     container.innerHTML = html;
+
+    const voteResultSelect = document.getElementById('voteResult');
+    const jesterVictimBlock = document.getElementById('jesterVictimBlock');
+
+    voteResultSelect.addEventListener('change', function () {
+        const selectedValue = this.value;
+        if (selectedValue !== 'никого' && gameData) {
+            const selectedPlayer = gameData.alive_players.find(p => p.name === selectedValue);
+            if (selectedPlayer && selectedPlayer.role === 'jester') {
+                jesterVictimBlock.style.display = 'block';
+            } else {
+                jesterVictimBlock.style.display = 'none';
+            }
+        } else {
+            jesterVictimBlock.style.display = 'none';
+        }
+    });
 }
 
-// Результаты дня
+function submitDayVote() {
+    const voteResult = document.getElementById('voteResult')?.value;
+    const jesterVictim = document.getElementById('jesterVictim')?.value;
+
+    if (!voteResult) {
+        alert('Выберите результат голосования');
+        return;
+    }
+
+    const csrfToken = getCSRFToken();
+
+    fetch(`/mafia/${gameCode}/action/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ action: 'day_vote_result', target: voteResult })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) throw new Error('Ошибка');
+        if (jesterVictim && jesterVictim !== 'никого' && voteResult !== 'никого') {
+            return fetch(`/mafia/${gameCode}/action/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ action: 'jester_victim', target: jesterVictim })
+            });
+        }
+        return null;
+    })
+    .then(() => {
+        isInputMode = false;
+        nextStage();
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при сохранении');
+        isInputMode = false;
+        startAutoRefresh();
+        updateGame();
+    });
+}
+
+function cancelDayVote() {
+    isInputMode = false;
+    startAutoRefresh();
+    updateGame();
+}
+
 function renderDayResults(container) {
-    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
-    html += '<h5 class="section-title text-center mb-3">📊 Итоги голосования</h5>';
-    
-    if (gameData && gameData.game_log) {
-        const dayLogs = gameData.game_log.slice(-3);
-        dayLogs.forEach(function(log) {
-            html += '<p class="h5 text-center" style="color: #333;">' + log.message + '</p>';
-        });
-    }
-    
-    if (gameData && gameData.is_game_over) {
-        html += '<button class="btn btn-primary btn-lg w-100 mt-3" onclick="location.reload()" style="font-size: 1.2rem;">';
-        html += 'Завершить игру';
-        html += '</button>';
+    isInputMode = false;
+    startAutoRefresh();
+
+    let html = '<div class="stats-panel">';
+    html += '<h5>📊 Итоги дня</h5>';
+    const recentLogs = gameData?.game_log?.slice(-3) || [];
+    recentLogs.forEach(log => {
+        html += `<div class="log-entry" style="font-size: 0.9rem;">${log.message}</div>`;
+    });
+
+    if (gameData?.is_game_over) {
+        html += `<button class="btn btn--primary w-100 mt-3" onclick="location.reload()">
+                    <i class="fas fa-flag-checkered"></i>Завершить
+                 </button>`;
     } else {
-        html += '<button class="btn btn-success btn-lg w-100 mt-3" onclick="nextStage()" style="font-size: 1.2rem;">';
-        html += 'Следующая ночь 🌙';
-        html += '</button>';
+        html += `<button class="btn btn--success w-100 mt-3" onclick="nextStage()">
+                    <i class="fas fa-moon"></i>Следующая ночь
+                 </button>`;
     }
     html += '</div>';
-    
     container.innerHTML = html;
 }
 
-// Конец игры
 function renderGameOver(container) {
-    let html = '<div style="background: #fff; padding: 20px; border-radius: 15px;">';
-    html += '<div class="text-center">';
-    html += '<h1 class="mb-4" style="font-size: 3rem;">🏁</h1>';
-    html += '<h2 class="mb-4" style="color: #333;">Игра окончена!</h2>';
-    
-    if (gameData && gameData.game_log && gameData.game_log.length > 0) {
-        const lastLog = gameData.game_log[gameData.game_log.length - 1];
-        const isWin = lastLog.message.indexOf('победили') !== -1;
-        const bgColor = isWin ? '#e8f5e9' : '#ffebee';
-        const textColor = isWin ? '#2e7d32' : '#c62828';
-        
-        html += '<div style="background: ' + bgColor + '; padding: 20px; border-radius: 15px; margin: 20px 0;">';
-        html += '<p class="h4 mb-0" style="color: ' + textColor + ';">' + lastLog.message + '</p>';
-        html += '</div>';
+    isInputMode = false;
+    stopAutoRefresh();
+
+    let html = '<div class="stats-panel" style="text-align: center;">';
+    html += '<h1 style="font-family: \'Playfair Display\', serif; color: var(--gold); font-size: 2rem; margin-bottom: 1rem;">🏁 Игра окончена</h1>';
+
+    const lastLog = gameData?.game_log?.slice(-1)[0];
+    if (lastLog) {
+        const isMafiaWin = lastLog.message.includes('МАФИИ');
+        html += `<div class="game-over-box ${isMafiaWin ? 'win-mafia' : 'win-town'}">
+                    <h4>${lastLog.message}</h4>
+                </div>`;
     }
-    
-    html += '<h5 class="mb-3 mt-4" style="color: #333;">Итоговый состав:</h5>';
-    
-    if (gameData && gameData.players) {
-        gameData.players.forEach(function(player) {
-            const bgColor = player.alive ? '#e8f5e9' : '#ffebee';
-            const statusIcon = player.alive ? '❤️' : '💀';
-            const statusText = player.alive ? 'Выжил' : 'Убит';
-            
-            html += '<div style="background: ' + bgColor + '; padding: 12px; margin: 8px 0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">';
-            html += '<span style="color: #333;">' + player.icon + ' <strong>' + player.name + '</strong> - ' + player.role_name + '</span>';
-            html += '<span>' + statusIcon + ' ' + statusText + '</span>';
-            html += '</div>';
+
+    html += '<h5 style="margin-top: 1.5rem;">Итоговый состав:</h5>';
+    if (gameData?.players) {
+        gameData.players.forEach(p => {
+            html += `<div class="final-player-row ${p.alive ? 'alive' : 'dead'}">
+                        <span>${p.icon} <strong style="color: ${p.alive ? 'var(--gold)' : 'var(--text-muted)'};">${p.name}</strong> (${p.role_name})</span>
+                        <span>${p.alive ? '❤️' : '💀'}</span>
+                    </div>`;
         });
     }
-    
-    html += '<div class="d-grid gap-2 mt-4">';
-    html += '<a href="/mafia/" class="btn btn-primary btn-lg" style="font-size: 1.2rem;">🔄 Новая игра</a>';
-    html += '<button class="btn btn-outline-secondary btn-lg" onclick="location.reload()" style="font-size: 1.2rem;">📋 Обновить</button>';
-    html += '</div>';
-    
-    html += '</div>';
-    html += '</div>';
-    
+
+    html += '<div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 8px;">';
+    html += '<button class="btn btn--success w-100" onclick="rematch()"><i class="fas fa-redo"></i>Реванш (те же игроки)</button>';
+    html += '<button class="btn btn--primary w-100" onclick="newGame()"><i class="fas fa-plus"></i>Новая игра</button>';
+    html += '<a href="/mafia/" class="btn btn--ghost w-100"><i class="fas fa-home"></i>Выход в меню</a>';
+    html += '</div></div>';
+
     container.innerHTML = html;
 }
 
-// Вспомогательные функции
 function showRole(index) {
-    fetch('/mafia/' + gameCode + '/role/' + index + '/')
+    fetch(`/mafia/${gameCode}/role/${index}/`)
         .then(r => r.json())
         .then(data => {
             const overlay = document.createElement('div');
             overlay.className = 'overlay';
-            overlay.onclick = closeRoleReveal;
-            
+            overlay.onclick = () => {
+                overlay.remove();
+                roleReveal.remove();
+            };
+
             const roleReveal = document.createElement('div');
             roleReveal.className = 'role-reveal';
-            roleReveal.id = 'roleReveal';
-            roleReveal.innerHTML = '<h2 class="mb-3" style="font-size: 4rem;">' + data.icon + '</h2>' +
-                '<h2 style="color: #333; margin-bottom: 10px;">' + data.name + '</h2>' +
-                '<p class="h4" style="color: #8B4513; font-weight: bold;">' + data.role + '</p>' +
-                '<small class="text-muted mt-3 d-block">Нажмите в любом месте чтобы закрыть</small>';
-            
+            roleReveal.innerHTML = `
+                <div style="font-size: 4rem;">${data.icon}</div>
+                <h3>${data.name}</h3>
+                <p style="color: var(--gold); font-size: 1.3rem; font-weight: bold;">${data.role}</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">${data.description || ''}</p>
+                <small style="color: var(--text-dim);">Нажмите чтобы закрыть</small>
+            `;
+
             document.body.appendChild(overlay);
             document.body.appendChild(roleReveal);
         });
 }
 
-function closeRoleReveal() {
-    const overlay = document.querySelector('.overlay');
-    const roleReveal = document.getElementById('roleReveal');
-    if (overlay) document.body.removeChild(overlay);
-    if (roleReveal) document.body.removeChild(roleReveal);
-}
-
-function selectPlayer(name, element) {
-    document.querySelectorAll('.player-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    
-    element.classList.add('selected');
-    selectedPlayer = name;
-    
-    const confirmBtn = document.getElementById('confirmBtn');
-    if (confirmBtn) {
-        confirmBtn.disabled = false;
-        confirmBtn.style.opacity = '1';
-    }
-}
-
-function confirmAction() {
-    if (!selectedPlayer) {
-        alert('Выберите игрока!');
-        return;
-    }
-    
-    let action = '';
-    switch(currentStage) {
-        case 'night_mafia': action = 'mafia_kill'; break;
-        case 'night_sheriff': action = 'sheriff_check'; break;
-        case 'night_doctor': action = 'doctor_heal'; break;
-        case 'night_don': action = 'don_check'; break;
-        default: return;
-    }
-    
-    const csrfToken = getCSRFToken();
-    
-    fetch('/mafia/' + gameCode + '/action/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            action: action,
-            target: selectedPlayer,
-            actor: 'host'
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            selectedPlayer = null;
-            nextStage();
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка при выполнении действия:', error);
-    });
-}
-
-function confirmDayVote() {
-    if (!selectedPlayer) {
-        alert('Выберите игрока или "воздержаться"!');
-        return;
-    }
-    
-    const csrfToken = getCSRFToken();
-    
-    fetch('/mafia/' + gameCode + '/action/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            action: 'day_vote',
-            target: selectedPlayer,
-            actor: 'host'
-        })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            selectedPlayer = null;
-            nextStage();
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка при голосовании:', error);
-    });
-}
-
 function nextStage() {
-    console.log('Переход к следующей стадии...');
-    
-    const csrfToken = getCSRFToken();
-    
-    if (!csrfToken) {
-        console.error('CSRF токен не найден!');
-        alert('Ошибка безопасности. Обновите страницу.');
-        return;
-    }
-    
-    fetch('/mafia/' + gameCode + '/next-stage/', {
+    fetch(`/mafia/${gameCode}/next-stage/`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        }
-    })
-    .then(r => r.json())
-    .then(data => {
-        console.log('Результат перехода:', data);
-        selectedPlayer = null;
-        updateGame();
-    })
-    .catch(error => {
-        console.error('Ошибка при переходе на следующую стадию:', error);
-    });
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() }
+    }).then(() => updateGame());
 }
 
 function updateLog(logs) {
-    const logContainer = document.getElementById('logEntries');
-    if (!logContainer) return;
-    
-    if (logs && logs.length > 0) {
-        const recentLogs = gameData && gameData.is_game_over ? logs.slice(-10) : logs.slice(-6);
-        let logHtml = '';
-        recentLogs.forEach(function(log) {
-            logHtml += '<div class="log-entry">' + log.time + ' - ' + log.message + '</div>';
-        });
-        logContainer.innerHTML = logHtml;
+    const container = document.getElementById('logEntries');
+    if (!container) return;
+    if (logs?.length) {
+        container.innerHTML = logs.slice(-8).map(log => `<div class="log-entry">${log.time} - ${log.message}</div>`).join('');
+        container.scrollTop = container.scrollHeight;
     } else {
-        logContainer.innerHTML = '<p style="color: #999;">Пока событий нет</p>';
-    }
-    
-    if (logContainer) {
-        logContainer.scrollTop = logContainer.scrollHeight;
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; margin: 0;">Пока событий нет</p>';
     }
 }
 
-// Инициализация
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Страница загружена, запуск игры');
-    updateGame();
-});
+function rematch() {
+    if (!gameData || !gameData.players) {
+        alert('Ошибка: нет данных об игроках');
+        return;
+    }
+    const playerNames = gameData.players.map(p => p.name);
+    showRoleSelectionDialog(playerNames);
+}
 
-// Автообновление
-setInterval(updateGame, 5000);
+function newGame() {
+    window.location.href = '/mafia/';
+}
+
+function showRoleSelectionDialog(playerNames) {
+    const modalHtml = `
+        <div id="rematchModal" class="modal show" style="display: block; background: rgba(0,0,0,0.85); z-index: 9999;">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 28px; overflow: hidden;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" style="font-size: 1.2rem;">🎮 Настройка реванша</h5>
+                        <button type="button" class="btn-close btn-close-white" onclick="closeRematchModal()" style="filter: invert(1) brightness(2); opacity: 0.5;"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="font-size: 0.9rem; margin-bottom: 1rem;">👥 Игроки (${playerNames.length}): <strong style="color: var(--gold);">${playerNames.join(', ')}</strong></p>
+
+                        <div style="margin: 15px 0;">
+                            <div style="font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">🎭 Распределение ролей</div>
+
+                            <!-- Мафия -->
+                            <div class="counter-group">
+                                <div class="counter-label"><span>🔪</span> Мафия</div>
+                                <div class="counter-controls">
+                                    <button type="button" class="counter-btn minus" onclick="changeRematchRole('mafia', -1)">−</button>
+                                    <div class="counter-value" id="rematchMafiaCount">2</div>
+                                    <button type="button" class="counter-btn plus" onclick="changeRematchRole('mafia', 1)">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Дон -->
+                            <div class="counter-group">
+                                <div class="counter-label"><span>👑</span> Дон мафии</div>
+                                <div class="counter-controls">
+                                    <button type="button" class="counter-btn minus" onclick="changeRematchRole('don', -1)">−</button>
+                                    <div class="counter-value" id="rematchDonCount">0</div>
+                                    <button type="button" class="counter-btn plus" onclick="changeRematchRole('don', 1)">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Шериф -->
+                            <div class="counter-group">
+                                <div class="counter-label"><span>🔍</span> Шериф</div>
+                                <div class="counter-controls">
+                                    <button type="button" class="counter-btn minus" onclick="changeRematchRole('sheriff', -1)">−</button>
+                                    <div class="counter-value" id="rematchSheriffCount">1</div>
+                                    <button type="button" class="counter-btn plus" onclick="changeRematchRole('sheriff', 1)">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Доктор -->
+                            <div class="counter-group">
+                                <div class="counter-label"><span>💊</span> Доктор</div>
+                                <div class="counter-controls">
+                                    <button type="button" class="counter-btn minus" onclick="changeRematchRole('doctor', -1)">−</button>
+                                    <div class="counter-value" id="rematchDoctorCount">1</div>
+                                    <button type="button" class="counter-btn plus" onclick="changeRematchRole('doctor', 1)">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Шут -->
+                            <div class="counter-group">
+                                <div class="counter-label"><span>🤡</span> Шут</div>
+                                <div class="counter-controls">
+                                    <button type="button" class="counter-btn minus" onclick="changeRematchRole('jester', -1)">−</button>
+                                    <div class="counter-value" id="rematchJesterCount">0</div>
+                                    <button type="button" class="counter-btn plus" onclick="changeRematchRole('jester', 1)">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Маньяк -->
+                            <div class="counter-group">
+                                <div class="counter-label"><span>🔪</span> Маньяк</div>
+                                <div class="counter-controls">
+                                    <button type="button" class="counter-btn minus" onclick="changeRematchRole('maniac', -1)">−</button>
+                                    <div class="counter-value" id="rematchManiacCount">0</div>
+                                    <button type="button" class="counter-btn plus" onclick="changeRematchRole('maniac', 1)">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Телохранитель -->
+                            <div class="counter-group">
+                                <div class="counter-label"><span>🛡️</span> Телохранитель</div>
+                                <div class="counter-controls">
+                                    <button type="button" class="counter-btn minus" onclick="changeRematchRole('bodyguard', -1)">−</button>
+                                    <div class="counter-value" id="rematchBodyguardCount">0</div>
+                                    <button type="button" class="counter-btn plus" onclick="changeRematchRole('bodyguard', 1)">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Путана -->
+                            <div class="counter-group">
+                                <div class="counter-label"><span>💄</span> Путана</div>
+                                <div class="counter-controls">
+                                    <button type="button" class="counter-btn minus" onclick="changeRematchRole('hooker', -1)">−</button>
+                                    <div class="counter-value" id="rematchHookerCount">0</div>
+                                    <button type="button" class="counter-btn plus" onclick="changeRematchRole('hooker', 1)">+</button>
+                                </div>
+                            </div>
+
+                            <div id="rematchRoleWarning" style="background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 20px; padding: 12px 15px; font-size: 0.85rem; color: var(--amber); margin: 10px 0; display: none;">
+                                ⚠️ Слишком много ролей! Уменьшите количество.
+                            </div>
+                        </div>
+
+                        <small style="color: var(--text-muted); display: block; margin-top: 10px;">Остальные автоматически станут мирными жителями</small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn--ghost" style="flex: 1;" onclick="closeRematchModal()">Отмена</button>
+                        <button type="button" class="btn btn--primary" style="flex: 1;" onclick="startRematchWithRoles('${playerNames.join(',')}')">Начать реванш!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.body.style.overflow = 'hidden';
+
+    window.rematchRolesData = {
+        mafia: 2,
+        don: 0,
+        sheriff: 1,
+        doctor: 1,
+        jester: 0,
+        maniac: 0,
+        bodyguard: 0,
+        hooker: 0
+    };
+}
+
+function closeRematchModal() {
+    const modal = document.getElementById('rematchModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+}
+
+function changeRematchRole(role, delta) {
+    let newValue = window.rematchRolesData[role] + delta;
+    let maxValue = 5;
+
+    const uniqueRoles = ['don', 'sheriff', 'doctor', 'jester', 'maniac', 'bodyguard', 'hooker'];
+    if (uniqueRoles.includes(role)) {
+        maxValue = 2;
+    }
+
+    if (newValue >= 0 && newValue <= maxValue) {
+        window.rematchRolesData[role] = newValue;
+        updateRematchDisplay();
+        checkRematchRoleBalance();
+    }
+}
+
+function updateRematchDisplay() {
+    document.getElementById('rematchMafiaCount').innerText = window.rematchRolesData.mafia;
+    document.getElementById('rematchDonCount').innerText = window.rematchRolesData.don;
+    document.getElementById('rematchSheriffCount').innerText = window.rematchRolesData.sheriff;
+    document.getElementById('rematchDoctorCount').innerText = window.rematchRolesData.doctor;
+    document.getElementById('rematchJesterCount').innerText = window.rematchRolesData.jester;
+    document.getElementById('rematchManiacCount').innerText = window.rematchRolesData.maniac;
+    document.getElementById('rematchBodyguardCount').innerText = window.rematchRolesData.bodyguard;
+    document.getElementById('rematchHookerCount').innerText = window.rematchRolesData.hooker;
+}
+
+function checkRematchRoleBalance() {
+    const totalRoles = window.rematchRolesData.mafia + window.rematchRolesData.don +
+                       window.rematchRolesData.sheriff + window.rematchRolesData.doctor +
+                       window.rematchRolesData.jester + window.rematchRolesData.maniac +
+                       window.rematchRolesData.bodyguard + window.rematchRolesData.hooker;
+
+    const playerCount = window.currentPlayerCountForRematch || 6;
+    const warning = document.getElementById('rematchRoleWarning');
+
+    if (totalRoles > playerCount) {
+        warning.style.display = 'block';
+        warning.innerHTML = `⚠️ Слишком много ролей (${totalRoles}) для ${playerCount} игроков! Уменьшите количество.`;
+        return false;
+    } else if (totalRoles === playerCount) {
+        warning.style.display = 'block';
+        warning.innerHTML = `ℹ️ Все ${playerCount} игроков будут иметь особые роли. Мирных жителей не будет.`;
+        warning.style.background = 'rgba(96, 165, 250, 0.12)';
+        warning.style.borderColor = 'rgba(96, 165, 250, 0.3)';
+        warning.style.color = '#93c5fd';
+        return true;
+    } else {
+        warning.style.display = 'none';
+        return true;
+    }
+}
+
+function startRematchWithRoles(playerNamesStr) {
+    const playerNames = playerNamesStr.split(',');
+    const playerCount = playerNames.length;
+    window.currentPlayerCountForRematch = playerCount;
+
+    const totalRoles = window.rematchRolesData.mafia + window.rematchRolesData.don +
+                       window.rematchRolesData.sheriff + window.rematchRolesData.doctor +
+                       window.rematchRolesData.jester + window.rematchRolesData.maniac +
+                       window.rematchRolesData.bodyguard + window.rematchRolesData.hooker;
+
+    if (totalRoles > playerCount) {
+        alert(`Слишком много ролей (${totalRoles}) для ${playerCount} игроков!`);
+        return;
+    }
+
+    let roles = [];
+    for (let i = 0; i < window.rematchRolesData.mafia; i++) roles.push('mafia');
+    for (let i = 0; i < window.rematchRolesData.don; i++) roles.push('don');
+    for (let i = 0; i < window.rematchRolesData.sheriff; i++) roles.push('sheriff');
+    for (let i = 0; i < window.rematchRolesData.doctor; i++) roles.push('doctor');
+    for (let i = 0; i < window.rematchRolesData.jester; i++) roles.push('jester');
+    for (let i = 0; i < window.rematchRolesData.maniac; i++) roles.push('maniac');
+    for (let i = 0; i < window.rematchRolesData.bodyguard; i++) roles.push('bodyguard');
+    for (let i = 0; i < window.rematchRolesData.hooker; i++) roles.push('hooker');
+
+    const civilianCount = playerCount - roles.length;
+    for (let i = 0; i < civilianCount; i++) roles.push('civilian');
+
+    for (let i = roles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [roles[i], roles[j]] = [roles[j], roles[i]];
+    }
+
+    const players = playerNames.map((name, index) => ({
+        name: name.trim(),
+        role: roles[index]
+    }));
+
+    fetch(`/mafia/${gameCode}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCSRFToken() }
+    }).catch(console.error);
+
+    fetch('/mafia/create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ players: players })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            closeRematchModal();
+            window.location.href = data.redirect_url;
+        } else {
+            alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при создании игры');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateGame().then(() => startAutoRefresh());
+});
 </script>
 {% endblock %}

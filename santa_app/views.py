@@ -17,6 +17,9 @@ from datetime import timedelta
 from .models import PasswordResetToken
 from .forms import SECURITY_QUESTIONS
 
+import logging
+logger = logging.getLogger(__name__)
+
 def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -56,7 +59,9 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    user_rooms = Room.objects.filter(participant__user=request.user)
+    user_rooms = Room.objects.filter(
+        participant__user=request.user
+    ).prefetch_related('participant_set').distinct()
     created_rooms = Room.objects.filter(admin=request.user)
     
     room_form = RoomForm()
@@ -85,6 +90,12 @@ def dashboard(request):
                     room=room, 
                     display_name=display_name
                 )
+                try:
+                    from .bot_integration import notify_new_participant
+                    notify_new_participant(room.id, display_name)
+                except Exception as e:
+                    logger.exception("notify participant error: %s", e)
+
                 return redirect('room_detail', room_id=room.id)
                 
         elif form_type == 'join_room':
@@ -112,6 +123,12 @@ def dashboard(request):
                         room=room, 
                         display_name=display_name
                     )
+                    try:
+                        from .bot_integration import notify_new_participant
+                        notify_new_participant(room.id, display_name)
+                    except Exception as e:
+                        logger.exception("notify participant error: %s", e)
+
                     messages.success(request, f'Вы успешно присоединились к комнате как "{display_name}"')
                     return redirect('room_detail', room_id=room.id)
                     
@@ -158,6 +175,18 @@ def room_detail(request, room_id):
     # Получаем чаты пользователя
     user_chats = Chat.objects.filter(user=request.user, room=room)
     
+    # ⭐ НОВОЕ: информация о дедлайне
+    days_to_deadline = None
+    deadline_passed = False
+    deadline_soon = False
+
+    if room.gift_deadline:
+        from django.utils import timezone
+        delta = room.gift_deadline - timezone.now()
+        days_to_deadline = delta.days
+        deadline_passed = days_to_deadline < 0
+        deadline_soon = 0 <= days_to_deadline <= 3
+
     context = {
         'room': room,
         'participant': participant,
@@ -166,8 +195,12 @@ def room_detail(request, room_id):
         'my_receiver': my_receiver_wishlist,
         'my_receiver_wishlist': my_receiver_wishlist,
         'user_chats': user_chats,
+        # ⭐ НОВОЕ
+        'days_to_deadline': days_to_deadline,
+        'deadline_passed': deadline_passed,
+        'deadline_soon': deadline_soon,
     }
-    
+
     return render(request, 'room_detail.html', context)
 
 @login_required
@@ -312,6 +345,12 @@ def chat_detail(request, chat_id):
             message.sender = request.user
             message.save()
             
+
+            try:
+                from .bot_integration import notify_new_message_async
+                notify_new_message_async(chat, message)
+            except Exception as e:
+                logger.exception("Telegram notify error: %s", e)
             # Создаем такое же сообщение в парном чате
             pair_chat = chat.get_pair_chat()
             if pair_chat:
@@ -382,6 +421,14 @@ def send_message(request, chat_id):
             image=image,
             video=video
         )
+
+        # Уведомление в Telegram получателю
+        # Уведомление в Telegram получателю (в фоне)
+        try:
+            from .bot_integration import notify_new_message_async
+            notify_new_message_async(chat, message)
+        except Exception as e:
+            logger.exception("Telegram notify error: %s", e)
         
         # Создаем такое же сообщение в парном чате
         pair_chat = chat.get_pair_chat()
@@ -430,26 +477,28 @@ def send_message(request, chat_id):
 def get_messages(request, chat_id):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         chat = get_object_or_404(Chat, id=chat_id)
-        
-        # Проверяем доступ
+
         if chat.user != request.user:
             return JsonResponse({'error': 'No access'}, status=403)
-        
-        # Получаем параметр last_id для фильтрации новых сообщений
+
         last_id = request.GET.get('last_id', 0)
         try:
             last_id = int(last_id)
         except (ValueError, TypeError):
             last_id = 0
-        
-        # Фильтруем сообщения, которые новее last_id
-        messages = Message.objects.filter(chat=chat, id__gt=last_id).order_by('timestamp')
 
-        # Помечаем непрочитанные сообщения как прочитанные
-        unread_messages = messages.filter(is_read=False).exclude(sender=request.user)
+        # ⭐ ИСКЛЮЧАЕМ свои сообщения — их добавил AJAX-отправитель
+        messages = Message.objects.filter(
+            chat=chat, id__gt=last_id
+        ).exclude(
+            sender=request.user
+        ).order_by('timestamp')
+
+        # Помечаем входящие прочитанными
+        unread_messages = messages.filter(is_read=False)
         if unread_messages.exists():
             unread_messages.update(is_read=True)
-        
+
         messages_data = []
         for message in messages:
             message_data = {
@@ -457,20 +506,19 @@ def get_messages(request, chat_id):
                 'sender': message.sender.get_full_name() or message.sender.phone,
                 'content': message.content,
                 'timestamp': message.timestamp.strftime('%H:%M'),
-                'is_own': message.sender == request.user,
+                'is_own': False,  # ← теперь всегда False, потому что свои отсекли
                 'message_type': message.message_type
             }
-            
-            # Добавляем URL медиафайлов
+
             if message.image:
                 message_data['image_url'] = message.image.url
             if message.video:
                 message_data['video_url'] = message.video.url
-                
+
             messages_data.append(message_data)
-        
+
         return JsonResponse({'messages': messages_data})
-    
+
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
@@ -808,3 +856,197 @@ def password_reset_complete(request):
     Завершение процесса сброса пароля
     """
     return render(request, 'password_reset_complete.html')
+
+
+
+@login_required
+def games_home(request):
+    games = [
+        {
+            'id': 'mafia',
+            'title': 'Мафия',
+            'description': 'Классическая социальная игра на дедукцию и логику',
+            'icon': 'fa-user-secret',
+            'url': '/mafia/',
+            'status': 'available',
+            'players': '6-20',
+            'duration': '30-90 мин',
+        },
+        {
+            'id': 'who_am_i',
+            'title': 'Кто я?',
+            'description': 'Угадай персонажа по подсказкам от друзей',
+            'icon': 'fa-question',
+            'url': '/games/who-am-i/',
+            'status': 'available',
+            'players': '3-12',
+            'duration': '15-30 мин',
+        },
+        {
+            'id': 'truth_or_dare',
+            'title': 'Правда или действие',
+            'description': 'Классика вечеринок с неожиданными заданиями',
+            'icon': 'fa-fire',
+            'url': '/games/truth-or-dare/',
+            'status': 'available',
+            'players': '2-12',
+            'duration': '20-60 мин',
+        },
+        {
+            'id': 'crocodile',
+            'title': 'Крокодил',
+            'description': 'Показывай слова жестами, команда угадывает',
+            'icon': 'fa-paw',
+            'url': '#',
+            'status': 'soon',
+            'players': '4-12',
+            'duration': '20-40 мин',
+        },
+    ]
+    return render(request, 'games_home.html', {'games': games})
+
+
+import random as rnd
+from .games_data import (
+    WHO_AM_I_CHARACTERS,
+    TRUTH_OR_DARE_TRUTHS,
+    TRUTH_OR_DARE_DARES,
+)
+
+
+@login_required
+def game_who_am_i(request):
+    """Игра «Кто я?»"""
+    if request.method == 'POST':
+        players_count = int(request.POST.get('players', 4))
+        players_count = max(3, min(players_count, 12))
+        
+        characters = rnd.sample(WHO_AM_I_CHARACTERS, players_count)
+        players = []
+        for i, char in enumerate(characters):
+            players.append({
+                'number': i + 1,
+                'character': char,
+                'flipped': False,
+            })
+        
+        return render(request, 'game_who_am_i.html', {
+            'players': players,
+            'players_count': players_count,
+        })
+    
+    return render(request, 'game_who_am_i.html', {'players_count': 4})
+
+
+@login_required
+def game_truth_or_dare(request):
+    """Игра «Правда или действие»"""
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'truth':
+            text = rnd.choice(TRUTH_OR_DARE_TRUTHS)
+            type_ = 'truth'
+        else:
+            text = rnd.choice(TRUTH_OR_DARE_DARES)
+            type_ = 'dare'
+        
+        return JsonResponse({'success': True, 'type': type_, 'text': text})
+    
+    return render(request, 'game_truth_or_dare.html')
+
+
+@login_required
+def mark_gift_bought(request, room_id):
+    """AJAX: отметить/снять отметку покупки подарка"""
+    from django.utils import timezone
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    room = get_object_or_404(Room, id=room_id)
+    participant = get_object_or_404(Participant, user=request.user, room=room)
+
+    # Переключаем флаг
+    participant.gift_bought = not participant.gift_bought
+    participant.gift_bought_at = timezone.now() if participant.gift_bought else None
+    participant.save(update_fields=['gift_bought', 'gift_bought_at'])
+
+    return JsonResponse({
+        'success': True,
+        'bought': participant.gift_bought,
+        'message': 'Отмечено!' if participant.gift_bought else 'Отметка снята',
+    })
+
+
+from django.conf import settings
+
+
+def telegram_page(request):
+    """Страница с информацией о Telegram-боте"""
+    bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', 'opensecretsantabot')
+
+    # Проверим, привязан ли Telegram у текущего пользователя
+    telegram_linked = None
+    if request.user.is_authenticated:
+        from .models import TelegramUser
+        telegram_linked = TelegramUser.objects.filter(
+            user=request.user, is_active=True
+        ).first()
+
+    context = {
+        'bot_username': bot_username,
+        'telegram_linked': telegram_linked,
+    }
+    return render(request, 'telegram_page.html', context)
+
+@login_required
+def room_reveal(request, room_id):
+    """Страница с раскрытой картой пар после дедлайна"""
+    room = get_object_or_404(Room, id=room_id)
+    participant = get_object_or_404(Participant, user=request.user, room=room)
+
+    # Проверяем, что дедлайн прошёл
+    if not room.can_reveal_pairs:
+        messages.error(request, 'Пары будут раскрыты после дедлайна подарка.')
+        return redirect('room_detail', room_id=room.id)
+
+    # Собираем все пары
+    pairs = SantaPair.objects.filter(room=room).select_related(
+        'santa', 'receiver'
+    )
+
+    # Обогащаем участниками (чтобы показывать display_name, а не phone)
+    pairs_data = []
+    for pair in pairs:
+        santa_participant = Participant.objects.filter(
+            user=pair.santa, room=room
+        ).first()
+        receiver_participant = Participant.objects.filter(
+            user=pair.receiver, room=room
+        ).first()
+
+        pairs_data.append({
+            'santa': santa_participant,
+            'receiver': receiver_participant,
+            'is_me_santa': pair.santa == request.user,
+            'is_me_receiver': pair.receiver == request.user,
+        })
+
+    # Сортируем: сначала те, где я Санта, потом остальные
+    pairs_data.sort(key=lambda p: (not p['is_me_santa'], not p['is_me_receiver']))
+
+    # Находим мою пару
+    my_pair = next(
+        (p for p in pairs_data if p['is_me_santa']),
+        None
+    )
+
+    context = {
+        'room': room,
+        'participant': participant,
+        'pairs_data': pairs_data,
+        'my_pair': my_pair,
+        'total_pairs': len(pairs_data),
+    }
+
+    return render(request, 'room_reveal.html', context)

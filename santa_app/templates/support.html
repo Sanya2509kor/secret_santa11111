@@ -1,285 +1,180 @@
 {% extends 'base.html' %}
-
 {% block title %}Поддержка | Тайный Санта{% endblock %}
+{% block page_modifier %}page--narrow{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <!-- Заголовок -->
-        <div class="text-center mb-5">
-            <h1 class="fw-bold">💝 Поддержка проекта</h1>
-            <p class="lead text-muted">Ваша поддержка помогает развивать и улучшать сервис Тайный Санта</p>
-        </div>
+<div class="page-header text-center fade-in">
+    <h1>💝 Поддержка проекта</h1>
+    <p class="page-header__subtitle">Ваша поддержка помогает развивать и улучшать сервис</p>
+</div>
 
-        <!-- Информация о разработчике -->
-        <div class="card card-elevated mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-user me-2"></i>О разработчике
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h5>Александр</h5>
-                        <p class="text-muted mb-2">
-                            <i class="fas fa-code me-2"></i>Python разработчик
-                        </p>
-                        <p>
-                            Привет! Я создал этот сервис, чтобы сделать организацию Тайного Санты 
-                            простой и удобной. Проект разрабатывается в свободное время и постоянно 
-                            улучшается благодаря отзывам пользователей.
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <div class="bg-primary text-white rounded-circle mx-auto d-flex align-items-center justify-content-center" 
-                             style="width: 100px; height: 100px;">
-                            <i class="fas fa-heart fa-2x"></i>
-                        </div>
-                    </div>
+<!-- ═══ О разработчике ═══ -->
+<div class="card mb-4" data-reveal>
+    <div class="card__body" style="padding: 2rem;">
+        <div class="row align-items-center g-4">
+            <div class="col-md-8">
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.35rem;">Александр</h3>
+                <div style="color: var(--text-muted); margin-bottom: 1rem;">
+                    <i class="fas fa-code me-1"></i>Python разработчик
                 </div>
-            </div>
-        </div>
-
-        <!-- Способы поддержки -->
-        <div class="card card-elevated mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-hand-holding-heart me-2"></i>Способы поддержки
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-4">
-                    <!-- Финансовая поддержка -->
-                    <div class="col-md-6">
-                        <div class="text-center p-3 border rounded h-100">
-                            <div class="bg-success text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
-                                 style="width: 60px; height: 60px;">
-                                <i class="fas fa-donate fa-lg"></i>
-                            </div>
-                            <h6>Финансовая поддержка</h6>
-                            <p class="small text-muted">
-                                Помогите покрыть расходы на хостинг и дальнейшую разработку
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Отзывы и идеи -->
-                    <div class="col-md-6">
-                        <div class="text-center p-3 border rounded h-100">
-                            <div class="bg-info text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
-                                 style="width: 60px; height: 60px;">
-                                <i class="fas fa-lightbulb fa-lg"></i>
-                            </div>
-                            <h6>Отзывы и идеи</h6>
-                            <p class="small text-muted">
-                                Поделитесь идеями по улучшению сервиса
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Реквизиты для донатов -->
-        <div class="card card-elevated mb-4">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-wallet me-2"></i>Реквизиты для финансовой поддержки
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Любая сумма будет принята с благодарностью и поможет в развитии проекта!
-                </div>
-
-                <div class="row g-4">
-                    <!-- ЮMoney -->
-                    <div class="col-md-6">
-                        <div class="border rounded p-3 h-100">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="bg-warning rounded-circle me-3 d-flex align-items-center justify-content-center" 
-                                    style="width: 40px; height: 40px;">
-                                    <i class="fas fa-ruble-sign"></i>
-                                </div>
-                                <h6 class="mb-0">СБП</h6>
-                            </div>
-                            
-                            <div class="input-group mb-2">
-                                <input type="password" class="form-control" value="+79526136205" readonly 
-                                    id="yoomoney-input" style="font-family: monospace;">
-                                <button class="btn btn-outline-warning" type="button" 
-                                        onclick="toggleReveal('yoomoney-input', 'yoomoney-reveal')"
-                                        id="yoomoney-reveal">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-outline-secondary" type="button" 
-                                        onclick="copyToClipboard('+79526136205')">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">Номер телефона</small>
-                                <small class="text-muted click-hint" id="yoomoney-hint">
-                                    Нажмите 👁️ чтобы показать
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Контакты -->
-        <div class="card card-elevated">
-            <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-envelope me-2"></i>Контакты для связи
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-envelope fa-lg text-primary me-3"></i>
-                            <div>
-                                <h6 class="mb-1">Email</h6>
-                                <a href="mailto:admin@24santa-secret.ru" class="text-decoration-none">admin@24santa-secret.ru</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center">
-                            <i class="fab fa-telegram fa-lg text-primary me-3"></i>
-                            <div>
-                                <h6 class="mb-1">Telegram</h6>
-                                <a href="https://t.me/my_telegram_00000" class="text-decoration-none">@my_telegram_00000</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Форма обратной связи -->
-                <div class="mt-4 p-3 bg-light rounded">
-                    <h6>Есть вопросы или предложения?</h6>
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <!-- Поле email (необязательное) -->
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Ваш email (для ответа)</label>
-                            <input type="email" class="form-control" id="email" name="email" 
-                                placeholder="email@example.com" value="{{ user.email|default:'' }}">
-                        </div>
-                        
-                        <!-- Поле сообщения -->
-                        <div class="mb-3">
-                            <label for="message" class="form-label">Ваше сообщение *</label>
-                            <textarea class="form-control" id="message" name="message" rows="4" 
-                                    placeholder="Опишите вашу проблему, предложение или вопрос..." required></textarea>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary btn-shine">
-                            <i class="fas fa-paper-plane me-1"></i>Отправить сообщение
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Благодарность -->
-        <div class="text-center mt-5">
-            <div class="bg-light rounded p-4">
-                <i class="fas fa-heart text-danger fa-2x mb-3"></i>
-                <h5>Спасибо за вашу поддержку! 💝</h5>
-                <p class="text-muted mb-0">
-                    Каждое пожертвование мотивирует на дальнейшее развитие проекта и добавление новых функций
+                <p style="color: var(--text-soft); margin: 0;">
+                    Привет! Я создал этот сервис, чтобы сделать организацию Тайного Санты простой и удобной.
+                    Проект развивается в свободное время и постоянно улучшается благодаря вашим отзывам.
                 </p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div style="width: 100px; height: 100px; margin: 0 auto; background: var(--gradient-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1a1a1a; font-size: 2.5rem; box-shadow: var(--glow-gold-strong);">
+                    <i class="fas fa-heart"></i>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.input-group input[readonly] {
-    background-color: #f8f9fa;
-    cursor: pointer;
-}
+<!-- ═══ Способы поддержки ═══ -->
+<div class="card mb-4" data-reveal>
+    <div class="card__header">
+        <h5><i class="fas fa-hand-holding-heart" style="color: var(--emerald);"></i>Способы поддержки</h5>
+    </div>
+    <div class="card__body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card card--flat h-100" style="background: var(--surface-2); text-align: center;">
+                    <div class="card__body">
+                        <div style="width: 56px; height: 56px; margin: 0 auto 1rem; background: var(--gradient-forest); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #052e16; font-size: 1.5rem;">
+                            <i class="fas fa-donate"></i>
+                        </div>
+                        <h6 style="font-size: 1.05rem; margin-bottom: 0.5rem;">Финансовая поддержка</h6>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                            Помогите покрыть расходы на хостинг и разработку
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card--flat h-100" style="background: var(--surface-2); text-align: center;">
+                    <div class="card__body">
+                        <div style="width: 56px; height: 56px; margin: 0 auto 1rem; background: rgba(96, 165, 250, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #93c5fd; font-size: 1.5rem; border: 1px solid rgba(96, 165, 250, 0.3);">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <h6 style="font-size: 1.05rem; margin-bottom: 0.5rem;">Идеи и отзывы</h6>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                            Поделитесь идеями по улучшению сервиса
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-.input-group input[readonly]:focus {
-    background-color: #f8f9fa;
-    border-color: #ced4da;
-    box-shadow: none;
-}
+<!-- ═══ Реквизиты ═══ -->
+<div class="card mb-4" data-reveal>
+    <div class="card__header">
+        <h5><i class="fas fa-wallet" style="color: var(--amber);"></i>Реквизиты для донатов</h5>
+    </div>
+    <div class="card__body">
+        <div class="alert alert--info">
+            <i class="fas fa-info-circle" style="color: var(--sapphire);"></i>
+            <div>Любая сумма будет принята с благодарностью!</div>
+        </div>
 
-.border {
-    border-color: #e9ecef !important;
-}
+        <div class="card card--flat" style="background: var(--surface-2);">
+            <div class="card__body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gold-soft); color: var(--gold); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-ruble-sign"></i>
+                    </div>
+                    <h6 style="margin: 0;">СБП</h6>
+                </div>
 
-.click-hint {
-    font-size: 0.75rem;
-}
+                <div class="input-group">
+                    <span class="input-group__prefix"><i class="fas fa-phone"></i></span>
+                    <input type="text" class="form-control" value="+79526136205" readonly
+                           id="sbp-input" style="font-family: monospace;">
+                    <button type="button" class="btn btn--primary" onclick="copySBP()" style="margin-left: 0.5rem; border-radius: var(--radius-sm);">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="form-text">Нажмите для копирования</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-@media (max-width: 768px) {
-    .input-group {
-        
-    }
-    
-    .input-group .form-control {
-        font-size: 0.9rem;
-    }
-    
-    .input-group .btn {
-        padding: 0.375rem 0.75rem;
-    }
-}
-</style>
+<!-- ═══ Контакты ═══ -->
+<div class="card" data-reveal>
+    <div class="card__header">
+        <h5><i class="fas fa-envelope" style="color: var(--sapphire);"></i>Связь</h5>
+    </div>
+    <div class="card__body">
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fas fa-envelope" style="font-size: 1.5rem; color: var(--gold);"></i>
+                    <div>
+                        <div style="color: var(--text-muted); font-size: 0.8rem;">Email</div>
+                        <a href="mailto:admin@24santa-secret.ru" style="font-weight: 500;">admin@24santa-secret.ru</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fab fa-telegram" style="font-size: 1.5rem; color: var(--gold);"></i>
+                    <div>
+                        <div style="color: var(--text-muted); font-size: 0.8rem;">Telegram</div>
+                        <a href="https://t.me/my_telegram_00000" style="font-weight: 500;">@my_telegram_00000</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h6 style="font-family: 'Playfair Display', serif; margin-bottom: 1rem;">
+            <i class="fas fa-paper-plane me-2"></i>Форма обратной связи
+        </h6>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Email для ответа</label>
+                <input type="email" class="form-control" name="email"
+                       placeholder="email@example.com" value="{{ user.email|default:'' }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label form-label--required">Ваше сообщение</label>
+                <textarea class="form-control" name="message" rows="4"
+                          placeholder="Опишите проблему, предложение или вопрос..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--lg btn--shine">
+                <i class="fas fa-paper-plane"></i>Отправить
+            </button>
+        </form>
+    </div>
+</div>
+
+<div style="text-align: center; margin-top: 3rem;">
+    <i class="fas fa-heart" style="color: var(--ruby); font-size: 2rem; margin-bottom: 1rem; filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.5));"></i>
+    <h4 style="font-size: 1.2rem;">Спасибо за вашу поддержку!</h4>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">
+        Каждое пожертвование мотивирует на развитие проекта
+    </p>
+</div>
 
 <script>
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        // Показываем уведомление об успешном копировании
-        showNotification('Реквизиты скопированы в буфер обмена!', 'success');
-    }).catch(function(err) {
-        console.error('Ошибка при копировании: ', err);
-        showNotification('Ошибка при копировании', 'error');
+function copySBP() {
+    const input = document.getElementById('sbp-input');
+    navigator.clipboard.writeText(input.value).then(() => {
+        window.showToast('Реквизиты скопированы!', 'success');
+    }).catch(() => {
+        input.select();
+        document.execCommand('copy');
+        window.showToast('Реквизиты скопированы!', 'success');
     });
 }
-
-function showNotification(message, type) {
-    // Создаем временное уведомление
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-    const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" 
-             style="z-index: 1060; min-width: 300px;" role="alert">
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    
-    document.body.insertAdjacentHTML('beforeend', alertHtml);
-    
-    // Автоматически скрываем через 3 секунды
-    setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if (alert) {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }
-    }, 3000);
-}
-
-// Добавляем обработчики для всех кнопок копирования
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.btn-outline-warning, .btn-outline-primary, .btn-outline-success, .btn-outline-dark').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const input = this.closest('.input-group').querySelector('input');
-            copyToClipboard(input.value);
-        });
-    });
-});
 </script>
 {% endblock %}

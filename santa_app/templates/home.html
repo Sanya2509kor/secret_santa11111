@@ -1,144 +1,134 @@
 {% extends 'base.html' %}
+{% block title %}Тайный Санта — Волшебный обмен подарками{% endblock %}
 
 {% block content %}
-<div class="hero-section text-center text-white">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <h1 class="display-4 fw-bold mb-4 pulse">🎄 Тайный Санта 🎅</h1>
-                <p class="lead mb-4 fs-5">Организуйте волшебный обмен подарками с друзьями и коллегами в премиум-формате!</p>
-                
-                <div class="row g-4 mb-5">
-                    <div class="col-md-6">
-                        <div class="card h-100 border-0 card-elevated">
-                            <div class="card-body text-dark p-4">
-                                <div class="bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                    <i class="fas fa-plus-circle fa-2x"></i>
-                                </div>
-                                <h5 class="card-title fw-bold">Создайте комнату</h5>
-                                <p class="card-text">Создайте новую комнату и пригласите друзей по уникальному коду</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card h-100 border-0 card-elevated">
-                            <div class="card-body text-dark p-4">
-                                <div class="bg-success text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                    <i class="fas fa-users fa-2x"></i>
-                                </div>
-                                <h5 class="card-title fw-bold">Присоединяйтесь</h5>
-                                <p class="card-text">Войдите в существующую комнату по коду приглашения</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<!-- ═══ HERO ═══ -->
+<section class="fade-in" style="text-align:center; padding: 3rem 0 4rem;">
+    <div style="font-size: clamp(3rem, 10vw, 5rem); margin-bottom: 1rem; line-height: 1;">🎄</div>
+    <h1 class="display-1" style="margin-bottom: 1rem; background: var(--gradient-gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        Тайный Санта
+    </h1>
+    <p style="font-size: 1.1rem; color: var(--text-soft); max-width: 540px; margin: 0 auto 2.5rem;">
+        Организуйте волшебный обмен подарками с друзьями и коллегами — анонимно, элегантно, безопасно
+    </p>
 
-                {% if not user.is_authenticated %}
-                <div class="d-grid gap-2 d-md-flex justify-content-center">
-                    <a href="{% url 'register' %}" class="btn btn-light btn-lg px-4 me-md-2 fw-bold btn-shine">
-                        <i class="fas fa-rocket me-2"></i>Начать сейчас
-                    </a>
-                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4">
-                        <i class="fas fa-sign-in-alt me-2"></i>Войти
-                    </a>
-                </div>
-                {% else %}
-                <div class="d-grid gap-2 d-md-flex justify-content-center">
-                    <a href="{% url 'dashboard' %}" class="btn btn-light btn-lg px-4 fw-bold btn-shine">
-                        <i class="fas fa-tachometer-alt me-2"></i>Перейти в дашборд
-                    </a>
-                </div>
-                {% endif %}
-            </div>
-        </div>
+    {% if not user.is_authenticated %}
+    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+        <a href="{% url 'register' %}" class="btn btn--primary btn--lg btn--shine">
+            <i class="fas fa-rocket"></i>Начать бесплатно
+        </a>
+        <a href="{% url 'login' %}" class="btn btn--ghost btn--lg">
+            <i class="fas fa-sign-in-alt"></i>Войти
+        </a>
     </div>
-</div>
+    {% else %}
+    <a href="{% url 'dashboard' %}" class="btn btn--primary btn--lg btn--shine">
+        <i class="fas fa-door-open"></i>Открыть дашборд
+    </a>
+    {% endif %}
+</section>
 
-<div class="container my-5">
-    <div class="row g-4">
-        <div class="col-12 text-center mb-4">
-            <h2 class="fw-bold">Как это работает?</h2>
-            <p class="text-muted">Простой и элегантный процесс организации праздника</p>
-        </div>
-        <div class="col-md-3 col-6 text-center">
-            <div class="card border-0 card-elevated">
-                <div class="card-body">
-                    <div class="bg-primary text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
-                        <span class="fw-bold fs-5">1</span>
-                    </div>
-                    <h6 class="fw-semibold">Создайте комнату</h6>
-                    <small class="text-muted">Настройте параметры обмена</small>
+<!-- ═══ КАК ЭТО РАБОТАЕТ ═══ -->
+<section style="margin: 4rem 0;">
+    <div style="text-align:center; margin-bottom: 2.5rem;">
+        <h2>Как это работает</h2>
+        <p style="color: var(--text-muted); margin-top: 0.5rem;">Четыре шага до волшебства</p>
+    </div>
+
+    <div class="row g-3 stagger">
+        {% for step in "1234" %}{% endfor %}
+        <div class="col-md-3 col-6">
+            <div class="card card--hover h-100" style="text-align:center;">
+                <div class="card__body">
+                    <div style="width: 56px; height: 56px; margin: 0 auto 1rem; background: var(--gradient-gold); color: #1a1a1a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.4rem;">1</div>
+                    <h6 style="font-family:'Playfair Display',serif; font-size:1.05rem; margin-bottom:0.5rem;">Создайте комнату</h6>
+                    <small style="color: var(--text-muted);">Настройте обмен</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-6 text-center">
-            <div class="card border-0 card-elevated">
-                <div class="card-body">
-                    <div class="bg-success text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
-                        <span class="fw-bold fs-5">2</span>
-                    </div>
-                    <h6 class="fw-semibold">Пригласите друзей</h6>
-                    <small class="text-muted">Отправьте код приглашения</small>
+        <div class="col-md-3 col-6">
+            <div class="card card--hover h-100" style="text-align:center;">
+                <div class="card__body">
+                    <div style="width: 56px; height: 56px; margin: 0 auto 1rem; background: var(--gradient-forest); color: #052e16; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.4rem;">2</div>
+                    <h6 style="font-family:'Playfair Display',serif; font-size:1.05rem; margin-bottom:0.5rem;">Пригласите друзей</h6>
+                    <small style="color: var(--text-muted);">Поделитесь кодом</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-6 text-center">
-            <div class="card border-0 card-elevated">
-                <div class="card-body">
-                    <div class="bg-warning text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
-                        <span class="fw-bold fs-5">3</span>
-                    </div>
-                    <h6 class="fw-semibold">Проведите жеребьевку</h6>
-                    <small class="text-muted">Автоматическое распределение</small>
+        <div class="col-md-3 col-6">
+            <div class="card card--hover h-100" style="text-align:center;">
+                <div class="card__body">
+                    <div style="width: 56px; height: 56px; margin: 0 auto 1rem; background: linear-gradient(135deg, #60a5fa, #3b82f6); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.4rem;">3</div>
+                    <h6 style="font-family:'Playfair Display',serif; font-size:1.05rem; margin-bottom:0.5rem;">Жеребьёвка</h6>
+                    <small style="color: var(--text-muted);">Автоматически</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-6 text-center">
-            <div class="card border-0 card-elevated">
-                <div class="card-body">
-                    <div class="bg-danger text-white rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
-                        <span class="fw-bold fs-5">4</span>
-                    </div>
-                    <h6 class="fw-semibold">Обменивайтесь подарками!</h6>
-                    <small class="text-muted">Наслаждайтесь праздником</small>
+        <div class="col-md-3 col-6">
+            <div class="card card--hover h-100" style="text-align:center;">
+                <div class="card__body">
+                    <div style="width: 56px; height: 56px; margin: 0 auto 1rem; background: var(--gradient-fire); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.4rem;">4</div>
+                    <h6 style="font-family:'Playfair Display',serif; font-size:1.05rem; margin-bottom:0.5rem;">Дарите подарки</h6>
+                    <small style="color: var(--text-muted);">Радуйте близких</small>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<div class="bg-light py-5 mt-5">
-    <div class="container text-center">
-        <h3 class="fw-bold mb-4">Почему выбирают нас?</h3>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card border-0 h-100">
-                    <div class="card-body">
-                        <i class="fas fa-shield-alt fa-2x text-primary mb-3"></i>
-                        <h5>Безопасность</h5>
-                        <p class="text-muted">Ваши данные защищены</p>
-                    </div>
+<!-- ═══ ПРЕИМУЩЕСТВА ═══ -->
+<section style="margin: 4rem 0;">
+    <div style="text-align:center; margin-bottom: 2.5rem;">
+        <h2>Почему мы</h2>
+    </div>
+
+    <div class="row g-3 stagger">
+        <div class="col-md-4">
+            <div class="card card--hover h-100" style="text-align:center;">
+                <div class="card__body">
+                    <i class="fas fa-shield-alt" style="font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem;"></i>
+                    <h5 style="font-size:1.15rem; margin-bottom:0.5rem;">Анонимность</h5>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Полная приватность участников и переписки</p>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 h-100">
-                    <div class="card-body">
-                        <i class="fas fa-bolt fa-2x text-warning mb-3"></i>
-                        <h5>Скорость</h5>
-                        <p class="text-muted">Мгновенное создание комнат</p>
-                    </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card--hover h-100" style="text-align:center;">
+                <div class="card__body">
+                    <i class="fab fa-telegram" style="font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem;"></i>
+                    <h5 style="font-size:1.15rem; margin-bottom:0.5rem;">Telegram-бот</h5>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Уведомления и чаты прямо в мессенджере</p>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 h-100">
-                    <div class="card-body">
-                        <i class="fas fa-mobile-alt fa-2x text-success mb-3"></i>
-                        <h5>Доступность</h5>
-                        <p class="text-muted">Работает на всех устройствах</p>
-                    </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card--hover h-100" style="text-align:center;">
+                <div class="card__body">
+                    <i class="fas fa-gamepad" style="font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem;"></i>
+                    <h5 style="font-size:1.15rem; margin-bottom:0.5rem;">Игры для компании</h5>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Мафия и другие развлечения для вечеринок</p>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section style="margin: 4rem 0;">
+    <div class="card card--gold" style="text-align:center; background: linear-gradient(135deg, rgba(232,201,100,0.08), rgba(232,201,100,0.02));">
+        <div class="card__body" style="padding: 3rem 1.5rem;">
+            <h2 style="margin-bottom: 1rem;">Готовы устроить волшебство?</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Начните бесплатно за 30 секунд</p>
+            {% if not user.is_authenticated %}
+            <a href="{% url 'register' %}" class="btn btn--primary btn--lg btn--shine">
+                <i class="fas fa-gift"></i>Создать комнату
+            </a>
+            {% else %}
+            <a href="{% url 'dashboard' %}" class="btn btn--primary btn--lg btn--shine">
+                <i class="fas fa-door-open"></i>Перейти в дашборд
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
 {% endblock %}

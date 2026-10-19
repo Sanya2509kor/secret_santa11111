@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Кто я? | Тайный Санта{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'games_home' %}"><i class="fas fa-gamepad me-1"></i>Игры</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>Кто я?</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <div class="page-header__title">
+        <h1>🎭 Кто я?</h1>
+    </div>
+    <p class="page-header__subtitle">
+        Телефон передаётся по кругу. Игрок прикладывает ко лбу, не смотрит на экран. 
+        Остальные дают подсказки. Угадал — наклоняет телефон вниз. Не угадал — вверх.
+    </p>
+</div>
+
+{% if not players %}
+<div class="card card--gold">
+    <div class="card__body" style="padding: 2rem;">
+        <h3 style="margin-bottom: 1rem;">Начать игру</h3>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label class="form-label">Сколько игроков?</label>
+                <input type="number" name="players" class="form-control" 
+                       value="{{ players_count|default:4 }}" min="3" max="12"
+                       style="font-size: 1.25rem; text-align: center;">
+                <div class="form-text">От 3 до 12 человек</div>
+            </div>
+            <button type="submit" class="btn btn--primary btn--lg btn--block btn--shine">
+                <i class="fas fa-play"></i>Поехали!
+            </button>
+        </form>
+    </div>
+</div>
+{% else %}
+
+<div class="alert alert--info mb-4">
+    <i class="fas fa-info-circle"></i>
+    <div>По очереди передавайте телефон. Персонаж виден только тому, кто держит телефон НАД головой — остальные видят и дают подсказки.</div>
+</div>
+
+<div class="row g-3 stagger">
+    {% for player in players %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card" style="text-align: center; overflow: hidden;">
+            <div class="card__body" style="padding: 2rem 1.5rem;">
+                <div style="color: var(--gold); font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;">
+                    ИГРОК {{ player.number }}
+                </div>
+
+                <div id="char-{{ player.number }}" 
+                     style="font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; min-height: 60px; display: flex; align-items: center; justify-content: center; padding: 0.5rem; transition: all 0.3s ease;">
+                    <span class="char-text" style="opacity: 1;">{{ player.character }}</span>
+                </div>
+
+                <button type="button" 
+                        class="btn btn--secondary btn--sm btn--block"
+                        onclick="toggleChar({{ player.number }})"
+                        style="margin-top: 1rem;">
+                    <i class="fas fa-eye-slash"></i><span class="btn-text">Скрыть</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="d-flex flex-column flex-sm-row gap-2 mt-4">
+    <a href="{% url 'game_who_am_i' %}" class="btn btn--ghost" style="flex: 1;">
+        <i class="fas fa-redo"></i>Заново
+    </a>
+    <a href="{% url 'games_home' %}" class="btn btn--secondary" style="flex: 1;">
+        <i class="fas fa-arrow-left"></i>К играм
+    </a>
+</div>
+
+<script>
+function toggleChar(num) {
+    const container = document.getElementById('char-' + num);
+    const text = container.querySelector('.char-text');
+    const btn = container.parentElement.querySelector('button');
+    const btnText = btn.querySelector('.btn-text');
+    const icon = btn.querySelector('i');
+    
+    if (text.style.opacity === '0') {
+        text.style.opacity = '1';
+        container.style.background = 'transparent';
+        btnText.textContent = 'Скрыть';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        text.style.opacity = '0';
+        container.style.background = 'linear-gradient(135deg, rgba(232,201,100,0.15), rgba(232,201,100,0.05))';
+        btnText.textContent = 'Показать';
+        icon.className = 'fas fa-eye';
+    }
+}
+</script>
+
+{% endif %}
+{% endblock %}

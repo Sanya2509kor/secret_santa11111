@@ -87,6 +87,14 @@ class Room(models.Model):
     is_active = models.BooleanField(default=True)
     draw_completed = models.BooleanField(default=False)
     show_participants = models.BooleanField(default=False, verbose_name='Показывать участников?', blank=True, null=True)
+    gift_deadline = models.DateTimeField(
+        null=True, blank=True, 
+        verbose_name='Дедлайн подарка'
+    )
+    budget = models.CharField(
+        max_length=100, blank=True, null=True,
+        verbose_name='Бюджет'
+    )
     
     def save(self, *args, **kwargs):
         if not self.code:
@@ -102,6 +110,14 @@ class Room(models.Model):
         Participant.objects.filter(room=self).delete()
         # Удаляем саму комнату
         self.delete()
+
+    @property
+    def can_reveal_pairs(self):
+        """Можно ли раскрыть пары (после дедлайна)"""
+        from django.utils import timezone
+        if not self.gift_deadline:
+            return False
+        return timezone.now() > self.gift_deadline
     
 
     class Meta:
@@ -117,6 +133,19 @@ class Participant(models.Model):
     display_name = models.CharField(max_length=30, verbose_name="Имя в комнате", blank=True)
     wishlist = models.TextField(blank=True, null=True, verbose_name="Пожелания к подарку")
     joined_at = models.DateTimeField(auto_now_add=True)
+    # ⭐ НОВОЕ
+    gift_bought = models.BooleanField(
+        default=False,
+        verbose_name='Подарок куплен',
+    )
+    gift_bought_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name='Дата отметки',
+    )
+    last_asked_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name='Последний раз спрашивали',
+    )
     
     class Meta:
         unique_together = ['user', 'room']
@@ -271,4 +300,63 @@ class PasswordResetToken(models.Model):
     
     def is_valid(self):
         from django.utils import timezone
+        return not self.is_used and timezone.now() < self.expires_at
+
+
+
+# в основном models.py добавьте:
+
+class TelegramUser(models.Model):
+    """Привязка Telegram-аккаунта к пользователю сайта"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='telegram')
+    telegram_id = models.BigIntegerField(unique=True, db_index=True)
+    username = models.CharField(max_length=100, blank=True, null=True)
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    language_code = models.CharField(max_length=10, default='ru')
+    linked_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    # Для диалогов
+    state = models.CharField(max_length=50, blank=True, null=True)
+    temp_data = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        verbose_name = 'Telegram-пользователь'
+        verbose_name_plural = 'Telegram-пользователи'
+    
+    def __str__(self):
+        return f"@{self.username or self.telegram_id} → {self.user.phone}"
+
+
+class TelegramChat(models.Model):
+    """Привязка Telegram-группы к комнате"""
+    room = models.OneToOneField(Room, on_delete=models.CASCADE, related_name='telegram_chat')
+    chat_id = models.BigIntegerField(unique=True, db_index=True)
+    chat_title = models.CharField(max_length=200, blank=True)
+    chat_type = models.CharField(max_length=20, default='group')  # group, supergroup
+    is_active = models.BooleanField(default=True)
+    linked_at = models.DateTimeField(auto_now_add=True)
+    linked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    # Настройки уведомлений
+    notify_daily = models.BooleanField(default=True)
+    notify_new_member = models.BooleanField(default=True)
+    notify_deadline = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = 'Telegram-чат'
+        verbose_name_plural = 'Telegram-чаты'
+    
+    def __str__(self):
+        return f"{self.chat_title} → {self.room.name}"
+
+
+class TelegramLinkCode(models.Model):
+    """Одноразовый код для привязки аккаунта"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=10, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    def is_valid(self):
         return not self.is_used and timezone.now() < self.expires_at

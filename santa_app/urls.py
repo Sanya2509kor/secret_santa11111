@@ -25,4 +25,10 @@ urlpatterns = [
     path('password-reset/security-question/', views.security_question_verify, name='security_question_verify'),
     path('password-reset/confirm/<str:token>/', views.password_reset_confirm, name='password_reset_confirm'),
     path('password-reset/complete/', views.password_reset_complete, name='password_reset_complete'),
+    path('games/', views.games_home, name='games_home'),
+    path('games/who-am-i/', views.game_who_am_i, name='game_who_am_i'),
+    path('games/truth-or-dare/', views.game_truth_or_dare, name='game_truth_or_dare'),
+    path('room/<int:room_id>/mark-bought/', views.mark_gift_bought, name='mark_gift_bought'),
+    path('telegram/', views.telegram_page, name='telegram_page'),
+    path('room/<int:room_id>/reveal/', views.room_reveal, name='room_reveal'),
 ]

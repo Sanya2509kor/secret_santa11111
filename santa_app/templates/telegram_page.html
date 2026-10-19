@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% block title %}Telegram-бот | Тайный Санта{% endblock %}
+
+{% block content %}
+
+<!-- ═══ HERO ═══ -->
+<div class="hero-section text-center mb-5" style="margin: -1.5rem -12px 2rem; border-radius: 0 0 var(--radius-lg) var(--radius-lg); padding: 3rem 1rem;">
+    <div style="font-size: 4rem; line-height: 1; margin-bottom: 1rem; filter: drop-shadow(0 0 30px rgba(96, 165, 250, 0.4));">
+        <i class="fab fa-telegram" style="color: #60a5fa;"></i>
+    </div>
+    <h1 class="display-font mb-3">Telegram-бот Тайного Санты</h1>
+    <p class="lead mx-auto" style="max-width: 540px; color: var(--text-soft);">
+        Уведомления, напоминания и общение с Сантой прямо в мессенджере
+    </p>
+</div>
+
+<div class="page--narrow">
+
+    <!-- ═══ СТАТУС ПРИВЯЗКИ ═══ -->
+    {% if user.is_authenticated and telegram_linked %}
+    <div class="alert alert--success mb-4">
+        <i class="fas fa-check-circle" style="color: var(--emerald); font-size: 1.25rem;"></i>
+        <div>
+            <strong>Telegram привязан</strong>
+            {% if telegram_linked.username %}
+            <span style="color: var(--text-muted);">— @{{ telegram_linked.username }}</span>
+            {% endif %}
+            <br>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ ЮЗЕРНЕЙМ БОТА ═══ -->
+    <div class="card card--gold mb-4" data-reveal>
+        <div class="card__body" style="padding: 2rem;">
+
+            <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem; text-align: center;">
+                <i class="fas fa-at me-1" style="color: var(--gold);"></i>
+                Найти бота в Telegram
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-bottom: 1.5rem;">
+                Скопируйте имя и вставьте в поиск в Telegram
+            </p>
+
+            <div id="username-block"
+                 style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; background: var(--surface-2); border-radius: var(--radius); border: 1px solid var(--border-2);">
+                
+                <i class="fab fa-telegram" style="font-size: 1.5rem; color: #60a5fa; flex-shrink: 0;"></i>
+
+                <code id="bot-username"
+                      style="flex: 1; font-size: 1.25rem; font-weight: 700; background: transparent; padding: 0; color: var(--gold); user-select: all; word-break: break-all;">
+                    @{{ bot_username }}
+                </code>
+
+                <button type="button"
+                        class="btn btn--primary btn--sm"
+                        id="copy-btn"
+                        onclick="copyBotUsername()"
+                        style="flex-shrink: 0;">
+                    <i class="fas fa-copy"></i>
+                    <span>Скопировать</span>
+                </button>
+            </div>
+
+            <div style="text-align: center; margin-top: 1rem; color: var(--text-muted); font-size: 0.85rem;">
+                <i class="fas fa-info-circle me-1"></i>
+                Вставьте <code>@{{ bot_username }}</code> в поиск Telegram → найдите бота → нажмите «Запустить»
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ КАК НАЧАТЬ ═══ -->
+    <div class="card mb-4" data-reveal>
+        <div class="card__header">
+            <h5><i class="fas fa-rocket" style="color: var(--gold);"></i>Как начать пользоваться</h5>
+        </div>
+        <div class="card__body">
+
+            <div class="d-flex gap-3 mb-4">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-gold); color: #1a1a1a; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">1</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Найдите бота в Telegram</div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">
+                        Скопируйте <code>@{{ bot_username }}</code> и вставьте в поиск Telegram
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mb-4">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-gold); color: #1a1a1a; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">2</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Нажмите «Запустить»</div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">
+                        Откроется чат с ботом → нажмите кнопку «Запустить» внизу
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mb-4">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-gold); color: #1a1a1a; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">3</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">Отправьте команду <code>/link</code></div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">
+                        Бот попросит поделиться номером телефона, чтобы убедиться, что это вы
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-forest); color: #052e16; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 0.25rem; color: var(--emerald);">Готово!</div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem;">
+                        Теперь вам будут приходить уведомления о сообщениях, напоминания о дедлайнах и многое другое
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ═══ ЧТО УМЕЕТ БОТ ═══ -->
+    <div class="card mb-4" data-reveal>
+        <div class="card__header">
+            <h5><i class="fas fa-magic" style="color: var(--gold);"></i>Что умеет бот</h5>
+        </div>
+        <div class="card__body">
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <div style="display: flex; gap: 0.75rem; padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 1.5rem;">💬</div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.95rem;">Уведомления о сообщениях</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">
+                                Узнавайте сразу, когда ваш Санта или получатель написал
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div style="display: flex; gap: 0.75rem; padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 1.5rem;">⏰</div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.95rem;">Напоминания о дедлайнах</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">
+                                Не забудете купить и подарить подарок вовремя
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div style="display: flex; gap: 0.75rem; padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 1.5rem;">🎁</div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.95rem;">Мои комнаты</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">
+                                Просмотр всех ваших комнат, кому дарите, пожелания получателя
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div style="display: flex; gap: 0.75rem; padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 1.5rem;">✅</div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.95rem;">Отметка покупки</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">
+                                Отмечайте, что подарок куплен — в группе видят все
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div style="display: flex; gap: 0.75rem; padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 1.5rem;">👥</div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.95rem;">Работа в группах</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">
+                                Добавьте бота в чат — и все участники видят статус обмена
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div style="display: flex; gap: 0.75rem; padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="font-size: 1.5rem;">🔒</div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.95rem;">Приватность</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">
+                                Никто не узнает, кто чей Санта — вся переписка анонимна
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ FAQ ═══ -->
+    <div class="card mb-4" data-reveal>
+        <div class="card__header">
+            <h5><i class="fas fa-question-circle" style="color: var(--sapphire);"></i>Частые вопросы</h5>
+        </div>
+        <div class="card__body">
+
+            <details style="padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 0.5rem;">
+                <summary style="cursor: pointer; font-weight: 600; outline: none;">
+                    Как привязать Telegram к аккаунту на сайте?
+                </summary>
+                <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem; line-height: 1.7;">
+                    Откройте бота, отправьте команду <code>/link</code> и нажмите кнопку «📱 Поделиться номером».
+                    Telegram передаст ваш номер боту, и он сверит его с тем, что указан на сайте.
+                    Если номера совпадают — аккаунт привязан.
+                </div>
+            </details>
+
+            <details style="padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 0.5rem;">
+                <summary style="cursor: pointer; font-weight: 600; outline: none;">
+                    Это безопасно?
+                </summary>
+                <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem; line-height: 1.7;">
+                    Да. Бот работает через официальный Telegram Bot API. Ваш номер виден только боту,
+                    и используется только для сверки с сайтом. Никакие личные данные никому не передаются.
+                </div>
+            </details>
+
+            <details style="padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 0.5rem;">
+                <summary style="cursor: pointer; font-weight: 600; outline: none;">
+                    Могу ли я добавить бота в группу?
+                </summary>
+                <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem; line-height: 1.7;">
+                    Да! Добавьте бота в группу, затем напишите <code>/link_room КОД_КОМНАТЫ</code> —
+                    так группа привяжется к вашей комнате. После этого все участники смогут видеть статус
+                    обмена подарками и напоминания о дедлайнах.
+                </div>
+            </details>
+
+            <details style="padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <summary style="cursor: pointer; font-weight: 600; outline: none;">
+                    Как отвязать Telegram?
+                </summary>
+                <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem; line-height: 1.7;">
+                    Отправьте боту команду <code>/unlink</code>. Или перейдите в личный кабинет на сайте
+                    → раздел «Telegram» → «Отвязать».
+                </div>
+            </details>
+
+        </div>
+    </div>
+
+    <!-- ═══ CTA ═══ -->
+    <div class="card card--gold" data-reveal>
+        <div class="card__body" style="padding: 2rem; text-align: center;">
+            <h4 style="font-family: 'Playfair Display', serif; margin-bottom: 0.75rem;">
+                Готовы начать?
+            </h4>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                Скопируйте имя бота и откройте Telegram
+            </p>
+
+            <button type="button" 
+                    class="btn btn--primary btn--lg btn--shine"
+                    onclick="copyBotUsername()">
+                <i class="fas fa-copy"></i>
+                Скопировать @{{ bot_username }}
+            </button>
+
+            
+        </div>
+    </div>
+
+</div>
+
+<script>
+function copyBotUsername() {
+    const username = '@{{ bot_username }}';
+
+    const done = () => {
+        // Меняем иконку кнопки на галочку
+        const btn = document.getElementById('copy-btn');
+        if (btn) {
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('span');
+            const originalIcon = icon.className;
+            const originalText = text.textContent;
+
+            icon.className = 'fas fa-check';
+            text.textContent = 'Скопировано!';
+            btn.style.background = 'var(--gradient-forest)';
+            btn.style.color = '#052e16';
+
+            setTimeout(() => {
+                icon.className = 'fas fa-copy';
+                text.textContent = originalText;
+                btn.style.background = '';
+                btn.style.color = '';
+            }, 2000);
+        }
+
+        // Toast
+        if (window.showToast) {
+            window.showToast('✅ ' + username + ' скопирован. Вставьте в поиск Telegram', 'success');
+        }
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(username).then(done).catch(() => {
+            fallbackCopy(username);
+            done();
+        });
+    } else {
+        fallbackCopy(username);
+        done();
+    }
+}
+
+function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+}
+</script>
+{% endblock %}

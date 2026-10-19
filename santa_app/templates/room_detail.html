@@ -1,590 +1,655 @@
 {% extends 'base.html' %}
+{% block title %}{{ room.name }} | Тайный Санта{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'dashboard' %}"><i class="fas fa-home me-1"></i>Дашборд</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>{{ room.name }}</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold">{{ room.name }}</h2>
-            <div class="d-flex align-items-center gap-2">
-                <div class="position-relative d-inline-block">
-                    <span class="badge copyable-badge pulse-badge" 
-                        id="room-code-badge"
-                        onclick="copyRoomCode('{{ room.code }}')"
-                        style="cursor: pointer;"
-                        title="Нажмите чтобы скопировать код комнаты"
-                        data-bs-toggle="tooltip" 
-                        data-bs-placement="top">
-                        <i class="fas fa-key me-1"></i>
-                        <span id="room-code-text">Код: {{ room.code }}</span>
-                        <i class="fas fa-copy ms-1" id="room-code-icon"></i>
-                    </span>
-                </div>
-            </div>
-        </div>
-        {% if room.admin == user %}
-                <!-- Кнопка удаления комнаты -->
-                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteRoomModal">
-                    <i class="fas fa-trash me-1"></i>Удалить комнату
-                </button>
-                {% endif %}
 
-        <!-- Модальное окно подтверждения удаления -->
-        {% if room.admin == user %}
-        <div class="modal fade" id="deleteRoomModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Подтверждение удаления</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Вы уверены, что хотите удалить комнату <strong>"{{ room.name }}"</strong>?</p>
-                        <p class="text-danger">
-                            <i class="fas fa-exclamation-triangle me-1"></i>
-                            Это действие нельзя отменить! Все данные комнаты (участники, чаты, сообщения) будут удалены.
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                        <form method="post" action="{% url 'delete_room' room.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash me-1"></i>Удалить комнату
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
+<!-- ═══ HEADER ═══ -->
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start gap-3 mb-4 fade-in">
+    <div>
+        <h1 style="margin: 0 0 0.5rem;">{{ room.name }}</h1>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="badge badge--gold-soft copyable-code" onclick="copyCode('{{ room.code }}')" style="cursor:pointer;">
+                <i class="fas fa-key"></i>{{ room.code }}
+                <i class="fas fa-copy" style="margin-left: 4px;"></i>
+            </span>
+            <span class="badge badge--info">
+                <i class="fas fa-user-friends"></i>{{ participants.count }} участ.
+            </span>
+            {% if room.draw_completed %}
+            <span class="badge badge--success"><i class="fas fa-check-circle"></i>Жеребьёвка проведена</span>
+            {% else %}
+            <span class="badge badge--gold-soft"><i class="fas fa-hourglass-half"></i>Ожидание жеребьёвки</span>
+            {% endif %}
 
-        {% if room.description %}
-        <div class="card mb-4 card-elevated">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Описание комнаты</h6>
-                <p class="card-text">{{ room.description }}</p>
-            </div>
-        </div>
-        {% endif %}
+            {# ⭐ НОВОЕ: дедлайн и бюджет #}
+            {% if room.gift_deadline %}
+            <span class="badge" style="background: rgba(251, 191, 36, 0.15); color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.3);">
+                <i class="fas fa-calendar-alt"></i>
+                {{ room.gift_deadline|date:"d.m.Y H:i" }}
+            </span>
+            {% endif %}
 
-        <!-- Блок информации об имени -->
-        <div class="card mb-4 card-elevated">
-            <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-user me-2"></i>Ваше имя в комнате
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3 align-items-center">
-                    <div class="col-md-6">
-                        <p class="mb-0 fs-5">
-                            <strong>{{ participant.get_display_name }}</strong>
-                        </p>
-                        <small class="text-muted">
-                            Это имя видят другие участники комнаты.
-                        </small>
-                    </div>
-                    <div class="col-md-6 text-end">
-                        <span class="badge bg-warning text-dark">
-                            <i class="fas fa-lock me-1"></i>Нельзя изменить
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {% if room.draw_completed %}
-        <div class="alertnew alert-success">
-            <h5>🎉 Жеребьёвка завершена!</h5>
-            {% if my_receiver %}
-            <p>Вы - Тайный Санта для: <strong>{{ my_receiver.get_display_name }}</strong></p>
+            {% if room.budget %}
+            <span class="badge" style="background: rgba(74, 222, 128, 0.15); color: var(--emerald); border: 1px solid rgba(74, 222, 128, 0.3);">
+                <i class="fas fa-ruble-sign"></i>
+                {{ room.budget }}
+            </span>
             {% endif %}
         </div>
-        {% elif room.admin == user %}
-        <div class="alertnew alert-warning">
-            <p>Жеребьёвка еще не проведена. Когда все участники присоединятся, нажмите кнопку ниже.</p>
-            <form method="post" action="{% url 'start_draw' room.id %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success btn-shine">Провести жеребьёвку</button>
-            </form>
+    </div>
+
+    {% if room.admin == user %}
+    <button type="button" class="btn btn--ghost btn--sm" data-bs-toggle="modal" data-bs-target="#deleteRoomModal">
+        <i class="fas fa-trash"></i>Удалить
+    </button>
+    {% endif %}
+</div>
+
+{% if room.description %}
+<div class="card card--flat mb-4" data-reveal>
+    <div class="card__body">
+        <p style="margin: 0; color: var(--text-soft);">{{ room.description }}</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- ═══ СТАТУС ЖЕРЕБЬЁВКИ ═══ -->
+{% if room.draw_completed %}
+<div class="card card--gold mb-4" data-reveal>
+    <div class="card__body">
+        <h4 style="margin: 0 0 0.75rem; display:flex; align-items:center; gap:0.5rem;">
+            🎉 Жеребьёвка завершена!
+        </h4>
+        {% if room.can_reveal_pairs %}
+        <div class="card card--gold mb-4" data-reveal>
+            <div class="card__body" style="text-align: center; padding: 1.5rem;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎉</div>
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem;">
+                    Подарки вручены!
+                </h4>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                    Дедлайн прошёл — можно посмотреть, кто кому дарил
+                </p>
+                <a href="{% url 'room_reveal' room.id %}" class="btn btn--primary btn--shine">
+                    <i class="fas fa-eye"></i>Посмотреть карту пар
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        {% if my_receiver %}
+        <p style="margin: 0; color: var(--text-soft);">
+            Вы — Тайный Санта для <strong style="color: var(--gold);">{{ my_receiver.get_display_name }}</strong>
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% elif room.admin == user %}
+<div class="card card--gold mb-4" data-reveal>
+    <div class="card__body">
+        <h4 style="margin: 0 0 0.75rem;">Готовы провести жеребьёвку?</h4>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+            Когда все участники присоединятся, нажмите кнопку ниже. После жеребьёвки изменить состав нельзя.
+        </p>
+        <form method="post" action="{% url 'start_draw' room.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn--success btn--lg btn--shine">
+                <i class="fas fa-dice"></i>Провести жеребьёвку
+            </button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card mb-4" data-reveal>
+    <div class="card__body">
+        <p style="margin: 0; color: var(--text-muted);">
+            <i class="fas fa-hourglass-half me-2" style="color: var(--gold);"></i>
+            Ожидаем проведения жеребьёвки администратором
+        </p>
+    </div>
+</div>
+{% endif %}
+
+{# ═══ ДЕДЛАЙН ═══ #}
+{% if room.gift_deadline %}
+<div class="card mb-4" data-reveal>
+    <div class="card__body">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: {% if deadline_passed %}rgba(239, 68, 68, 0.15){% elif deadline_soon %}rgba(251, 191, 36, 0.15){% else %}var(--gold-soft){% endif %}; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                {% if deadline_passed %}
+                <i class="fas fa-exclamation-triangle" style="color: var(--ruby);"></i>
+                {% elif deadline_soon %}
+                <i class="fas fa-hourglass-half" style="color: var(--amber);"></i>
+                {% else %}
+                <i class="fas fa-calendar-check" style="color: var(--gold);"></i>
+                {% endif %}
+            </div>
+            <div style="flex: 1;">
+                <div style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.15rem; margin-bottom: 0.15rem;">
+                    {% if deadline_passed %}
+                        Дедлайн прошёл
+                    {% elif days_to_deadline == 0 %}
+                        🔥 Дедлайн сегодня!
+                    {% else %}
+                        До дедлайна {{ days_to_deadline }} дн.
+                    {% endif %}
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.9rem;">
+                    <i class="fas fa-clock me-1"></i>{{ room.gift_deadline|date:"d.m.Y в H:i" }}
+                </div>
+                {% if room.budget %}
+                <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+                    <i class="fas fa-ruble-sign me-1"></i>Бюджет: {{ room.budget }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ═══ ВАШЕ ИМЯ ═══ -->
+<div class="card mb-4" data-reveal>
+    <div class="card__header">
+        <h5><i class="fas fa-user" style="color: var(--sapphire);"></i>Ваше имя в комнате</h5>
+        <span class="badge badge--gold-soft"><i class="fas fa-lock"></i>Нельзя изменить</span>
+    </div>
+    <div class="card__body">
+        <div style="font-size: 1.25rem; font-weight: 600; color: var(--gold);">
+            {{ participant.get_display_name }}
+        </div>
+        <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
+            Это имя видят другие участники комнаты
+        </div>
+    </div>
+</div>
+
+<!-- ═══ ОСНОВНЫЕ БЛОКИ ═══ -->
+<div class="row g-4">
+
+    <!-- ЧАТЫ -->
+    <div class="col-lg-6">
+        <div class="card h-100" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-comments" style="color: var(--gold);"></i>Мои чаты</h5>
+            </div>
+            <div class="card__body">
+                {% if user_chats %}
+                <div class="d-flex flex-column gap-2">
+                    {% for user_chat in user_chats %}
+                    <a href="{% url 'chat_detail' user_chat.id %}" class="chat-item-row">
+                        <div class="chat-item-avatar {% if user_chat.chat_type == 'my_santa' %}chat-item-avatar--santa{% else %}chat-item-avatar--receiver{% endif %}">
+                            <i class="fas {% if user_chat.chat_type == 'my_santa' %}fa-gift{% else %}fa-user{% endif %}"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 600; font-size: 0.95rem;">
+                                {% if user_chat.chat_type == 'my_santa' %}Чат с моим Сантой{% else %}Чат с получателем{% endif %}
+                            </div>
+                            <div style="color: var(--text-muted); font-size: 0.8rem;">
+                                {% if user_chat.chat_type == 'my_santa' %}Обсудите пожелания{% else %}Узнайте предпочтения{% endif %}
+                            </div>
+                        </div>
+                        {% if user_chat.get_unread_count > 0 %}
+                        <span class="chat-item-badge">{{ user_chat.get_unread_count }}</span>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty" style="padding: 2rem 0;">
+                    <div class="empty__icon" style="font-size: 2.5rem;"><i class="fas fa-comments"></i></div>
+                    <p class="empty__desc" style="margin: 0;">Чаты появятся после жеребьёвки</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ПОЖЕЛАНИЯ ПОЛУЧАТЕЛЯ -->
+    <div class="col-lg-6">
+        {% if room.draw_completed and my_receiver %}
+        <div class="card h-100" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-gift" style="color: var(--amber);"></i>Пожелания получателя</h5>
+            </div>
+            <div class="card__body">
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                    Вы дарите для <strong style="color: var(--gold);">{{ my_receiver.get_display_name }}</strong>
+                </p>
+
+                {% if my_receiver_wishlist.wishlist %}
+                <div style="padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 1rem;">
+                    <p style="margin: 0; color: var(--text-soft); font-size: 0.9rem;">
+                        {{ my_receiver_wishlist.wishlist|truncatewords:30 }}
+                    </p>
+                </div>
+                <a href="{% url 'view_wishlist' room.id my_receiver_wishlist.id %}" class="btn btn--primary btn--block btn--shine">
+                    <i class="fas fa-eye"></i>Посмотреть полностью
+                </a>
+                {% else %}
+                <div class="empty" style="padding: 1.5rem 0;">
+                    <p class="empty__desc" style="margin: 0;">Получатель ещё не заполнил пожелания</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
         {% else %}
-        <div class="alertnew alert-info">
-            Ожидаем проведения жеребьёвки администратором комнаты.
-        </div>
-        {% endif %}
-
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card card-elevated">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Мои чаты</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if user_chats %}
-                        <div class="list-group">
-                            {% for chat in user_chats %}
-                            <a href="{% url 'chat_detail' chat.id %}" class="list-group-item list-group-item-action border-0 rounded mb-2">
-                                {% if chat.chat_type == 'my_santa' %}
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.2rem;">
-                                        🎅
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">Чат с моим Сантой</h6>
-                                        <small class="text-muted">Обсудите пожелания</small>
-                                    </div>
-                                    {% if chat.get_unread_count > 0 %}
-                                    <span class="badge bg-danger rounded-pill">
-                                        {{ chat.get_unread_count }}
-                                    </span>
-                                    {% endif %}
-                                </div>
-                                {% else %}
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-warning text-dark rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="fas fa-gift"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">Чат с моим получателем</h6>
-                                        <small class="text-muted">Узнайте о предпочтениях</small>
-                                    </div>
-                                    {% if chat.get_unread_count > 0 %}
-                                    <span class="badge bg-danger rounded-pill">
-                                        {{ chat.get_unread_count }}
-                                    </span>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </a>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <div class="text-center py-3">
-                            <i class="fas fa-comments fa-2x text-muted mb-2"></i>
-                            <p class="text-muted">Чаты появятся после жеребьёвки</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
+        <div class="card h-100" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-gift" style="color: var(--amber);"></i>Пожелания получателя</h5>
             </div>
-
-            {% if room.draw_completed and my_receiver and my_receiver_wishlist %}
-            <div class="col-md-6">
-                <div class="card card-elevated">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="card-title mb-0"><i class="fas fa-santa me-2"></i>Пожелания получателя</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">
-                            Вы - Тайный Санта для: 
-                            <strong>{{ my_receiver.get_display_name }}</strong>
-                        </p>
-                        {% if my_receiver_wishlist.wishlist %}
-                        <div class="mb-3">
-                            <p class="text-muted">{{ my_receiver_wishlist.wishlist|truncatewords:30 }}</p>
-                        </div>
-                        <a href="{% url 'view_wishlist' room.id my_receiver_wishlist.id %}" class="btn btn-warning btn-sm text-dark btn-shine">
-                            <i class="fas fa-eye me-1"></i>Посмотреть полный список
-                        </a>
-                        {% else %}
-                        <p class="text-muted">Этот участник еще не добавил пожелания</p>
-                        <a href="{% url 'view_wishlist' room.id my_receiver_wishlist.id %}" class="btn btn-outline-warning btn-sm">
-                            <i class="fas fa-eye me-1"></i>Посмотреть страницу участника
-                        </a>
-                        {% endif %}
-                    </div>
+            <div class="card__body">
+                <div class="empty" style="padding: 2rem 0;">
+                    <div class="empty__icon" style="font-size: 2.5rem;"><i class="fas fa-hourglass-half"></i></div>
+                    <p class="empty__desc" style="margin: 0;">Доступно после жеребьёвки</p>
                 </div>
-            </div>
-            {% elif room.draw_completed and my_receiver %}
-            <div class="col-md-6">
-                <div class="card card-elevated">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="card-title mb-0"><i class="fas fa-santa me-2"></i>Пожелания получателя</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">
-                            Вы - Тайный Санта для: 
-                            <strong>{{ my_receiver.get_display_name|default:my_receiver.phone }}</strong>
-                        </p>
-                        <p class="text-muted">Информация о пожеланиях временно недоступна</p>
-                        <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-warning btn-sm">
-                            <i class="fas fa-refresh me-1"></i>Обновить страницу
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card card-elevated">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="card-title mb-0"><i class="fas fa-gift me-2"></i>Мои пожелания</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if participant.wishlist %}
-                        <div class="mb-3">
-                            <p class="card-text">{{ participant.wishlist|truncatewords:30 }}</p>
-                        </div>
-                        {% else %}
-                        <p class="text-muted">Вы еще не добавили пожелания к подарку</p>
-                        {% endif %}
-                        <a href="{% url 'edit_wishlist' room.id %}" class="btn btn-info btn-sm btn-shine">
-                            <i class="fas fa-edit me-1"></i>
-                            {% if participant.wishlist %}Редактировать{% else %}Добавить{% endif %} пожелания
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h4 class="mt-5 mb-3">Участники ({{ participants.count }})</h4>
-         <!-- Переключатель видимости (только для админа) -->
-        {% if room.admin == user %}
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="participantsToggle" 
-                   {% if room.show_participants %}checked{% endif %}
-                   onchange="toggleParticipantsVisibility({{ room.id }})">
-            <label class="form-check-label" for="participantsToggle">
-                <small class="text-muted">Показывать участников</small>
-            </label>
-        </div>
-        {% endif %}
-        {% if room.show_participants %}
-        <button class="btn btn-outline-primary mb-3 btn-shine" type="button" data-bs-toggle="collapse" data-bs-target="#participantsList">
-            <i class="fas fa-users me-2"></i>Показать участников
-        </button>
-
-        <div class="collapse" id="participantsList">
-            <div class="list-group">
-                {% for participant in participants %}
-                <div class="list-group-item d-flex justify-content-between align-items-center border-0 rounded mb-2">
-                    <div>
-                        <i class="fas fa-user me-2 text-muted"></i>
-                        {{ participant.get_display_name }}
-                    </div>
-                </div>
-                {% endfor %}
             </div>
         </div>
         {% endif %}
     </div>
+
+    <!-- МОИ ПОЖЕЛАНИЯ -->
+    <div class="col-lg-6">
+        <div class="card h-100" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-list" style="color: var(--sapphire);"></i>Мои пожелания</h5>
+            </div>
+            <div class="card__body">
+                {% if participant.wishlist %}
+                <div style="padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 1rem;">
+                    <p style="margin: 0; color: var(--text-soft); font-size: 0.9rem;">
+                        {{ participant.wishlist|truncatewords:30 }}
+                    </p>
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                    Вы ещё не заполнили пожелания к подарку
+                </p>
+                {% endif %}
+                <a href="{% url 'edit_wishlist' room.id %}" class="btn btn--secondary btn--block">
+                    <i class="fas fa-{% if participant.wishlist %}edit{% else %}plus{% endif %}"></i>
+                    {% if participant.wishlist %}Редактировать{% else %}Добавить{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- ═══ ПОКУПКА ПОДАРКА ═══ -->
+    {% if room.draw_completed %}
+    <div class="col-lg-6">
+        <div class="card h-100" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-shopping-bag" style="color: var(--emerald);"></i>Мой подарок</h5>
+            </div>
+            <div class="card__body">
+
+                <div id="gift-status-block"
+                    class="d-flex align-items-center gap-3 mb-3"
+                    style="padding: 1rem; border-radius: var(--radius-sm); border: 1px solid {% if participant.gift_bought %}rgba(74, 222, 128, 0.4){% else %}var(--border){% endif %}; background: {% if participant.gift_bought %}rgba(74, 222, 128, 0.08){% else %}var(--surface-2){% endif %};">
+
+                    <div id="gift-status-icon"
+                        style="width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; background: {% if participant.gift_bought %}var(--gradient-forest){% else %}var(--surface-3){% endif %}; color: {% if participant.gift_bought %}#052e16{% else %}var(--text-muted){% endif %};">
+                        <i class="fas {% if participant.gift_bought %}fa-check{% else %}fa-gift{% endif %}"></i>
+                    </div>
+
+                    <div style="flex: 1;">
+                        <div id="gift-status-title"
+                            style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.05rem;">
+                            {% if participant.gift_bought %}
+                                Подарок куплен ✅
+                            {% else %}
+                                Подарок ещё не куплен
+                            {% endif %}
+                        </div>
+                        <div id="gift-status-sub"
+                            style="color: var(--text-muted); font-size: 0.85rem;">
+                            {% if participant.gift_bought %}
+                                Отмечено {{ participant.gift_bought_at|date:"d.m.Y H:i" }}
+                            {% else %}
+                                Не забудьте отметить после покупки
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button"
+                        id="gift-toggle-btn"
+                        class="btn {% if participant.gift_bought %}btn--ghost{% else %}btn--success{% endif %} btn--block btn--shine"
+                        onclick="toggleGiftBought({{ room.id }})">
+                    {% if participant.gift_bought %}
+                    <i class="fas fa-undo"></i>Снять отметку
+                    {% else %}
+                    <i class="fas fa-check"></i>Отметить, что купил(а)
+                    {% endif %}
+                </button>
+
+                {% if room.gift_deadline %}
+                <div style="margin-top: 1rem; padding: 0.75rem; background: var(--surface-2); border-radius: var(--radius-sm); font-size: 0.85rem;">
+                    <i class="fas fa-calendar-alt me-1" style="color: var(--gold);"></i>
+                    Дедлайн: <strong>{{ room.gift_deadline|date:"d.m.Y H:i" }}</strong>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- УЧАСТНИКИ -->
+    <div class="col-lg-6">
+        <div class="card h-100" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-users" style="color: var(--emerald);"></i>Участники</h5>
+                <span class="badge badge--gold-soft">{{ participants.count }}</span>
+            </div>
+            <div class="card__body">
+
+                <!-- Тумблер: только для админа, всегда виден -->
+                {% if room.admin == user %}
+                <div class="d-flex align-items-center justify-content-between mb-3"
+                     style="padding: 0.75rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                    <span style="font-size: 0.9rem; color: var(--text-soft);">
+                        <i class="fas fa-eye me-1"></i>Показывать участников
+                    </span>
+                    <div class="form-check form-switch" style="margin: 0;">
+                        <input class="form-check-input" type="checkbox" id="participantsToggle"
+                               {% if room.show_participants %}checked{% endif %}
+                               data-room-id="{{ room.id }}"
+                               style="cursor: pointer;">
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- ⭐ Список участников — управляется ТОЛЬКО тумблером, для всех включая админа -->
+                {% if room.show_participants %}
+                    {% if participants %}
+                    <div class="d-flex flex-column gap-2" style="max-height: 320px; overflow-y: auto;">
+                        {% for p in participants %}
+                        <div class="participant-row">
+                            <div class="participant-avatar">{{ p.get_display_name|first|upper }}</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 500;">{{ p.get_display_name }}</div>
+                                {% if p.user == user %}
+                                <span class="badge badge--gold-soft" style="font-size: 0.65rem;">Это вы</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p style="color: var(--text-muted); margin: 0;">Пока никого нет</p>
+                    {% endif %}
+                {% else %}
+                    <div class="empty" style="padding: 2rem 0;">
+                        <div class="empty__icon" style="font-size: 2.5rem;">
+                            <i class="fas fa-eye-slash"></i>
+                        </div>
+                        <h3 class="empty__title" style="font-size: 1rem;">
+                            Список участников скрыт
+                        </h3>
+                        <p class="empty__desc" style="margin: 0; font-size: 0.85rem;">
+                            {% if room.admin == user %}
+                            Включите тумблер выше, чтобы участники видели друг друга
+                            {% else %}
+                            Администратор ещё не открыл список участников
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- ═══ MODAL DELETE ═══ -->
+{% if room.admin == user %}
+<div class="modal fade" id="deleteRoomModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);">
+            <div class="modal-header" style="border-color: var(--border);">
+                <h5 class="modal-title">Удалить комнату?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1) brightness(2); opacity: 0.5;"></button>
+            </div>
+            <div class="modal-body">
+                <p>Комната <strong style="color: var(--gold);">{{ room.name }}</strong> будет удалена вместе с участниками, чатами и сообщениями.</p>
+                <div class="alert alert--danger" style="margin: 0;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>Это действие нельзя отменить!</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-color: var(--border);">
+                <button type="button" class="btn btn--ghost" data-bs-dismiss="modal">Отмена</button>
+                <form method="post" action="{% url 'delete_room' room.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--danger">
+                        <i class="fas fa-trash"></i>Удалить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <style>
-.list-group-item {
-    transition: all 0.3s ease;
-    background: #f8f9fa;
+.copyable-code { transition: all 0.2s ease; }
+.copyable-code:hover { background: var(--gold); color: #1a1a1a; }
+
+.chat-item-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.chat-item-row:hover {
+    border-color: var(--border-2);
+    background: var(--surface-3);
+    transform: translateX(3px);
+    color: var(--text);
 }
 
-.list-group-item:hover {
-    background-color: var(--light);
-    transform: translateX(5px);
-}
-
-.badge {
-    font-size: 0.75rem;
-    min-width: 20px;
-    height: 20px;
-    display: inline-flex;
+.chat-item-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+.chat-item-avatar--santa { background: var(--gradient-gold); color: #1a1a1a; }
+.chat-item-avatar--receiver { background: rgba(96, 165, 250, 0.15); color: #93c5fd; border: 1px solid rgba(96, 165, 250, 0.3); }
+
+.chat-item-badge {
+    background: var(--ruby);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 100px;
+    min-width: 22px;
+    text-align: center;
 }
 
-.copyable-badge {
-    background: linear-gradient(135deg, var(--secondary) 0%, #FFD700 100%);
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    color: #2C2C2C;
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border-radius: var(--border-radius-sm);
+.participant-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
 }
 
-.copyable-badge:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+.participant-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--gradient-gold);
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
 }
 
-.copyable-badge:active {
-    transform: translateY(0);
-}
-
-.pulse-badge {
-    animation: pulse-badge 2s infinite;
-}
-
-@keyframes pulse-badge {
-    0% {
-        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
-    }
-}
-
-@media (max-width: 768px) {
-    .copyable-badge {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-    }
-    
-    .copyable-badge:active {
-        transform: scale(0.95);
-    }
-    
-    .copyable-badge {
-        min-height: 44px;
-        min-width: 44px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-}
-
-.font-monospace {
-    font-family: 'Courier New', monospace;
-    font-size: 1.1rem;
-    letter-spacing: 1px;
-}
-
-/* Стили для переключателя */
-.form-check-input:checked {
-    background-color: var(--primary);
-    border-color: var(--primary);
-}
-
-.form-check-input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
-}
-
-.form-switch .form-check-input {
-    width: 3em;
-    height: 1.5em;
-}
-
-/* Анимация для переключения */
-.form-check-input {
-    transition: all 0.3s ease;
-}
-
-@media (max-width: 768px) {
-    .card-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    
-    .form-check {
-        align-self: flex-end;
-    }
-}
+.form-check-input:checked { background-color: var(--gold); border-color: var(--gold); }
+.form-switch .form-check-input { width: 2.75em; height: 1.5em; cursor: pointer; }
 </style>
 
 <script>
-function copyRoomCode(code) {
-    const badge = document.querySelector('.copyable-badge');
-    const textElement = document.getElementById('room-code-text');
-    const iconElement = document.getElementById('room-code-icon');
-    
-    if (!badge || !textElement || !iconElement) {
-        copyToClipboardFallback(code);
-        return;
-    }
-    
-    const originalText = textElement.textContent;
-    
-    badge.style.background = 'linear-gradient(135deg, #228B22 0%, #006400 100%)';
-    iconElement.classList.remove('fa-copy');
-    iconElement.classList.add('fa-check');
-    textElement.textContent = 'Скопировано!';
-    
-    copyToClipboardFallback(code).then(function() {
-        showRoomCodeNotification();
-        
-        setTimeout(() => {
-            badge.style.background = 'linear-gradient(135deg, var(--secondary) 0%, #FFD700 100%)';
-            iconElement.classList.remove('fa-check');
-            iconElement.classList.add('fa-copy');
-            textElement.textContent = originalText;
-        }, 2000);
-        
-    }).catch(function(err) {
-        console.error('Ошибка при копировании: ', err);
-        
-        badge.style.background = 'linear-gradient(135deg, #B22222 0%, #8B0000 100%)';
-        iconElement.classList.remove('fa-copy');
-        iconElement.classList.add('fa-times');
-        textElement.textContent = 'Ошибка!';
-        
-        setTimeout(() => {
-            badge.style.background = 'linear-gradient(135deg, var(--secondary) 0%, #FFD700 100%)';
-            iconElement.classList.remove('fa-times');
-            iconElement.classList.add('fa-copy');
-            textElement.textContent = originalText;
-        }, 2000);
-    });
+// ═══ Cookie helper ═══
+function getCookie(name) {
+    const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return v ? v.pop() : '';
 }
 
-function copyToClipboardFallback(text) {
-    return new Promise((resolve, reject) => {
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(resolve).catch(reject);
-        } else {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            
-            textArea.style.position = 'fixed';
-            textArea.style.top = '0';
-            textArea.style.left = '0';
-            textArea.style.width = '2em';
-            textArea.style.height = '2em';
-            textArea.style.padding = '0';
-            textArea.style.border = 'none';
-            textArea.style.outline = 'none';
-            textArea.style.boxShadow = 'none';
-            textArea.style.background = 'transparent';
-            textArea.style.opacity = '0';
-            
-            document.body.appendChild(textArea);
-            
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                const successful = document.execCommand('copy');
-                document.body.removeChild(textArea);
-                if (successful) {
-                    resolve();
-                } else {
-                    reject(new Error('Не удалось скопировать текст'));
-                }
-            } catch (err) {
-                document.body.removeChild(textArea);
-                reject(err);
+// ═══ Копирование кода комнаты ═══
+function copyCode(code) {
+    const done = () => {
+        if (window.showToast) window.showToast('Код скопирован: ' + code, 'success');
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(code).then(done).catch(() => {
+            fallbackCopy(code); done();
+        });
+    } else {
+        fallbackCopy(code); done();
+    }
+}
+
+function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+}
+
+// ═══ Тумблер «Показывать участников» ═══
+document.addEventListener('DOMContentLoaded', function () {
+    const toggle = document.getElementById('participantsToggle');
+    if (!toggle) return;
+
+    toggle.addEventListener('change', async function () {
+        const roomId = toggle.getAttribute('data-room-id');
+        const wasChecked = toggle.checked;
+
+        if (!roomId) {
+            console.error('data-room-id is empty');
+            toggle.checked = !wasChecked;
+            return;
+        }
+
+        toggle.disabled = true;
+
+        try {
+            const resp = await fetch(`/room/${roomId}/toggle_participants/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                credentials: 'same-origin',
+            });
+
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+            const data = await resp.json();
+
+            if (data.success) {
+                // Полная перезагрузка — Django перерендерит шаблон
+                window.location.reload();
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+        } catch (e) {
+            console.error('Toggle error:', e);
+            toggle.checked = !wasChecked;
+            toggle.disabled = false;
+            if (window.showToast) {
+                window.showToast('Не удалось сохранить: ' + e.message, 'error');
+            } else {
+                alert('Ошибка: ' + e.message);
             }
         }
     });
-}
-
-function showRoomCodeNotification() {
-    const notification = document.createElement('div');
-    notification.className = 'position-fixed top-0 start-50 translate-middle-x mt-3';
-    notification.style.zIndex = '1060';
-    notification.innerHTML = `
-        <div class="alert alert-success alert-dismissible fade show shadow" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            <strong>Код комнаты скопирован!</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, 3000);
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
 });
 
-// Функция для переключения видимости участников
-function toggleParticipantsVisibility(roomId) {
-    const toggle = document.getElementById('participantsToggle');
-    const isChecked = toggle.checked;
-    
-    // Показываем индикатор загрузки
-    toggle.disabled = true;
-    
-    // Отправляем запрос на сервер
-    fetch(`/room/${roomId}/toggle_participants/`, {
+function toggleGiftBought(roomId) {
+    const btn = document.getElementById('gift-toggle-btn');
+    const block = document.getElementById('gift-status-block');
+    const icon = document.getElementById('gift-status-icon');
+    const title = document.getElementById('gift-status-title');
+    const sub = document.getElementById('gift-status-sub');
+
+    btn.disabled = true;
+
+    fetch(`/room/${roomId}/mark-bought/`, {
         method: 'POST',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
         },
-        body: JSON.stringify({
-            show_participants: isChecked
-        })
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
-        if (data.success) {
-            // Показываем уведомление об успехе
-            showNotification(data.message, 'success');
-            
-            // Перезагружаем страницу для обновления интерфейса
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+        if (!data.success) throw new Error(data.error);
+
+        if (data.bought) {
+            // Отмечено
+            block.style.borderColor = 'rgba(74, 222, 128, 0.4)';
+            block.style.background = 'rgba(74, 222, 128, 0.08)';
+            icon.style.background = 'var(--gradient-forest)';
+            icon.style.color = '#052e16';
+            icon.querySelector('i').className = 'fas fa-check';
+            title.textContent = 'Подарок куплен ✅';
+            sub.textContent = 'Отмечено только что';
+
+            btn.className = 'btn btn--ghost btn--block';
+            btn.innerHTML = '<i class="fas fa-undo"></i>Снять отметку';
+
+            window.showToast('🎉 Отлично! Отметка сохранена', 'success');
         } else {
-            // Возвращаем переключатель в исходное состояние при ошибке
-            toggle.checked = !isChecked;
-            showNotification('Ошибка при сохранении настроек', 'error');
+            // Снято
+            block.style.borderColor = 'var(--border)';
+            block.style.background = 'var(--surface-2)';
+            icon.style.background = 'var(--surface-3)';
+            icon.style.color = 'var(--text-muted)';
+            icon.querySelector('i').className = 'fas fa-gift';
+            title.textContent = 'Подарок ещё не куплен';
+            sub.textContent = 'Не забудьте отметить после покупки';
+
+            btn.className = 'btn btn--success btn--block';
+            btn.innerHTML = '<i class="fas fa-check"></i>Отметить, что купил(а)';
+
+            window.showToast('Отметка снята', 'info');
         }
     })
-    .catch(error => {
-        console.error('Error:', error);
-        toggle.checked = !isChecked;
-        showNotification('Ошибка при сохранении настроек', 'error');
+    .catch(e => {
+        window.showToast('Ошибка: ' + e.message, 'error');
     })
     .finally(() => {
-        toggle.disabled = false;
+        btn.disabled = false;
     });
 }
-
-// Функция для показа уведомлений
-function showNotification(message, type) {
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-    
-    const notification = document.createElement('div');
-    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-    notification.style.zIndex = '1060';
-    notification.style.minWidth = '300px';
-    notification.innerHTML = `
-        <i class="fas ${icon} me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Автоматически скрываем через 3 секунды
-    setTimeout(() => {
-        if (notification.parentNode) {
-            const bsAlert = new bootstrap.Alert(notification);
-            bsAlert.close();
-        }
-    }, 3000);
-}
-
-// Обработчик для переключателя (альтернативный вариант)
-document.addEventListener('DOMContentLoaded', function() {
-    const toggle = document.getElementById('participantsToggle');
-    if (toggle) {
-        // Убираем встроенный onchange и добавляем через addEventListener
-        toggle.removeAttribute('onchange');
-        toggle.addEventListener('change', function() {
-            toggleParticipantsVisibility({{ room.id }});
-        });
-    }
-});
 </script>
 {% endblock %}

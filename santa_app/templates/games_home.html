@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Игры для компании | Тайный Санта{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <div class="page-header__title">
+        <h1><i class="fas fa-gamepad" style="color: var(--gold);"></i>Игры для компании</h1>
+    </div>
+    <p class="page-header__subtitle">Оживите вечеринку или корпоратив</p>
+</div>
+
+<div class="row g-4 stagger">
+    {% for game in games %}
+    <div class="col-md-6">
+        <div class="card card--hover h-100 {% if game.status == 'soon' %}" style="opacity: 0.75;{% endif %}">
+            <div class="card__body" style="padding: 1.75rem;">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <div style="width: 60px; height: 60px; border-radius: var(--radius); background: var(--gold-soft); border: 1px solid var(--border-2); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: var(--gold); flex-shrink: 0;">
+                        <i class="fas {{ game.icon }}"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 style="font-family:'Playfair Display',serif; font-size:1.4rem; margin:0;">
+                                {{ game.title }}
+                            </h3>
+                            {% if game.status == 'soon' %}
+                            <span class="badge badge--info">Скоро</span>
+                            {% else %}
+                            <span class="badge badge--success">Доступно</span>
+                            {% endif %}
+                        </div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem; display: flex; gap: 1rem;">
+                            <span><i class="fas fa-users me-1"></i>{{ game.players }}</span>
+                            <span><i class="fas fa-clock me-1"></i>{{ game.duration }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="color: var(--text-soft); font-size: 0.95rem; margin-bottom: 1.5rem;">
+                    {{ game.description }}
+                </p>
+
+                {% if game.status == 'available' %}
+                <a href="{{ game.url }}" class="btn btn--primary btn--block btn--shine">
+                    <i class="fas fa-play"></i>Играть
+                </a>
+                {% else %}
+                <button class="btn btn--ghost btn--block" disabled>
+                    <i class="fas fa-hourglass-half"></i>Скоро появится
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Предложение -->
+<div class="card mt-5" style="text-align: center;">
+    <div class="card__body" style="padding: 2rem;">
+        <h4 style="font-family:'Playfair Display',serif; margin-bottom: 0.75rem;">Нет нужной игры?</h4>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Расскажите, что хотите видеть — мы добавим</p>
+        <a href="{% url 'support' %}" class="btn btn--ghost">
+            <i class="fas fa-lightbulb"></i>Предложить идею
+        </a>
+    </div>
+</div>
+{% endblock %}

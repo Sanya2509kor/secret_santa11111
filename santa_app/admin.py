@@ -75,3 +75,25 @@ class SupportMessageAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user')
+
+
+from .models import TelegramUser, TelegramChat, TelegramLinkCode
+
+@admin.register(TelegramUser)
+class TelegramUserAdmin(admin.ModelAdmin):
+    list_display = ['telegram_id', 'user', 'username', 'is_active', 'linked_at']
+    list_filter = ['is_active', 'linked_at']
+    search_fields = ['telegram_id', 'username', 'user__phone', 'user__first_name']
+    readonly_fields = ['linked_at']
+
+@admin.register(TelegramChat)
+class TelegramChatAdmin(admin.ModelAdmin):
+    list_display = ['chat_title', 'room', 'chat_id', 'is_active', 'linked_at']
+    list_filter = ['is_active', 'linked_at']
+    search_fields = ['chat_title', 'room__name', 'chat_id']
+
+@admin.register(TelegramLinkCode)
+class TelegramLinkCodeAdmin(admin.ModelAdmin):
+    list_display = ['code', 'user', 'created_at', 'expires_at', 'is_used']
+    list_filter = ['is_used', 'created_at']
+    search_fields = ['code', 'user__phone']

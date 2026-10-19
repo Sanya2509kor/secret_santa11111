@@ -1,185 +1,109 @@
 {% extends 'base.html' %}
+{% block title %}Безопасность | Тайный Санта{% endblock %}
+{% block page_modifier %}page--narrow{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card card-elevated">
-            <div class="card-header bg-primary text-white">
-                <h4 class="card-title mb-0 text-center">
-                    <i class="fas fa-shield-alt me-2"></i>Настройка секретного вопроса
-                </h4>
+<div class="card fade-in-up">
+    <div class="card__header">
+        <h5><i class="fas fa-shield-alt" style="color: var(--sapphire);"></i>Настройка секретного вопроса</h5>
+    </div>
+    <div class="card__body" style="padding: 2rem;">
+
+        <div class="alert alert--info">
+            <i class="fas fa-info-circle" style="color: var(--sapphire);"></i>
+            <div>
+                <strong>Зачем это нужно?</strong><br>
+                <span style="color: var(--text-muted); font-size: 0.9rem;">
+                    Если забудете пароль — сможете восстановить его через секретный вопрос.
+                    Ответ знаете только вы.
+                </span>
             </div>
-            <div class="card-body p-4">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Секретный вопрос поможет восстановить пароль</strong><br>
-                    Выберите вопрос и ответ, которые знаете только вы. Эта информация будет использоваться для подтверждения вашей личности при восстановлении пароля.
-                </div>
-                
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <div class="mb-4">
-                        <label for="id_security_question" class="form-label fw-semibold">
-                            Секретный вопрос *
-                        </label>
-                        {{ form.security_question }}
-                        {% if form.security_question.errors %}
-                        <div class="text-danger small mt-2">
-                            {% for error in form.security_question.errors %}
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-circle me-1"></i>
-                                <span>{{ error }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-4" id="custom-question-container" style="display: none;">
-                        <label for="id_security_question_custom" class="form-label fw-semibold">
-                            Ваш вопрос *
-                        </label>
-                        {{ form.security_question_custom }}
-                        {% if form.security_question_custom.errors %}
-                        <div class="text-danger small mt-2">
-                            {% for error in form.security_question_custom.errors %}
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-circle me-1"></i>
-                                <span>{{ error }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label for="id_security_answer" class="form-label fw-semibold">
-                            Ответ на вопрос *
-                        </label>
-                        {{ form.security_answer }}
-                        {% if form.security_answer.errors %}
-                        <div class="text-danger small mt-2">
-                            {% for error in form.security_answer.errors %}
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-circle me-1"></i>
-                                <span>{{ error }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-text">
-                            Ответ должен быть запоминающимся. Регистр букв не имеет значения.
-                        </div>
-                    </div>
-                    
-                    {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {% for error in form.non_field_errors %}
-                        <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-shine py-2 fw-semibold">
-                            <i class="fas fa-save me-2"></i>Сохранить секретный вопрос
-                        </button>
-                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-2"></i>Отмена
-                        </a>
-                    </div>
-                </form>
-                
-                <div class="mt-4 p-3 bg-light rounded">
-                    <h6><i class="fas fa-lightbulb me-2"></i>Рекомендации:</h6>
-                    <ul class="small text-muted mb-0">
-                        <li>Выбирайте вопрос, ответ на который знаете только вы</li>
-                        <li>Ответ должен быть постоянным и не меняться со временем</li>
-                        <li>Избегайте очевидных ответов, которые можно угадать</li>
-                        <li>Не используйте информацию, которую можно найти в соцсетях</li>
-                    </ul>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label class="form-label form-label--required">Секретный вопрос</label>
+                {{ form.security_question }}
+                {% if form.security_question.errors %}
+                <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ form.security_question.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4" id="custom-question-container" style="display: none;">
+                <label class="form-label form-label--required">Ваш вопрос</label>
+                {{ form.security_question_custom }}
+                {% if form.security_question_custom.errors %}
+                <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ form.security_question_custom.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label form-label--required">Ответ</label>
+                {{ form.security_answer }}
+                {% if form.security_answer.errors %}
+                <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ form.security_answer.errors.0 }}</div>
+                {% endif %}
+                <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>Регистр букв не важен
                 </div>
             </div>
+
+            {% if form.non_field_errors %}
+            <div class="alert alert--danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>{{ form.non_field_errors.0 }}</div>
+            </div>
+            {% endif %}
+
+            <div class="d-flex flex-column gap-2">
+                <button type="submit" class="btn btn--primary btn--lg btn--shine">
+                    <i class="fas fa-save"></i>Сохранить
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn--ghost btn--block">
+                    <i class="fas fa-times"></i>Отмена
+                </a>
+            </div>
+        </form>
+
+        <div class="divider"></div>
+
+        <div style="padding: 1rem; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <h6 style="font-family: 'Playfair Display', serif; margin-bottom: 0.75rem;">
+                <i class="fas fa-lightbulb me-2" style="color: var(--amber);"></i>Рекомендации
+            </h6>
+            <ul style="color: var(--text-muted); font-size: 0.85rem; margin: 0; padding-left: 1.2rem;">
+                <li>Выбирайте вопрос, ответ на который знаете только вы</li>
+                <li>Ответ должен быть постоянным во времени</li>
+                <li>Избегайте очевидных ответов, которые можно угадать</li>
+                <li>Не используйте информацию из соцсетей</li>
+            </ul>
         </div>
     </div>
 </div>
 
-<style>
-#id_security_question {
-    border-radius: var(--border-radius-sm);
-}
-
-#id_security_answer, #id_security_question_custom {
-    border-radius: var(--border-radius-sm);
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Находим элементы по различным возможным селекторам
-    const questionSelect = document.querySelector('select[name="security_question"], #id_security_question');
-    const customContainer = document.getElementById('custom-question-container');
-    const customInput = document.querySelector('input[name="security_question_custom"], #id_security_question_custom');
-    const answerInput = document.querySelector('input[name="security_answer"], #id_security_answer');
-    
-    console.log('Found elements:', {
-        questionSelect: !!questionSelect,
-        customContainer: !!customContainer,
-        customInput: !!customInput,
-        answerInput: !!answerInput
-    });
-    
-    function toggleCustomQuestion() {
-        if (!questionSelect || !customContainer) return;
-        
-        if (questionSelect.value === 'custom') {
-            customContainer.style.display = 'block';
+    const select = document.getElementById('id_security_question');
+    const container = document.getElementById('custom-question-container');
+    const customInput = document.getElementById('id_security_question_custom');
+
+    function toggle() {
+        if (!select || !container) return;
+        if (select.value === 'custom') {
+            container.style.display = 'block';
             if (customInput) customInput.required = true;
         } else {
-            customContainer.style.display = 'none';
-            if (customInput) {
-                customInput.required = false;
-                customInput.value = '';
-            }
+            container.style.display = 'none';
+            if (customInput) { customInput.required = false; customInput.value = ''; }
         }
     }
-    
-    // Инициализация
-    if (questionSelect) {
-        toggleCustomQuestion();
-        questionSelect.addEventListener('change', toggleCustomQuestion);
+
+    if (select) {
+        toggle();
+        select.addEventListener('change', toggle);
     }
-    
-    // Фокус на поле ответа
-    if (answerInput) {
-        answerInput.focus();
-    }
-    
-    // Альтернативный способ найти элементы если они не найдены
-    setTimeout(function() {
-        if (!questionSelect) {
-            console.warn('Question select not found, searching again...');
-            const foundSelect = document.querySelector('select');
-            if (foundSelect) {
-                console.log('Found select:', foundSelect);
-                foundSelect.addEventListener('change', function() {
-                    const customContainer = document.getElementById('custom-question-container');
-                    const customInput = document.querySelector('input[name="security_question_custom"]');
-                    if (this.value === 'custom' && customContainer) {
-                        customContainer.style.display = 'block';
-                        if (customInput) customInput.required = true;
-                    } else if (customContainer) {
-                        customContainer.style.display = 'none';
-                        if (customInput) {
-                            customInput.required = false;
-                            customInput.value = '';
-                        }
-                    }
-                });
-            }
-        }
-    }, 100);
 });
 </script>
 {% endblock %}

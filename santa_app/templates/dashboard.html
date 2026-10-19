@@ -1,40 +1,66 @@
 {% extends 'base.html' %}
+{% block title %}Дашборд | Тайный Санта{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12 mb-4">
-        <h2 class="fw-bold">👋 Добро пожаловать, {{ user.get_full_name|default:user.phone }}!</h2>
-        <p class="text-muted">Управляйте вашими комнатами Тайного Санты в премиум-формате</p>
+<div class="page-header fade-in">
+    <div class="page-header__title">
+        <h1>Привет, {{ user.get_display_name }} 👋</h1>
     </div>
+    <p class="page-header__subtitle">Управляйте комнатами и создавайте волшебство</p>
 </div>
 
-<div class="row g-4">
+<div class="row g-4" id="rooms">
+    <!-- ЛЕВАЯ КОЛОНКА -->
     <div class="col-lg-8">
-        <div class="card card-elevated">
-            <div class="card-header">
-                <h5 class="card-title mb-0"><i class="fas fa-users me-2"></i>Мои комнаты</h5>
-            </div>
-            <div class="card-body">
+        <!-- Мои комнаты -->
+        <div class="card card--hover mb-4" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-tree"></i>Мои комнаты</h5>
                 {% if user_rooms %}
-                <div class="row g-3">
+                <span class="badge badge--gold-soft">{{ user_rooms|length }}</span>
+                {% endif %}
+            </div>
+            <div class="card__body">
+                {% if user_rooms %}
+                <div class="row g-3 stagger">
                     {% for room in user_rooms %}
                     <div class="col-md-6">
-                        <div class="card room-card h-100 card-elevated">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h6 class="card-title fw-bold">{{ room.name }}</h6>
+                        <div class="card card--hover h-100" style="background: var(--surface-2);">
+                            <div class="card__body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h6 style="font-family: 'Playfair Display', serif; font-size: 1.05rem; margin: 0;">
+                                        {{ room.name }}
+                                    </h6>
                                     {% if room.admin == user %}
-                                    <span class="badge bg-primary">Админ</span>
+                                    <span class="badge badge--gold"><i class="fas fa-crown"></i>Админ</span>
                                     {% endif %}
                                 </div>
-                                <p class="card-text small text-muted mb-2">
-                                    <i class="fas fa-key me-1"></i>Код: <strong>{{ room.code }}</strong>
-                                </p>
-                                <p class="card-text small text-muted mb-3">
-                                    <i class="fas fa-user-friends me-1"></i>Участников: {{ room.participant_set.count }}
-                                </p>
-                                <a href="{% url 'room_detail' room.id %}" class="btn btn-primary btn-sm w-100 btn-shine">
-                                    <i class="fas fa-door-open me-1"></i>Перейти
+
+                                <div class="d-flex flex-wrap gap-3 mb-3" style="font-size: 0.85rem; color: var(--text-muted);">
+                                    <span><i class="fas fa-key me-1" style="color: var(--gold);"></i><code>{{ room.code }}</code></span>
+                                    <span><i class="fas fa-user-friends me-1"></i>{{ room.participant_set.count }} участ.</span>
+                                </div>
+
+                                {# ⭐ НОВОЕ: дедлайн и бюджет #}
+                                {% if room.gift_deadline or room.budget %}
+                                <div class="d-flex flex-wrap gap-2 mb-3" style="font-size: 0.8rem;">
+                                    {% if room.gift_deadline %}
+                                    <span class="badge" style="background: rgba(251, 191, 36, 0.12); color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.25);">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        {{ room.gift_deadline|date:"d.m" }}
+                                    </span>
+                                    {% endif %}
+                                    {% if room.budget %}
+                                    <span class="badge" style="background: rgba(74, 222, 128, 0.12); color: var(--emerald); border: 1px solid rgba(74, 222, 128, 0.25);">
+                                        <i class="fas fa-ruble-sign"></i>
+                                        {{ room.budget }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
+                                <a href="{% url 'room_detail' room.id %}" class="btn btn--primary btn--block btn--shine">
+                                    <i class="fas fa-door-open"></i>Открыть
                                 </a>
                             </div>
                         </div>
@@ -42,157 +68,151 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="text-center py-4">
-                    <i class="fas fa-door-open fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">Вы еще не присоединились ни к одной комнате.</p>
+                <div class="empty">
+                    <div class="empty__icon"><i class="fas fa-tree"></i></div>
+                    <h3 class="empty__title">Пока нет комнат</h3>
+                    <p class="empty__desc">Создайте первую комнату или присоединитесь по коду от друга</p>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
-    
+
+    <!-- ПРАВАЯ КОЛОНКА -->
     <div class="col-lg-4">
-        <!-- В правой колонке dashboard.html, после формы создания комнаты -->
-        <div class="card mb-4 card-elevated">
-            <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-shield-alt me-2"></i>Безопасность аккаунта
-                </h5>
+        <!-- Присоединиться -->
+        <div class="card mb-4" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-sign-in-alt" style="color: var(--sapphire);"></i>Присоединиться</h5>
             </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-question-circle fa-2x text-info"></i>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1">Секретный вопрос</h6>
-                        <p class="text-muted small mb-0">
-                            {% if user.security_question %}
-                            <span class="text-success">
-                                <i class="fas fa-check-circle me-1"></i>Настроен
-                            </span>
-                            {% else %}
-                            <span class="text-warning">
-                                <i class="fas fa-exclamation-triangle me-1"></i>Не настроен
-                            </span>
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-                
-                <p class="small text-muted mb-3">
-                    Настройте секретный вопрос для восстановления пароля, если забудете его.
-                </p>
-                
-                <a href="{% url 'security_question_setup' %}" class="btn btn-info w-100 btn-sm btn-shine">
-                    <i class="fas fa-cog me-1"></i>
-                    {% if user.security_question %}
-                    Изменить секретный вопрос
-                    {% else %}
-                    Настроить секретный вопрос
-                    {% endif %}
-                </a>
-                
-                {% if not user.security_question %}
-                <div class="mt-2 p-2 bg-warning text-dark rounded small">
-                    <i class="fas fa-exclamation-triangle me-1"></i>
-                    <strong>Рекомендуем настроить</strong> для возможности восстановления пароля
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div class="card card-elevated">
-            <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0"><i class="fas fa-sign-in-alt me-2"></i>Присоединиться</h5>
-            </div>
-            <div class="card-body">
+            <div class="card__body">
                 <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="join_room">
-                    
+
                     <div class="mb-3">
-                        <label for="{{ join_form.code.id_for_label }}" class="form-label">Код комнаты</label>
+                        <label class="form-label form-label--required">Код комнаты</label>
                         {{ join_form.code }}
                         {% if join_form.code.errors %}
-                        <div class="text-danger small mt-1">
-                            {% for error in join_form.code.errors %}
-                            {{ error }}
-                            {% endfor %}
-                        </div>
+                        <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ join_form.code.errors.0 }}</div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label for="join_display_name" class="form-label">Ваше имя в комнате</label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="join_display_name"
-                               name="display_name" 
-                               value="{{ user.get_display_name }}"
-                               placeholder="Как вас называть в этой комнате?"
-                               maxlength="30">
-                        <div class="form-text">
-                            Это имя увидят другие участники. Нельзя изменить после присоединения.
-                        </div>
+                        <label class="form-label">Ваше имя в комнате</label>
+                        <input type="text" class="form-control" name="display_name"
+                               value="{{ user.get_display_name }}" maxlength="30">
                     </div>
-                    
-                    <button type="submit" class="btn btn-info w-100 text-white btn-shine">
-                        <i class="fas fa-users me-1"></i>Присоединиться
+
+                    <button type="submit" class="btn btn--secondary btn--block btn--shine">
+                        <i class="fas fa-users"></i>Войти в комнату
                     </button>
                 </form>
             </div>
         </div>
-        
-        <div class="card mb-4 card-elevated">
-            <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0"><i class="fas fa-plus-circle me-2"></i>Создать комнату</h5>
+
+        <!-- Создать -->
+        <div class="card mb-4" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-plus-circle" style="color: var(--emerald);"></i>Новая комната</h5>
             </div>
-            <div class="card-body">
-                <form method="post">
+            <div class="card__body">
+                <form method="post" id="create-room-form">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="create_room">
-                    
+
+                    <!-- Название -->
                     <div class="mb-3">
-                        <label for="{{ room_form.name.id_for_label }}" class="form-label">Название комнаты</label>
+                        <label class="form-label form-label--required">Название</label>
                         {{ room_form.name }}
                         {% if room_form.name.errors %}
-                        <div class="text-danger small mt-1">
-                            {% for error in room_form.name.errors %}
-                            {{ error }}
-                            {% endfor %}
+                        <div class="form-error">
+                            <i class="fas fa-exclamation-circle"></i>{{ room_form.name.errors.0 }}
                         </div>
                         {% endif %}
                     </div>
+
+                    <!-- Описание -->
                     <div class="mb-3">
+                        <label class="form-label">Описание</label>
                         {{ room_form.description }}
                         {% if room_form.description.errors %}
-                        <div class="text-danger small mt-1">
-                            {% for error in room_form.description.errors %}
-                            {{ error }}
-                            {% endfor %}
+                        <div class="form-error">
+                            <i class="fas fa-exclamation-circle"></i>{{ room_form.description.errors.0 }}
                         </div>
                         {% endif %}
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="create_display_name" class="form-label">Ваше имя в комнате</label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="create_display_name"
-                               name="display_name" 
-                               value="{{ user.get_display_name }}"
-                               placeholder="Как вас называть в этой комнате?"
-                               maxlength="30">
-                        <div class="form-text">
-                            Это имя увидят другие участники. Нельзя изменить после создания.
+
+                    <!-- Дедлайн + Бюджет -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt me-1" style="color: var(--gold);"></i>
+                                Дедлайн подарка
+                            </label>
+                            {{ room_form.gift_deadline }}
+                            {% if room_form.gift_deadline.errors %}
+                            <div class="form-error">
+                                <i class="fas fa-exclamation-circle"></i>{{ room_form.gift_deadline.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>Укажите, до какого числа нужно купить подарок
+                            </div>
+                        </div>
+
+                        <div class="col-12" style="margin-top: 0.5rem;">
+                            <label class="form-label">
+                                <i class="fas fa-ruble-sign me-1" style="color: var(--gold);"></i>
+                                Бюджет
+                            </label>
+                            {{ room_form.budget }}
+                            {% if room_form.budget.errors %}
+                            <div class="form-error">
+                                <i class="fas fa-exclamation-circle"></i>{{ room_form.budget.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Примерная стоимость — подскажет участникам
+                            </div>
                         </div>
                     </div>
-                    
-                    <button type="submit" class="btn btn-success w-100 btn-shine">
-                        <i class="fas fa-plus me-1"></i>Создать комнату
+
+                    <!-- Ваше имя -->
+                    <div class="mb-3">
+                        <label class="form-label">Ваше имя</label>
+                        <input type="text" class="form-control" name="display_name"
+                            value="{{ user.get_display_name }}" maxlength="30">
+                    </div>
+
+                    <button type="submit" class="btn btn--success btn--block btn--shine">
+                        <i class="fas fa-plus"></i>Создать комнату
                     </button>
                 </form>
+            </div>
+        </div>
+
+        <!-- Безопасность -->
+        <div class="card" data-reveal>
+            <div class="card__header">
+                <h5><i class="fas fa-shield-alt" style="color: var(--sapphire);"></i>Безопасность</h5>
+            </div>
+            <div class="card__body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <i class="fas fa-question-circle" style="font-size: 2rem; color: var(--sapphire); opacity: 0.7;"></i>
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 0.15rem;">Секретный вопрос</div>
+                        {% if user.security_question %}
+                        <span class="badge badge--success"><i class="fas fa-check-circle"></i>Настроен</span>
+                        {% else %}
+                        <span class="badge badge--danger"><i class="fas fa-exclamation-triangle"></i>Не настроен</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <a href="{% url 'security_question_setup' %}" class="btn btn--ghost btn--block">
+                    <i class="fas fa-cog"></i>{% if user.security_question %}Изменить{% else %}Настроить{% endif %}
+                </a>
             </div>
         </div>
     </div>

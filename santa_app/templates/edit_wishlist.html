@@ -1,85 +1,100 @@
 {% extends 'base.html' %}
+{% block title %}Мои пожелания | {{ room.name }}{% endblock %}
+{% block page_modifier %}page--narrow{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'dashboard' %}"><i class="fas fa-home me-1"></i>Дашборд</a>
+    <i class="fas fa-chevron-right"></i>
+    <a href="{% url 'room_detail' room.id %}">{{ room.name }}</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>Пожелания</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card card-elevated">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-gift me-2"></i>Мой виш-лист
-                </h5>
+<div class="card fade-in-up">
+    <div class="card__header">
+        <h5><i class="fas fa-gift" style="color: var(--gold);"></i>Мой виш-лист</h5>
+    </div>
+    <div class="card__body" style="padding: 2rem;">
+
+        <div class="alert alert--info">
+            <i class="fas fa-lightbulb" style="color: var(--sapphire);"></i>
+            <div>
+                Расскажите о своих пожеланиях — это поможет вашему Тайному Санте выбрать идеальный подарок!
             </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Расскажите о своих пожеланиях к подарку. Это поможет вашему Тайному Санте выбрать идеальный подарок!
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label class="form-label">Что бы вы хотели получить?</label>
+                {{ form.wishlist }}
+                <div class="form-text">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Укажите предпочтения: книги, одежда, хобби, любимые вкусы
                 </div>
-                
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <div class="mb-4">
-                        <label for="{{ form.wishlist.id_for_label }}" class="form-label">
-                            <strong>Что бы вы хотели получить в подарок?</strong>
-                        </label>
-                        {{ form.wishlist }}
-                        <div class="form-text">
-                            Можете указать: любимые жанры книг, размер одежды, предпочтения в еде, хобби, цветовые предпочтения и т.д.
-                        </div>
-                        {% if form.wishlist.errors %}
-                        <div class="text-danger mt-2">
-                            {% for error in form.wishlist.errors %}
-                            <small>{{ error }}</small>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
+                {% if form.wishlist.errors %}
+                <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ form.wishlist.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row gap-2">
+                <button type="submit" class="btn btn--success btn--lg btn--shine" style="flex: 1;">
+                    <i class="fas fa-save"></i>Сохранить
+                </button>
+                <a href="{% url 'room_detail' room.id %}" class="btn btn--ghost btn--lg">
+                    <i class="fas fa-times"></i>Отмена
+                </a>
+            </div>
+        </form>
+
+        <div class="divider"></div>
+
+        <h6 style="font-family: 'Playfair Display', serif; margin-bottom: 1rem;">
+            💡 Примеры хороших пожеланий
+        </h6>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card card--flat" style="background: var(--surface-2);">
+                    <div class="card__body" style="padding: 1rem;">
+                        <h6 style="color: var(--gold); font-size: 0.95rem; margin-bottom: 0.4rem;">📚 Книголюбам</h6>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                            Люблю фэнтези и научную фантастику. Особенно Азимов и Ле Гуин.
+                        </p>
                     </div>
-                    
-                    <div class="d-flex gap-2 flex-wrap">
-                        <button type="submit" class="btn btn-success btn-shine">
-                            <i class="fas fa-save me-1"></i>Сохранить пожелания
-                        </button>
-                        <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-1"></i>Отмена
-                        </a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card--flat" style="background: var(--surface-2);">
+                    <div class="card__body" style="padding: 1rem;">
+                        <h6 style="color: var(--gold); font-size: 0.95rem; margin-bottom: 0.4rem;">👕 Модникам</h6>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                            Размер M, любимые цвета — синий и зелёный. Люблю свитеры.
+                        </p>
                     </div>
-                </form>
-                
-                <div class="mt-5">
-                    <h6 class="mb-3">🎯 Примеры хороших пожеланий:</h6>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="card bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="card-title text-primary">📚 Для книголюбов</h6>
-                                    <p class="card-text small">"Люблю книги в жанре фэнтези и научная фантастика. Особенно нравятся авторы: Айзек Азимов, Урсула Ле Гуин"</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="card-title text-primary">👕 Для модников</h6>
-                                    <p class="card-text small">"Размер одежды: M, любимые цвета: синий, зеленый. Предпочитаю casual стиль, теплые свитеры"</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="card-title text-primary">🍫 Для сладкоежек</h6>
-                                    <p class="card-text small">"Обожаю темный шоколад (от 70%), мармелад, качественный чай. Не люблю белый шоколад"</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card bg-light h-100">
-                                <div class="card-body">
-                                    <h6 class="card-title text-primary">🎨 Для творческих</h6>
-                                    <p class="card-text small">"Увлекаюсь рисованием - нужны качественные кисти, акварельная бумага. Люблю наборы для творчества"</p>
-                                </div>
-                            </div>
-                        </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card--flat" style="background: var(--surface-2);">
+                    <div class="card__body" style="padding: 1rem;">
+                        <h6 style="color: var(--gold); font-size: 0.95rem; margin-bottom: 0.4rem;">🍫 Сладкоежкам</h6>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                            Обожаю тёмный шоколад (70%+), мармелад и хороший чай.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card--flat" style="background: var(--surface-2);">
+                    <div class="card__body" style="padding: 1rem;">
+                        <h6 style="color: var(--gold); font-size: 0.95rem; margin-bottom: 0.4rem;">🎨 Творческим</h6>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">
+                            Занимаюсь рисованием — пригодятся кисти и акварельная бумага.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -87,49 +102,15 @@
     </div>
 </div>
 
-<style>
-#id_wishlist {
-    min-height: 200px;
-    resize: vertical;
-}
-
-.card.bg-light {
-    border: 1px solid rgba(212, 175, 55, 0.2);
-    transition: all 0.3s ease;
-}
-
-.card.bg-light:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-@media (max-width: 768px) {
-    .btn {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    
-    #id_wishlist {
-        min-height: 150px;
-    }
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const textarea = document.getElementById('id_wishlist');
-    if (textarea) {
-        // Автоматическое изменение высоты textarea
-        textarea.addEventListener('input', function() {
+    const ta = document.getElementById('id_wishlist');
+    if (ta) {
+        ta.style.minHeight = '180px';
+        ta.addEventListener('input', function() {
             this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 300) + 'px';
+            this.style.height = Math.min(this.scrollHeight, 400) + 'px';
         });
-        
-        // Инициализируем высоту
-        setTimeout(() => {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.min(textarea.scrollHeight, 300) + 'px';
-        }, 100);
     }
 });
 </script>

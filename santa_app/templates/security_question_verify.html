@@ -1,93 +1,59 @@
 {% extends 'base.html' %}
+{% block title %}Подтверждение | Тайный Санта{% endblock %}
+{% block page_modifier %}page--narrow{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card card-elevated">
-            <div class="card-header bg-info text-white">
-                <h4 class="card-title mb-0 text-center">
-                    <i class="fas fa-shield-alt me-2"></i>Подтверждение личности
-                </h4>
+<div class="card fade-in-up">
+    <div class="card__header">
+        <h5><i class="fas fa-user-shield" style="color: var(--sapphire);"></i>Подтверждение личности</h5>
+    </div>
+    <div class="card__body" style="padding: 2rem;">
+
+        <div style="text-align: center; padding: 1.25rem; background: var(--surface-2); border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+            <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.3rem;">Восстановление для:</div>
+            <div style="font-weight: 700; color: var(--text); font-size: 1.05rem;">{{ user.get_display_name }}</div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">{{ user.phone }}</div>
+        </div>
+
+        <div style="padding: 1.25rem; background: var(--gold-soft); border: 1px solid var(--border-2); border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+            <div style="font-size: 0.8rem; color: var(--gold); margin-bottom: 0.4rem;">
+                <i class="fas fa-lock me-1"></i>Ваш секретный вопрос:
             </div>
-            <div class="card-body p-4">
-                <div class="alert alert-info">
-                    <i class="fas fa-user-shield me-2"></i>
-                    Ответьте на ваш секретный вопрос для подтверждения.
+            <div style="font-weight: 600; color: var(--text);">{{ user.security_question }}</div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label class="form-label form-label--required">Ваш ответ</label>
+                <div class="input-group">
+                    <span class="input-group__prefix"><i class="fas fa-key"></i></span>
+                    {{ form.security_answer }}
                 </div>
-                
-                <div class="text-center mb-4">
-                    <div class="bg-light rounded p-3">
-                        <small class="text-muted">Восстановление для:</small>
-                        <br>
-                        <strong>{{ user.get_display_name }}</strong>
-                        <br>
-                        <small class="text-muted">{{ user.phone }}</small>
-                    </div>
-                </div>
-                
-                <div class="mb-4 p-3 bg-warning text-dark rounded">
-                    <h6 class="mb-2">🔒 Ваш секретный вопрос:</h6>
-                    <p class="mb-0 fw-semibold">{{ user.security_question }}</p>
-                </div>
-                
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <div class="mb-4">
-                        <label for="id_security_answer" class="form-label fw-semibold">Ваш ответ</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light">
-                                <i class="fas fa-key text-muted"></i>
-                            </span>
-                            {{ form.security_answer }}
-                        </div>
-                        {% if form.security_answer.errors %}
-                        <div class="text-danger small mt-2">
-                            {% for error in form.security_answer.errors %}
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-circle me-1"></i>
-                                <span>{{ error }}</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-text">Регистр букв не имеет значения</div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-info w-100 btn-shine py-2 fw-semibold text-white">
-                        <i class="fas fa-check me-2"></i>Подтвердить ответ
-                    </button>
-                </form>
-                
-                <div class="text-center mt-3">
-                    <small class="text-muted">
-                        Не помните ответ? 
-                        <a href="{% url 'password_reset_request' %}" class="text-decoration-none">
-                            Начать заново
-                        </a>
-                    </small>
-                </div>
+                {% if form.security_answer.errors %}
+                <div class="form-error"><i class="fas fa-exclamation-circle"></i>{{ form.security_answer.errors.0 }}</div>
+                {% endif %}
+                <div class="form-text">Регистр букв не важен</div>
             </div>
+
+            <button type="submit" class="btn btn--primary btn--lg btn--block btn--shine">
+                <i class="fas fa-check"></i>Подтвердить
+            </button>
+        </form>
+
+        <div class="divider"></div>
+
+        <div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+            Не помните ответ?
+            <a href="{% url 'password_reset_request' %}" style="font-weight: 600;">Начать заново</a>
         </div>
     </div>
 </div>
 
-<style>
-.input-group-text {
-    border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm) !important;
-}
-
-#id_security_answer {
-    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0 !important;
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const answerInput = document.getElementById('id_security_answer');
-    if (answerInput) {
-        answerInput.focus();
-    }
+    document.getElementById('id_security_answer')?.focus();
 });
 </script>
 {% endblock %}

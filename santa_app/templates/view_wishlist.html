@@ -1,127 +1,83 @@
 {% extends 'base.html' %}
+{% block title %}Пожелания | {{ room.name }}{% endblock %}
+{% block page_modifier %}page--narrow{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'dashboard' %}"><i class="fas fa-home me-1"></i>Дашборд</a>
+    <i class="fas fa-chevron-right"></i>
+    <a href="{% url 'room_detail' room.id %}">{{ room.name }}</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>{% if is_own_wishlist %}Мои пожелания{% else %}Пожелания получателя{% endif %}</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card card-elevated">
-            <div class="card-header {% if is_own_wishlist %}bg-info{% else %}bg-warning{% endif %} text-white">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-gift me-2"></i>
-                    {% if is_own_wishlist %}
-                    Мой виш-лист
-                    {% else %}
-                    Пожелания {{ participant.get_display_name }}
-                    {% endif %}
-                </h5>
-            </div>
-            <div class="card-body">
-                {% if is_own_wishlist %}
-                <div class="alert alert-info">
-                    <i class="fas fa-eye me-2"></i>
-                    Это ваши пожелания. Их видит только ваш Тайный Санта.
-                </div>
-                {% else %}
-                <div class="alert alert-warning">
-                    <i class="fas fa-santa me-2"></i>
-                    Вы - Тайный Санта для этого участника! Используйте эту информацию для выбора подарка.
-                </div>
-                {% endif %}
-                
-                <div class="wishlist-content">
-                    {% if participant.wishlist %}
-                    <div class="bg-light p-4 rounded">
-                        <div class="wishlist-text">
-                            {{ participant.wishlist|linebreaks }}
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-5">
-                        <div class="empty-wishlist-icon mb-4">
-                            <i class="fas fa-question-circle fa-4x text-muted"></i>
-                        </div>
-                        <h5 class="text-muted mb-3">
-                            {% if is_own_wishlist %}
-                            Вы еще не добавили пожелания
-                            {% else %}
-                            Участник еще не добавил пожелания
-                            {% endif %}
-                        </h5>
-                        <p class="text-muted">
-                            {% if is_own_wishlist %}
-                            Расскажите о своих предпочтениях, чтобы помочь Санте выбрать идеальный подарок!
-                            {% else %}
-                            Как только участник добавит пожелания, они появятся здесь.
-                            {% endif %}
-                        </p>
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="mt-4 d-flex gap-2 flex-wrap">
-                    {% if is_own_wishlist %}
-                    <a href="{% url 'edit_wishlist' room.id %}" class="btn btn-primary btn-shine">
-                        <i class="fas fa-edit me-1"></i>Редактировать пожелания
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Назад к комнате
-                    </a>
-                </div>
+<div class="card fade-in-up">
+    <div class="card__header">
+        <h5>
+            <i class="fas fa-{% if is_own_wishlist %}list{% else %}gift{% endif %}"
+               style="color: {% if is_own_wishlist %}var(--sapphire){% else %}var(--amber){% endif %};"></i>
+            {% if is_own_wishlist %}
+                Мой виш-лист
+            {% else %}
+                Пожелания {{ participant.get_display_name }}
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card__body" style="padding: 2rem;">
 
-                {% if not participant.wishlist and is_own_wishlist %}
-                <div class="mt-4">
-                    <div class="card bg-light">
-                        <div class="card-body">
-                            <h6 class="card-title">💡 Примеры хороших пожеланий:</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <ul class="list-unstyled small">
-                                        <li>• 📚 Люблю книги в жанре фэнтези</li>
-                                        <li>• 👕 Размер одежды: M</li>
-                                        <li>• 🎨 Увлекаюсь рисованием</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <ul class="list-unstyled small">
-                                        <li>• ☕ Коллекционирую кружки</li>
-                                        <li>• 🍫 Обожаю темный шоколад</li>
-                                        <li>• 🎵 Слушаю рок-музыку</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
+        {% if is_own_wishlist %}
+        <div class="alert alert--info">
+            <i class="fas fa-eye" style="color: var(--sapphire);"></i>
+            <div>Это ваши пожелания. Их видит только ваш Тайный Санта.</div>
+        </div>
+        {% else %}
+        <div class="alert alert--warning">
+            <i class="fas fa-user-secret" style="color: var(--amber);"></i>
+            <div>
+                Вы — Тайный Санта для этого участника! Используйте эту информацию при выборе подарка.
             </div>
+        </div>
+        {% endif %}
+
+        {% if participant.wishlist %}
+        <div style="padding: 1.5rem; background: var(--surface-2); border-radius: var(--radius); border: 1px solid var(--border); line-height: 1.8;">
+            {{ participant.wishlist|linebreaks }}
+        </div>
+        {% else %}
+        <div class="empty">
+            <div class="empty__icon"><i class="fas fa-question-circle"></i></div>
+            <h3 class="empty__title">
+                {% if is_own_wishlist %}Пожелания ещё не заполнены{% else %}Участник не заполнил пожелания{% endif %}
+            </h3>
+            <p class="empty__desc">
+                {% if is_own_wishlist %}
+                    Расскажите о своих предпочтениях, чтобы Санта выбрал идеальный подарок
+                {% else %}
+                    Как только участник добавит пожелания, они появятся здесь
+                {% endif %}
+            </p>
+            {% if is_own_wishlist %}
+            <a href="{% url 'edit_wishlist' room.id %}" class="btn btn--primary btn--shine">
+                <i class="fas fa-plus"></i>Добавить пожелания
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="divider"></div>
+
+        <div class="d-flex flex-column flex-sm-row gap-2">
+            {% if is_own_wishlist and participant.wishlist %}
+            <a href="{% url 'edit_wishlist' room.id %}" class="btn btn--primary" style="flex: 1;">
+                <i class="fas fa-edit"></i>Редактировать
+            </a>
+            {% endif %}
+            <a href="{% url 'room_detail' room.id %}" class="btn btn--ghost" style="flex: 1;">
+                <i class="fas fa-arrow-left"></i>Назад к комнате
+            </a>
         </div>
     </div>
 </div>
-
-<style>
-.wishlist-text {
-    line-height: 1.8;
-    font-size: 1.05rem;
-}
-
-.empty-wishlist-icon {
-    opacity: 0.6;
-}
-
-.card.bg-light {
-    border-left: 4px solid var(--secondary);
-}
-
-@media (max-width: 768px) {
-    .wishlist-text {
-        font-size: 1rem;
-        line-height: 1.6;
-    }
-    
-    .btn {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-}
-</style>
 {% endblock %}

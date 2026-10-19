@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Правда или действие | Тайный Санта{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="breadcrumbs">
+    <a href="{% url 'games_home' %}"><i class="fas fa-gamepad me-1"></i>Игры</a>
+    <i class="fas fa-chevron-right"></i>
+    <span>Правда или действие</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header text-center fade-in">
+    <h1>🔥 Правда или действие</h1>
+    <p class="page-header__subtitle">Выбирай честно — или выполняй задание</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card__body" style="padding: 3rem 2rem; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                
+                <div id="task-display" style="display: none;">
+                    <div id="task-type" style="color: var(--gold); font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 1rem;"></div>
+                    <div id="task-text" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; line-height: 1.4; color: var(--text);"></div>
+                </div>
+                
+                <div id="start-display">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🎲</div>
+                    <h2 style="margin-bottom: 1rem;">Готовы?</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem;">Выбирайте честно, иначе играть не интересно</p>
+                </div>
+                
+            </div>
+            
+            <div class="card__footer" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button type="button" onclick="pickTask('truth')" class="btn btn--primary" style="flex: 1; min-width: 140px;">
+                    <i class="fas fa-comment-dots"></i>Правда
+                </button>
+                <button type="button" onclick="pickTask('dare')" class="btn btn--danger" style="flex: 1; min-width: 140px;">
+                    <i class="fas fa-fire"></i>Действие
+                </button>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <a href="{% url 'games_home' %}" class="btn btn--ghost" style="flex: 1;">
+                <i class="fas fa-arrow-left"></i>К играм
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function pickTask(type) {
+    fetch("{% url 'game_truth_or_dare' %}", {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'action=' + type,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('start-display').style.display = 'none';
+            document.getElementById('task-display').style.display = 'block';
+            
+            const typeEl = document.getElementById('task-type');
+            const textEl = document.getElementById('task-text');
+            
+            if (data.type === 'truth') {
+                typeEl.textContent = '💬 ПРАВДА';
+                typeEl.style.color = 'var(--gold)';
+            } else {
+                typeEl.textContent = '🔥 ДЕЙСТВИЕ';
+                typeEl.style.color = 'var(--ruby)';
+            }
+            
+            textEl.textContent = data.text;
+        }
+    })
+    .catch(() => window.showToast('Ошибка', 'error'));
+}
+</script>
+{% endblock %}

@@ -61,19 +61,63 @@ class PhoneAuthenticationForm(AuthenticationForm):
     )
 
 class RoomForm(forms.ModelForm):
+    gift_deadline = forms.DateTimeField(
+        required=False,
+        label='Дедлайн подарка',
+        widget=forms.DateTimeInput(attrs={
+            'class': 'form-control',
+            'type': 'datetime-local',
+            'id': 'id_gift_deadline',
+        }),
+        input_formats=['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M', '%Y-%m-%d'],
+        help_text='До какого числа нужно купить и подарить подарок',
+    )
+
+    budget = forms.CharField(
+        required=False,
+        max_length=100,
+        label='Бюджет',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Например: 500-1000 ₽',
+            'maxlength': '100',
+        }),
+        help_text='Примерная стоимость подарка — необязательно',
+    )
+
     class Meta:
         model = Room
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'gift_deadline', 'budget']
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'form-control', 
-                'placeholder': 'Название комнаты'
+                'class': 'form-control',
+                'placeholder': 'Название комнаты',
+                'maxlength': '100',
             }),
             'description': forms.TextInput(attrs={
-                'class': 'form-control', 
-                'placeholder': 'Описание'
-            }), 
+                'class': 'form-control',
+                'placeholder': 'Описание (необязательно)',
+                'maxlength': '1000',
+            }),
         }
+
+    def clean_gift_deadline(self):
+        """Проверяем, что дедлайн в будущем"""
+        deadline = self.cleaned_data.get('gift_deadline')
+        if deadline:
+            from django.utils import timezone
+            if deadline < timezone.now():
+                raise forms.ValidationError(
+                    'Дедлайн не может быть в прошлом. Укажите будущую дату.'
+                )
+        return deadline
+
+    def clean_budget(self):
+        """Ограничим длину и очистим от лишних символов"""
+        budget = self.cleaned_data.get('budget', '').strip()
+        if len(budget) > 100:
+            raise forms.ValidationError('Бюджет слишком длинный')
+        return budget
 
 class JoinRoomForm(forms.Form):
     code = forms.CharField(

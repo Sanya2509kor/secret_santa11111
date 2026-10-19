@@ -3,897 +3,1146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>{% block title %}🎅 Тайный Санта | Премиум сервис{% endblock %}</title>
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{% block title %}🎄 Тайный Санта{% endblock %}</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+
     <style>
+        /* ═══════════════ ПЕРЕМЕННЫЕ ═══════════════ */
         :root {
-            --primary: #8B4513;
-            --primary-dark: #654321;
-            --primary-light: #A0522D;
-            --secondary: #D4AF37;
-            --success: #228B22;
-            --warning: #FFD700;
-            --danger: #B22222;
-            --dark: #2C2C2C;
-            --light: #F8F8F8;
-            --white: #FFFFFF;
-            --gradient: linear-gradient(135deg, #8B4513 0%, #D4AF37 100%);
-            --gradient-primary: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
-            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            --shadow-lg: 0 15px 40px rgba(0, 0, 0, 0.12);
-            --border-radius: 20px;
-            --border-radius-sm: 12px;
+            --bg: #0a0a0f;
+            --bg-deep: #060609;
+            --surface: #13131a;
+            --surface-2: #1a1a24;
+            --surface-3: #22222e;
+
+            --gold: #e8c964;
+            --gold-dark: #a8842a;
+            --gold-soft: rgba(232, 201, 100, 0.12);
+
+            --emerald: #4ade80;
+            --ruby: #ef4444;
+            --sapphire: #60a5fa;
+            --amber: #fbbf24;
+
+            --text: #f5f1e8;
+            --text-soft: #c9c3b7;
+            --text-muted: #8a857a;
+            --text-dim: #5a564e;
+
+            --border: rgba(232, 201, 100, 0.1);
+            --border-2: rgba(232, 201, 100, 0.2);
+            --border-strong: rgba(232, 201, 100, 0.35);
+
+            --gradient-gold: linear-gradient(135deg, #e8c964 0%, #d4af37 50%, #a8842a 100%);
+            --gradient-fire: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
+            --gradient-forest: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+            --shadow: 0 8px 24px rgba(0,0,0,0.35);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+            --glow-gold: 0 0 40px rgba(232, 201, 100, 0.15);
+            --glow-gold-strong: 0 0 60px rgba(232, 201, 100, 0.3);
+
+            --radius-sm: 10px;
+            --radius: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+            --header-h: 64px;
+            --bottom-nav-h: 68px;
         }
 
+        /* ═══════════════ БАЗА ═══════════════ */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #fefefe 0%, #f8f6f4 100%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            line-height: 1.7;
-            color: var(--dark);
-            font-weight: 300;
+            line-height: 1.6;
+            font-weight: 400;
+            padding-top: var(--safe-top);
+            overflow-x: hidden;
+            position: relative;
         }
 
-        /* Премиум навбар */
-        .navbar-brand {
+        /* Aurora — переливающийся фон */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: -50%;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(232, 201, 100, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(96, 165, 250, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(74, 222, 128, 0.03) 0%, transparent 50%);
+            z-index: -1;
+            animation: aurora 30s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes aurora {
+            0%   { transform: translate(0, 0) scale(1); }
+            50%  { transform: translate(-3%, 3%) scale(1.05); }
+            100% { transform: translate(3%, -3%) scale(1); }
+        }
+
+        /* Скроллбар */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+        /* Типографика */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
             font-weight: 700;
-            font-size: 1.6rem;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            letter-spacing: -0.01em;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); }
+        h2 { font-size: clamp(1.5rem, 3vw, 2rem); }
+        h3 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); }
+
+        .display-1 { font-family: 'Playfair Display', serif; font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 800; }
+
+        a { color: var(--gold); text-decoration: none; transition: color 0.2s ease; }
+        a:hover { color: #f0d47d; }
+
+        code {
+            font-family: 'SF Mono', Monaco, monospace;
+            background: var(--gold-soft);
+            color: var(--gold);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        /* ═══════════════ ВЕРХНИЙ ХЕДЕР ═══════════════ */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+            min-height: var(--header-h);
+        }
+
+        .site-header__inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            height: var(--header-h);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: var(--gradient-gold);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: -0.5px;
+            flex-shrink: 0;
         }
 
-        .navbar {
-            background: rgba(255, 255, 255, 0.98) !important;
-            backdrop-filter: blur(20px);
-            box-shadow: var(--shadow);
-            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        .brand-icon {
+            font-size: 1.5rem;
+            -webkit-text-fill-color: initial;
+            filter: drop-shadow(0 0 12px rgba(232, 201, 100, 0.5));
         }
 
-        .nav-link {
+        .nav-desktop {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-left: auto;
+        }
+
+        .nav-desktop a {
+            color: var(--text-soft);
+            padding: 0.5rem 0.9rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
             font-weight: 500;
-            padding: 0.5rem 1rem !important;
-            border-radius: var(--border-radius-sm);
-            transition: all 0.3s ease;
-            color: var(--dark) !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
         }
 
-        .nav-link:hover {
-            background: var(--primary);
-            color: white !important;
-            transform: translateY(-2px);
+        .nav-desktop a:hover {
+            background: var(--gold-soft);
+            color: var(--gold);
         }
 
-        /* Элегантные карточки */
-        .card {
-            border: none;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            margin-top: 20px;
-            border: 1px solid rgba(212, 175, 55, 0.1);
+        .nav-desktop a.active {
+            color: var(--gold);
+            background: var(--gold-soft);
+        }
+
+        /* Профиль dropdown */
+        .user-menu {
+            position: relative;
+            margin-left: 0.5rem;
+        }
+
+        .user-menu__trigger {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.8rem 0.4rem 0.4rem;
+            border-radius: 100px;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .user-menu__trigger:hover {
+            border-color: var(--border-strong);
+            background: var(--surface-3);
+        }
+
+        .user-menu__avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--gradient-gold);
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .user-menu__name {
+            max-width: 140px;
             overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .card:hover {
-            transform: translateY(-8px);
+        .user-menu__dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 240px;
+            background: var(--surface-2);
+            border: 1px solid var(--border-2);
+            border-radius: var(--radius);
             box-shadow: var(--shadow-lg);
+            padding: 0.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.2s ease;
         }
 
-        .card-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-bottom: none;
-            padding: 1.5rem;
-            font-weight: 600;
+        .user-menu.open .user-menu__dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
-        .card-header.bg-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important; }
-        .card-header.bg-success { background: linear-gradient(135deg, #228B22 0%, #006400 100%) !important; }
-        .card-header.bg-info { background: linear-gradient(135deg, #4169E1 0%, #191970 100%) !important; }
-        .card-header.bg-warning { background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%) !important; }
-
-        .room-card {
-            background: linear-gradient(135deg, var(--white) 0%, #f8f9fa 100%);
-            border-left: 4px solid var(--secondary);
+        .user-menu__dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0.9rem;
+            border-radius: var(--radius-sm);
+            color: var(--text-soft);
+            font-size: 0.9rem;
+            transition: all 0.15s ease;
         }
 
-        /* Премиум кнопки */
+        .user-menu__dropdown a:hover {
+            background: var(--gold-soft);
+            color: var(--gold);
+        }
+
+        .user-menu__dropdown a.danger { color: #fca5a5; }
+        .user-menu__dropdown a.danger:hover { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+
+        .user-menu__divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0.35rem 0.5rem;
+        }
+
+        /* Мобильная кнопка меню */
+        .burger-btn {
+            display: none;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: auto;
+            font-size: 1.1rem;
+        }
+
+        /* ═══════════════ ОСНОВНОЙ КОНТЕНТ ═══════════════ */
+        .page {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 2rem;
+        }
+
+        .page--narrow { max-width: 720px; }
+        .page--wide { max-width: 1400px; }
+
+        /* Хлебные крошки */
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumbs a { color: var(--text-muted); }
+        .breadcrumbs a:hover { color: var(--gold); }
+        .breadcrumbs i { font-size: 0.7rem; opacity: 0.5; }
+
+        /* Заголовок страницы */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header__title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .page-header__title h1 {
+            margin: 0;
+        }
+
+        .page-header__subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* ═══════════════ КАРТОЧКИ ═══════════════ */
+        .card {
+            background: var(--gradient-glass);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            color: var(--text);
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card--hover:hover {
+            border-color: var(--border-2);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow), var(--glow-gold);
+        }
+
+        .card--flat { box-shadow: none; }
+        .card--gold { border-color: var(--border-strong); }
+        .card--dark { background: var(--surface-2); backdrop-filter: none; }
+
+        .card__header {
+            padding: 1.1rem 1.4rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .card__header h5 {
+            margin: 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .card__header h5 i { color: var(--gold); }
+
+        .card__body { padding: 1.4rem; }
+        .card__body--tight { padding: 1rem; }
+
+        .card__footer {
+            padding: 1rem 1.4rem;
+            border-top: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        /* ═══════════════ КНОПКИ ═══════════════ */
         .btn {
-            border-radius: var(--border-radius-sm);
+            border-radius: var(--radius-sm);
             font-weight: 600;
-            padding: 0.875rem 2rem;
-            transition: all 0.3s ease;
-            border: none;
+            padding: 0.7rem 1.4rem;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            letter-spacing: 0.01em;
+            cursor: pointer;
             position: relative;
             overflow: hidden;
-            letter-spacing: 0.5px;
+            white-space: nowrap;
+            text-decoration: none;
         }
 
-        .btn::before {
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn--primary {
+            background: var(--gradient-gold);
+            color: #1a1a1a;
+            box-shadow: 0 4px 20px rgba(232, 201, 100, 0.25);
+        }
+        .btn--primary:hover:not(:disabled) {
+            box-shadow: 0 8px 30px rgba(232, 201, 100, 0.4);
+            transform: translateY(-1px);
+            color: #1a1a1a;
+        }
+
+        .btn--secondary {
+            background: var(--surface-3);
+            color: var(--text);
+            border-color: var(--border-2);
+        }
+        .btn--secondary:hover:not(:disabled) {
+            background: var(--surface-2);
+            border-color: var(--border-strong);
+            color: var(--gold);
+        }
+
+        .btn--ghost {
+            background: transparent;
+            color: var(--text-soft);
+            border-color: var(--border);
+        }
+        .btn--ghost:hover:not(:disabled) {
+            background: var(--gold-soft);
+            border-color: var(--border-strong);
+            color: var(--gold);
+        }
+
+        .btn--success {
+            background: var(--gradient-forest);
+            color: #052e16;
+            box-shadow: 0 4px 20px rgba(74, 222, 128, 0.2);
+        }
+        .btn--success:hover:not(:disabled) { box-shadow: 0 8px 30px rgba(74, 222, 128, 0.35); transform: translateY(-1px); }
+
+        .btn--danger {
+            background: var(--gradient-fire);
+            color: white;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2);
+        }
+        .btn--danger:hover:not(:disabled) { box-shadow: 0 8px 30px rgba(239, 68, 68, 0.35); transform: translateY(-1px); }
+
+        .btn--sm { padding: 0.5rem 1rem; font-size: 0.85rem; }
+        .btn--lg { padding: 0.9rem 1.8rem; font-size: 1rem; }
+        .btn--block { width: 100%; }
+        .btn--icon { padding: 0.6rem; width: 38px; height: 38px; }
+
+        /* Shine эффект */
+        .btn--shine::before {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transition: left 0.6s;
+        }
+        .btn--shine:hover::before { left: 100%; }
+
+        /* ═══════════════ ФОРМЫ ═══════════════ */
+        .form-label {
+            color: var(--text-soft);
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+            display: block;
         }
 
-        .btn:hover::before {
-            left: 100%;
+        .form-label--required::after {
+            content: ' *';
+            color: var(--ruby);
         }
 
-        .btn-primary {
-            background: var(--gradient-primary);
-            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+        .form-control, .form-select {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            width: 100%;
+            font-family: inherit;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.4);
+        .form-control:focus, .form-select:focus {
+            background: var(--surface-3);
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px var(--gold-soft);
+            color: var(--text);
+            outline: none;
         }
 
-        /* Герой секция премиум класса */
-        .hero-section {
-            background: var(--gradient);
-            color: white;
-            padding: 6rem 0;
-            border-radius: 0 0 var(--border-radius) var(--border-radius);
-            position: relative;
-            overflow: hidden;
+        .form-control::placeholder { color: var(--text-dim); }
+
+        textarea.form-control { min-height: 100px; resize: vertical; }
+
+        .form-text { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; }
+
+        .form-error {
+            color: #fca5a5;
+            font-size: 0.85rem;
+            margin-top: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
         }
 
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="rgba(255,255,255,0.03)" points="0,1000 1000,0 1000,1000"/></svg>');
+        /* Input groups */
+        .input-group { display: flex; }
+        .input-group__prefix {
+            background: var(--gold-soft);
+            border: 1px solid var(--border);
+            border-right: none;
+            color: var(--gold);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 48px;
+        }
+        .input-group .form-control {
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
         }
 
-        /* Элегантные формы */
-        .form-control {
-            border-radius: var(--border-radius-sm);
-            border: 2px solid #e8e8e8;
-            padding: 0.875rem 1.25rem;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-            font-weight: 300;
+        /* ═══════════════ BADGES ═══════════════ */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 100px;
+            letter-spacing: 0.02em;
         }
 
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.15);
-            transform: translateY(-1px);
+        .badge--gold {
+            background: var(--gradient-gold);
+            color: #1a1a1a;
+        }
+        .badge--gold-soft {
+            background: var(--gold-soft);
+            color: var(--gold);
+            border: 1px solid var(--border-2);
+        }
+        .badge--success {
+            background: rgba(74, 222, 128, 0.12);
+            color: var(--emerald);
+            border: 1px solid rgba(74, 222, 128, 0.25);
+        }
+        .badge--danger {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .badge--info {
+            background: rgba(96, 165, 250, 0.12);
+            color: #93c5fd;
+            border: 1px solid rgba(96, 165, 250, 0.25);
         }
 
-        /* Премиум чат */
-        .chat-container {
-            height: 70vh;
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--shadow-lg);
-            background: white;
-            border: 1px solid rgba(212, 175, 55, 0.1);
-        }
-
-        .chat-messages {
-            height: calc(100% - 80px);
-            overflow-y: auto;
-            padding: 1.5rem;
-            background: #fafafa;
-        }
-
-        .message {
-            max-width: 70%;
+        /* ═══════════════ ALERTS / TOASTS ═══════════════ */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            color: var(--text);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
             margin-bottom: 1rem;
-            animation: messageSlide 0.3s ease;
+        }
+        .alert--success { border-left: 3px solid var(--emerald); }
+        .alert--danger { border-left: 3px solid var(--ruby); }
+        .alert--warning { border-left: 3px solid var(--amber); }
+        .alert--info { border-left: 3px solid var(--sapphire); }
+
+        /* Toast-уведомления (всплывающие) */
+        .toast-container {
+            position: fixed;
+            top: calc(var(--header-h) + 16px);
+            right: 16px;
+            z-index: 1080;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 380px;
         }
 
-        @keyframes messageSlide {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .toast {
+            background: var(--surface-2);
+            border: 1px solid var(--border-2);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            color: var(--text);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            animation: toast-in 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 3px solid var(--gold);
         }
 
-        .message-own {
-            margin-left: auto;
-            background: var(--gradient-primary);
-            color: white;
-            border-radius: 20px 20px 5px 20px;
-            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.2);
+        .toast--success { border-left-color: var(--emerald); }
+        .toast--error { border-left-color: var(--ruby); }
+        .toast--warning { border-left-color: var(--amber); }
+
+        .toast__icon { font-size: 1.25rem; flex-shrink: 0; }
+        .toast--success .toast__icon { color: var(--emerald); }
+        .toast--error .toast__icon { color: var(--ruby); }
+        .toast--warning .toast__icon { color: var(--amber); }
+        .toast--info .toast__icon { color: var(--sapphire); }
+
+        .toast__content { flex: 1; font-size: 0.9rem; }
+        .toast__close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+        .toast__close:hover { color: var(--text); }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        .message-other {
-            background: #f8f8f8;
-            color: var(--dark);
-            border-radius: 20px 20px 20px 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border: 1px solid rgba(212, 175, 55, 0.1);
+        /* ═══════════════ EMPTY STATE ═══════════════ */
+        .empty {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        .empty__icon {
+            font-size: 3.5rem;
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        .empty__title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--text-soft);
+            margin-bottom: 0.5rem;
+        }
+        .empty__desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            max-width: 380px;
+            margin: 0 auto 1.5rem;
         }
 
-        /* Мобильная навигация */
-        .mobile-bottom-nav {
+        /* ═══════════════ BOTTOM NAV (mobile) ═══════════════ */
+        .bottom-nav {
+            display: none;
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
-            box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
-            z-index: 1000;
-            display: none;
-            border-top: 1px solid rgba(212, 175, 55, 0.1);
+            background: rgba(10, 10, 15, 0.92);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-top: 1px solid var(--border);
+            padding-bottom: var(--safe-bottom);
+            z-index: 1040;
         }
 
-        .nav-item-mobile {
+        .bottom-nav__inner {
+            display: flex;
+            height: var(--bottom-nav-h);
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .bottom-nav__item {
             flex: 1;
-            text-align: center;
-            padding: 0.75rem;
-            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            font-weight: 500;
+            position: relative;
+            transition: all 0.2s ease;
             text-decoration: none;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
         }
 
-        .nav-item-mobile.active {
-            color: var(--primary);
+        .bottom-nav__item i {
+            font-size: 1.3rem;
+            transition: transform 0.2s ease;
         }
 
-        .nav-item-mobile i {
-            font-size: 1.2rem;
-            margin-bottom: 0.25rem;
-            display: block;
+        .bottom-nav__item:hover, .bottom-nav__item.active {
+            color: var(--gold);
         }
 
-        /* Адаптивность */
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 15px;
-            }
-
-            .hero-section {
-                padding: 4rem 0;
-                border-radius: 0;
-            }
-
-            .card {
-                margin-bottom: 1rem;
-            }
-
-            .mobile-bottom-nav {
-                display: flex;
-            }
-
-            .main-content {
-                padding-bottom: 80px;
-            }
-
-            .chat-container {
-                height: calc(100vh - 140px);
-                border-radius: 0;
-            }
-
-            .navbar-nav {
-                text-align: center;
-            }
-
-            .btn {
-                width: 100%;
-                margin-bottom: 0.5rem;
-            }
-
-            .room-card {
-                margin: 0.5rem 0;
-            }
+        .bottom-nav__item.active i {
+            transform: scale(1.1) translateY(-2px);
+            filter: drop-shadow(0 0 12px rgba(232, 201, 100, 0.5));
         }
 
-        @media (max-width: 576px) {
-            .hero-section h1 {
-                font-size: 2.2rem;
-            }
-
-            .card-body {
-                padding: 1.25rem;
-            }
-
-            .message {
-                max-width: 85%;
-            }
-        }
-
-        /* Анимации премиум класса */
-        .fade-in {
-            animation: fadeIn 0.6s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Улучшенные уведомления */
-        .alert {
-            border: none;
-            border-radius: var(--border-radius-sm);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(10px);
-            border-left: 4px solid;
-            font-weight: 400;
-        }
-
-        .alertnew {
-            border-radius: var(--border-radius-sm);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(10px);
-            position: relative;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid rgba(212, 175, 55, 0.1);
-            border-left: 4px solid var(--secondary);
-            font-weight: 400;
-        }
-
-        /* Загрузка */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #ffffff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Дополнительные премиум эффекты */
-        .fade-in-up {
-            animation: fadeInUp 0.8s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .btn-shine {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-shine::after {
+        .bottom-nav__item.active::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                to bottom right,
-                rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.1) 50%,
-                rgba(255,255,255,0) 100%
-            );
-            transform: rotate(30deg);
-            transition: all 0.6s ease;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 36px;
+            height: 3px;
+            background: var(--gradient-gold);
+            border-radius: 0 0 3px 3px;
+            box-shadow: 0 0 12px rgba(232, 201, 100, 0.6);
         }
 
-        .btn-shine:hover::after {
-            animation: shine 1.5s ease;
+        .bottom-nav__item .unread-dot {
+            position: absolute;
+            top: 8px;
+            right: calc(50% - 14px);
+            width: 8px;
+            height: 8px;
+            background: var(--ruby);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--ruby);
         }
 
-        @keyframes shine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(30deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(30deg); }
+        /* ═══════════════ МОБИЛЬНОЕ МЕНЮ ═══════════════ */
+        .mobile-drawer {
+            position: fixed;
+            inset: 0;
+            z-index: 1050;
+            pointer-events: none;
         }
 
-        .card-elevated {
-            box-shadow: 
-                0 2.8px 2.2px rgba(0, 0, 0, 0.02),
-                0 6.7px 5.3px rgba(0, 0, 0, 0.028),
-                0 12.5px 10px rgba(0, 0, 0, 0.035),
-                0 22.3px 17.9px rgba(0, 0, 0, 0.042),
-                0 41.8px 33.4px rgba(0, 0, 0, 0.05),
-                0 100px 80px rgba(0, 0, 0, 0.07);
+        .mobile-drawer__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
         }
 
-        .divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.3) 50%, transparent 100%);
-            margin: 2rem 0;
+        .mobile-drawer__panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(320px, 85vw);
+            background: var(--surface);
+            border-left: 1px solid var(--border-2);
+            padding: 1.5rem;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            padding-top: calc(1.5rem + var(--safe-top));
         }
 
-        /* Стили для модального окна чатов */
-        .chat-list-item {
+        .mobile-drawer.open { pointer-events: auto; }
+        .mobile-drawer.open .mobile-drawer__backdrop { opacity: 1; }
+        .mobile-drawer.open .mobile-drawer__panel { transform: translateX(0); }
+
+        .mobile-drawer__user {
             display: flex;
             align-items: center;
-            padding: 1rem;
-            border: none;
-            border-radius: var(--border-radius-sm);
-            background: #f8f9fa;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            color: var(--dark);
-            margin-bottom: 0.5rem;
+            gap: 1rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
         }
 
-        .chat-list-item:hover {
-            background: rgba(139, 69, 19, 0.1);
-            transform: translateX(5px);
-        }
-
-        .chat-list-avatar {
-            width: 45px;
-            height: 45px;
+        .mobile-drawer__avatar {
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
+            background: var(--gradient-gold);
+            color: #1a1a1a;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 1rem;
+            font-weight: 800;
             font-size: 1.1rem;
         }
 
-        .chat-santa-avatar {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
+        .mobile-drawer__name { color: var(--text); font-weight: 600; font-size: 0.95rem; }
+        .mobile-drawer__phone { color: var(--text-muted); font-size: 0.8rem; }
+
+        .mobile-drawer__nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
         }
 
-        .chat-receiver-avatar {
-            background: linear-gradient(135deg, var(--warning) 0%, #FFD700 100%);
-            color: #2C2C2C;
+        .mobile-drawer__nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-sm);
+            color: var(--text-soft);
+            font-size: 0.95rem;
+            transition: all 0.15s ease;
         }
 
-        .chat-list-info {
-            flex: 1;
-        }
-
-        .chat-list-name {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .chat-list-preview {
-            font-size: 0.85rem;
-            color: #6c757d;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .chat-unread-badge {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            border-radius: 10px;
-            padding: 0.25rem 0.5rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            min-width: 20px;
+        .mobile-drawer__nav a i {
+            width: 20px;
             text-align: center;
+            color: var(--gold);
         }
 
-        .no-chats-message {
-            text-align: center;
-            padding: 2rem;
-            color: #6c757d;
+        .mobile-drawer__nav a:hover {
+            background: var(--gold-soft);
+            color: var(--gold);
         }
 
-        .no-chats-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
+        .mobile-drawer__nav a.danger { color: #fca5a5; }
+        .mobile-drawer__nav a.danger i { color: #fca5a5; }
+        .mobile-drawer__nav a.danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* ═══════════════ УТИЛИТЫ ═══════════════ */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-2), transparent);
+            margin: 1.5rem 0;
+            border: none;
         }
 
-        .chat-list-room {
-            font-size: 0.75rem;
-            color: var(--primary);
-            font-weight: 500;
-            margin-bottom: 0.25rem;
+        .glow-gold { filter: drop-shadow(0 0 20px rgba(232, 201, 100, 0.5)); }
+
+        .fade-in { animation: fade-in 0.5s ease both; }
+        .fade-in-up { animation: fade-up 0.6s cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .stagger > * { animation: fade-up 0.5s ease both; }
+        .stagger > *:nth-child(1) { animation-delay: 0.05s; }
+        .stagger > *:nth-child(2) { animation-delay: 0.1s; }
+        .stagger > *:nth-child(3) { animation-delay: 0.15s; }
+        .stagger > *:nth-child(4) { animation-delay: 0.2s; }
+        .stagger > *:nth-child(5) { animation-delay: 0.25s; }
+        .stagger > *:nth-child(6) { animation-delay: 0.3s; }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-2);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Скелетон */
+        .skeleton {
+            background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite linear;
+            border-radius: 8px;
+        }
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
         }
 
-        .chat-list-preview {
-            font-size: 0.8rem;
-            color: #6c757d;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        /* ═══════════════ АДАПТИВ ═══════════════ */
+        @media (max-width: 900px) {
+            .nav-desktop { display: none; }
+            .burger-btn { display: flex; }
+            .bottom-nav { display: block; }
+            body { padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom)); }
         }
 
-        /* Убедимся, что всё хорошо вписывается */
-        .chat-list-info {
-            flex: 1;
-            min-width: 0; /* Важно для правильного обрезания текста */
+        @media (max-width: 600px) {
+            .page { padding: 1rem 0.875rem 1.5rem; }
+            .card__body { padding: 1.1rem; }
+            .card__header { padding: 1rem 1.1rem; }
+            .card__footer { padding: 0.9rem 1.1rem; }
+            .btn { padding: 0.75rem 1.2rem; }
+            .btn--lg { padding: 0.85rem 1.5rem; }
+            .toast-container { top: calc(var(--header-h) + 8px); left: 8px; right: 8px; max-width: none; }
         }
 
-        .chat-list-name {
-            font-weight: 600;
-            margin-bottom: 0.1rem;
-            font-size: 0.9rem;
+        /* Отключение hover-эффекта на тач-устройствах */
+        @media (hover: none) {
+            .card--hover:hover { transform: none; }
+            .btn:hover { transform: none; }
         }
     </style>
+
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <!-- Премиум навбар -->
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fas fa-gift me-2" style="color: var(--secondary);"></i>Тайный Санта
+
+    <!-- ═══════════════ HEADER ═══════════════ -->
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a href="{% url 'home' %}" class="brand">
+                <i class="fas fa-gift brand-icon"></i>
+                <span>Тайный Санта</span>
             </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                {% if user.is_authenticated %}
-                <div class="navbar-nav ms-auto">
-                    <span class="nav-link text-dark me-3">
-                        <i class="fas fa-user me-1"></i>{{ user.get_full_name|default:user.phone }}
-                    </span>
-                    <a class="nav-link" href="{% url 'dashboard' %}">
-                        <i class="fas fa-tachometer-alt me-1"></i>Дашборд
-                    </a>
-                    <a class="nav-link" href="{% url 'mafia_home' %}">
-                        <i class="fas fa-user-secret me-1"></i>Мафия
-                    </a>
-                    <a class="nav-link" href="{% url 'support' %}">
-                        <i class="fas fa-headset me-1"></i>Поддержка
-                    </a>
-                    <a class="nav-link text-danger" href="{% url 'logout' %}">
-                        <i class="fas fa-sign-out-alt me-1"></i>Выйти
-                    </a>
+
+            {% if user.is_authenticated %}
+            <nav class="nav-desktop">
+                <a href="{% url 'dashboard' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">
+                    <i class="fas fa-home"></i>Главная
+                </a>
+                <a href="{% url 'games_home' %}" class="{% if '/games' in request.path %}active{% endif %}">
+                    <i class="fas fa-gamepad"></i>Игры
+                </a>
+                <a href="{% url 'telegram_page' %}" class="{% if '/telegram' in request.path %}active{% endif %}">
+                    <i class="fab fa-telegram"></i>Telegram-бот
+                </a>
+                <a href="{% url 'support' %}" class="{% if request.path == '/support/' %}active{% endif %}">
+                    <i class="fas fa-headset"></i>Поддержка
+                </a>
+            </nav>
+
+            <div class="user-menu" id="userMenu">
+                <button type="button" class="user-menu__trigger" onclick="toggleUserMenu(event)">
+                    <span class="user-menu__avatar">{{ user.get_display_name|first|upper }}</span>
+                    <span class="user-menu__name">{{ user.get_display_name }}</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.7rem; opacity: 0.6;"></i>
+                </button>
+                <div class="user-menu__dropdown">
+                    <a href="{% url 'dashboard' %}"><i class="fas fa-user"></i>Дашборд</a>
+                    <a href="{% url 'security_question_setup' %}"><i class="fas fa-shield-alt"></i>Безопасность</a>
+                    <a href="{% url 'telegram_page' %}"><i class="fab fa-telegram"></i>Telegram-бот</a>
+                    <a href="{% url 'support' %}"><i class="fas fa-headset"></i>Поддержка</a>
+                    <div class="user-menu__divider"></div>
+                    <a href="{% url 'logout' %}" class="danger"><i class="fas fa-sign-out-alt"></i>Выйти</a>
                 </div>
-                {% else %}
-                <div class="navbar-nav ms-auto">
-                    <a class="nav-link" href="{% url 'login' %}">
-                        <i class="fas fa-sign-in-alt me-1"></i>Войти
-                    </a>
-                    <a class="nav-link" href="{% url 'register' %}">
-                        <i class="fas fa-user-plus me-1"></i>Регистрация
-                    </a>
-                </div>
-                {% endif %}
             </div>
+            {% else %}
+            <div class="user-menu" style="margin-left:auto; display:flex; gap:0.5rem;">
+                <a href="{% url 'login' %}" class="btn btn--ghost btn--sm"><i class="fas fa-sign-in-alt"></i>Войти</a>
+                <a href="{% url 'register' %}" class="btn btn--primary btn--sm"><i class="fas fa-user-plus"></i>Начать</a>
+            </div>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            <button type="button" class="burger-btn" onclick="toggleDrawer()">
+                <i class="fas fa-bars"></i>
+            </button>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- ═══════════════ BREADCRUMBS + CONTENT ═══════════════ -->
+    <main class="page {% block page_modifier %}{% endblock %}">
+        {% block breadcrumbs %}{% endblock %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ═══════════════ BOTTOM NAV ═══════════════ -->
+    {% if user.is_authenticated %}
+    <nav class="bottom-nav">
+        <div class="bottom-nav__inner">
+            <a href="{% url 'dashboard' %}" class="bottom-nav__item {% if request.path == '/dashboard/' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Главная</span>
+            </a>
+            <a href="{% url 'dashboard' %}#rooms" class="bottom-nav__item">
+                <i class="fas fa-tree"></i>
+                <span>Комнаты</span>
+            </a>
+            <a href="{% url 'games_home' %}" class="bottom-nav__item {% if '/games' in request.path %}active{% endif %}">
+                <i class="fas fa-gamepad"></i>
+                <span>Игры</span>
+            </a>
+            <a href="{% url 'support' %}" class="bottom-nav__item {% if request.path == '/support/' %}active{% endif %}">
+                <i class="fas fa-headset"></i>
+                <span>Помощь</span>
+            </a>
+            <a href="#" onclick="toggleDrawer(); return false;" class="bottom-nav__item">
+                <i class="fas fa-user"></i>
+                <span>Профиль</span>
+            </a>
         </div>
     </nav>
 
-    <!-- Мобильная нижняя навигация -->
-    {% if user.is_authenticated %}
-    <nav class="mobile-bottom-nav">
-        <a href="{% url 'dashboard' %}" class="nav-item-mobile {% if request.path == '/dashboard/' %}active{% endif %}">
-            <i class="fas fa-tachometer-alt"></i>Главная
-        </a>
-        <a href="{% url 'support'%}" class="nav-item-mobile">
-            <i class="fas fa-headset"></i>Поддержка
-        </a>
-        <a href="#" class="nav-item-mobile" id="mobile-chats-btn">
-            <i class="fas fa-comments"></i>Чаты
-        </a>
-        <a href="{% url 'logout' %}" class="nav-item-mobile text-danger">
-            <i class="fas fa-sign-out-alt"></i>Выйти
-        </a>
-    </nav>
-    <!-- Модальное окно для выбора чатов -->
-    <div class="modal fade" id="chatsModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Мои чаты</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="mobile-chats-list">
-                        <!-- Список чатов будет загружен здесь -->
-                        <div class="text-center py-4">
-                            <div class="loading-spinner"></div>
-                            <p class="text-muted mt-2">Загрузка чатов...</p>
-                        </div>
-                    </div>
+    <!-- ═══════════════ MOBILE DRAWER ═══════════════ -->
+    <div class="mobile-drawer" id="mobileDrawer">
+        <div class="mobile-drawer__backdrop" onclick="toggleDrawer()"></div>
+        <div class="mobile-drawer__panel">
+            <div class="mobile-drawer__user">
+                <div class="mobile-drawer__avatar">{{ user.get_display_name|first|upper }}</div>
+                <div>
+                    <div class="mobile-drawer__name">{{ user.get_display_name }}</div>
+                    <div class="mobile-drawer__phone">{{ user.phone }}</div>
                 </div>
             </div>
+            <nav class="mobile-drawer__nav">
+                <a href="{% url 'dashboard' %}"><i class="fas fa-home"></i>Главная</a>
+                <a href="{% url 'games_home' %}"><i class="fas fa-gamepad"></i>Игры</a>
+                <a href="{% url 'support' %}"><i class="fas fa-headset"></i>Поддержка</a>
+                <a href="{% url 'telegram_page' %}"><i class="fab fa-telegram"></i>Telegram-бот</a>
+                <div class="divider" style="margin: 0.75rem 0;"></div>
+                <a href="{% url 'logout' %}" class="danger"><i class="fas fa-sign-out-alt"></i>Выйти</a>
+            </nav>
         </div>
     </div>
     {% endif %}
 
-    <div class="main-content">
-        <!-- Уведомления -->
+    <!-- ═══════════════ TOAST CONTAINER ═══════════════ -->
+    <div class="toast-container" id="toastContainer">
         {% if messages %}
-        <div class="container mt-3">
             {% for message in messages %}
-            {% if message.tags == 'success' or message.tags == 'error' %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show fade-in" role="alert">
-                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="toast toast--{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %}" data-auto-dismiss>
+                <div class="toast__icon">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                </div>
+                <div class="toast__content">{{ message }}</div>
+                <button class="toast__close" onclick="this.parentElement.remove()">&times;</button>
             </div>
-            {% endif %}
             {% endfor %}
-        </div>
         {% endif %}
-
-        <!-- Основной контент -->
-        <main class="container mt-4">
-            {% block content %}
-            {% endblock %}
-        </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Автоматическое скрытие уведомлений
-        document.addEventListener('DOMContentLoaded', function() {
-            // Скрыть уведомления через 5 секунд
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(function(alert) {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                });
+        // ═══ User menu ═══
+        function toggleUserMenu(e) {
+            e?.stopPropagation();
+            document.getElementById('userMenu')?.classList.toggle('open');
+        }
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('userMenu');
+            if (menu && !menu.contains(e.target)) menu.classList.remove('open');
+        });
+
+        // ═══ Mobile drawer ═══
+        function toggleDrawer() {
+            document.getElementById('mobileDrawer')?.classList.toggle('open');
+            document.body.style.overflow = document.getElementById('mobileDrawer')?.classList.contains('open') ? 'hidden' : '';
+        }
+
+        // ═══ Toasts — авто-скрытие ═══
+        document.querySelectorAll('.toast[data-auto-dismiss]').forEach(t => {
+            setTimeout(() => {
+                t.style.animation = 'toast-in 0.3s ease reverse';
+                setTimeout(() => t.remove(), 300);
             }, 5000);
+        });
 
-            // Плавная прокрутка
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    document.querySelector(this.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                });
-            });
+        // ═══ Toast helper ═══
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
 
-            // Анимация появления элементов при скролле
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-circle',
+                warning: 'exclamation-triangle',
+                info: 'info-circle'
             };
+            const t = document.createElement('div');
+            t.className = `toast toast--${type}`;
+            t.innerHTML = `
+                <div class="toast__icon"><i class="fas fa-${icons[type] || icons.info}"></i></div>
+                <div class="toast__content">${message}</div>
+                <button class="toast__close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(t);
+            setTimeout(() => {
+                t.style.animation = 'toast-in 0.3s ease reverse';
+                setTimeout(() => t.remove(), 300);
+            }, 5000);
+        };
 
-            const observer = new IntersectionObserver(function(entries) {
-                entries.forEach(function(entry) {
+        // ═══ Анимация появления карточек ═══
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
+                        entry.target.classList.add('fade-in-up');
+                        observer.unobserve(entry.target);
                     }
                 });
-            }, observerOptions);
+            }, { threshold: 0.05, rootMargin: '0px 0px -30px 0px' });
 
-            // Наблюдаем за карточками
-            document.querySelectorAll('.card, .hero-section').forEach(function(el) {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(20px)';
-                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(el);
-            });
-        });
-
-        // Обработка форм с индикацией загрузки
-        document.querySelectorAll('form').forEach(function(form) {
-            form.addEventListener('submit', function() {
-                const submitBtn = this.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.innerHTML = '<div class="loading-spinner"></div> Загрузка...';
-                    submitBtn.disabled = true;
-                }
-            });
-        });
-
-        function toggleReveal(inputId, buttonId) {
-            const input = document.getElementById(inputId);
-            const button = document.getElementById(buttonId);
-            const hint = document.getElementById(inputId.replace('-input', '-hint'));
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                button.innerHTML = '<i class="fas fa-eye-slash"></i>';
-                button.classList.remove('btn-outline-warning');
-                button.classList.add('btn-warning');
-                if (hint) hint.textContent = 'Реквизиты видны • Скопируйте и закройте';
-            } else {
-                input.type = 'password';
-                button.innerHTML = '<i class="fas fa-eye"></i>';
-                button.classList.remove('btn-warning');
-                button.classList.add('btn-outline-warning');
-                if (hint) hint.textContent = 'Нажмите 👁️ чтобы показать';
-            }
-        }
-
-
-        // Функция для загрузки списка чатов
-        function loadMobileChats() {
-            const chatsList = document.getElementById('mobile-chats-list');
-            if (!chatsList) return;
-
-            // Показываем индикатор загрузки
-            chatsList.innerHTML = `
-                <div class="text-center py-4">
-                    <div class="loading-spinner"></div>
-                    <p class="text-muted mt-2">Загрузка чатов...</p>
-                </div>
-            `;
-
-            // Загружаем список чатов
-            fetch('/get_user_chats/', {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.chats && data.chats.length > 0) {
-                    renderChatsList(data.chats);
-                } else {
-                    showNoChatsMessage();
-                }
-            })
-            .catch(error => {
-                console.error('Error loading chats:', error);
-                showErrorLoadingChats();
-            });
-        }
-
-        // Функция для отображения списка чатов
-        function renderChatsList(chats) {
-            const chatsList = document.getElementById('mobile-chats-list');
-            
-            let html = '';
-            chats.forEach(chat => {
-                const lastMessage = chat.last_message ? 
-                    (chat.last_message.content ? 
-                        chat.last_message.content.substring(0, 30) + (chat.last_message.content.length > 30 ? '...' : '') : 
-                        '📎 Медиа') : 
-                    'Начните общение';
-                
-                const unreadCount = chat.unread_count > 0 ? 
-                    `<span class="chat-unread-badge">${chat.unread_count}</span>` : 
-                    '';
-                
-                const avatarClass = chat.chat_type === 'my_santa' ? 'chat-santa-avatar' : 'chat-receiver-avatar';
-                const icon = chat.chat_type === 'my_santa' ? 'fa-gift' : 'fa-user';
-                const title = chat.chat_type === 'my_santa' ? 'Чат с моим Сантой' : 'Чат с моим получателем';
-                
-                // УБЕРИТЕ data-bs-dismiss="modal" и добавьте правильный URL
-                html += `
-                    <a href="${chat.url}" class="chat-list-item">
-                        <div class="chat-list-avatar ${avatarClass}">
-                            <i class="fas ${icon}"></i>
-                        </div>
-                        <div class="chat-list-info">
-                            <div class="chat-list-name">${title}</div>
-                            <div class="chat-list-room">${chat.room_name}</div>
-                            <div class="chat-list-preview">${lastMessage}</div>
-                        </div>
-                        ${unreadCount}
-                    </a>
-                `;
-            });
-            
-            chatsList.innerHTML = html;
-            
-            // Добавьте обработчик для автоматического закрытия модального окна
-            chatsList.querySelectorAll('.chat-list-item').forEach(link => {
-                link.addEventListener('click', function() {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('chatsModal'));
-                    modal.hide();
-                });
-            });
-        }
-
-        // Функция для показа сообщения "Нет чатов"
-        function showNoChatsMessage() {
-            const chatsList = document.getElementById('mobile-chats-list');
-            chatsList.innerHTML = `
-                <div class="no-chats-message">
-                    <div class="no-chats-icon">
-                        <i class="fas fa-comments"></i>
-                    </div>
-                    <h6>Нет активных чатов</h6>
-                    <p class="text-muted">Чаты появятся после жеребьёвки в комнатах</p>
-                </div>
-            `;
-        }
-
-        // Функция для показа ошибки загрузки
-        function showErrorLoadingChats() {
-            const chatsList = document.getElementById('mobile-chats-list');
-            chatsList.innerHTML = `
-                <div class="no-chats-message">
-                    <div class="no-chats-icon text-danger">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <h6>Ошибка загрузки</h6>
-                    <p class="text-muted">Не удалось загрузить список чатов</p>
-                    <button class="btn btn-primary btn-sm mt-2" onclick="loadMobileChats()">
-                        <i class="fas fa-redo me-1"></i>Повторить
-                    </button>
-                </div>
-            `;
-        }
-
-        // Обработчик открытия модального окна чатов
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatsBtn = document.getElementById('mobile-chats-btn');
-            const chatsModal = document.getElementById('chatsModal');
-            
-            if (chatsBtn && chatsModal) {
-                chatsBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const modal = new bootstrap.Modal(chatsModal);
-                    modal.show();
-                    
-                    // Загружаем чаты при открытии модального окна
-                    loadMobileChats();
-                });
-            }
-            
-            // Закрытие модального окна при переходе в чат
-            chatsModal.addEventListener('hidden.bs.modal', function() {
-                const chatsList = document.getElementById('mobile-chats-list');
-                chatsList.innerHTML = `
-                    <div class="text-center py-4">
-                        <div class="loading-spinner"></div>
-                        <p class="text-muted mt-2">Загрузка чатов...</p>
-                    </div>
-                `;
-            });
+            document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
         });
     </script>
+
     {% block scripts %}{% endblock %}
 </body>
 </html>

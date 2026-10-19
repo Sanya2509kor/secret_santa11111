@@ -158,3 +158,15 @@ MAX_UPLOAD_SIZE = 104857600
 # Разрешенные типы файлов
 ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp']
 ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi', 'mkv']
+
+# CSRF
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_HTTPONLY = False     # ← ВАЖНО! JS должен читать куку
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [
+    'https://santa-secret24.ru',
+    'https://www.santa-secret24.ru',
+]
+
+# ═══ Telegram Bot ═══
+TELEGRAM_BOT_USERNAME = 'opensecretsantabot'  # ⚠️ без @
