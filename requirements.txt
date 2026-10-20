@@ -27,3 +27,7 @@ tzdata==2025.2
 urllib3==2.8.0
 vk_api==11.10.1
 yarl==1.25.1
+
+python-dotenv
+mysqlclient
+gunicorn

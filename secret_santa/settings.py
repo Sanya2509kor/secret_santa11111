@@ -12,7 +12,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
+
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,7 +29,7 @@ SECRET_KEY = 'django-insecure-_v7^j_=_y=^^27zb*@nrn_)oadx2d^_=4q@ixzpew-ljb1tt$u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -82,19 +85,22 @@ WSGI_APPLICATION = 'secret_santa.wsgi.application'
 #     }
 # }
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'cn95494_santa',
-        'USER': 'cn95494_santa',
-        'PASSWORD': '89526136205Sa',
-        'HOST': '127.0.0.1',
-        'PORT': 3306,
+        'NAME': os.environ.get('DB_NAME', 'cn95494_santa'),
+        'USER': os.environ.get('DB_USER', 'cn95494_santa'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'db'), # Важно! Теперь 'db', а не 127.0.0.1
+        'PORT': os.environ.get('DB_PORT', '3306'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
+
+
 
 
 # Password validation

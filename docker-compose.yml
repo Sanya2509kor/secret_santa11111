@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: cn95494_santa
+      MYSQL_USER: cn95494_santa
+      MYSQL_PASSWORD: "89526136205Sa"
+      MYSQL_ROOT_PASSWORD: "root_password_secret"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  web:
+    build: .
+    restart: always
+    ports:
+      - "127.0.0.1:8001:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./static:/app/static
+      - ./media:/app/media
+
+volumes:
+  mysql_data:
