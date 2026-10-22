@@ -1,6 +1,7 @@
 services:
   db:
     image: mysql:8.0
+    container_name: mysql-main
     restart: always
     environment:
       MYSQL_DATABASE: cn95494_santa
