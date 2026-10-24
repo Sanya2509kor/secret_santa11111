@@ -170,8 +170,8 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_COOKIE_HTTPONLY = False     # ← ВАЖНО! JS должен читать куку
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_TRUSTED_ORIGINS = [
-    'https://santa-secret24.ru',
-    'https://www.santa-secret24.ru',
+    'https://secret-santa24.ru',
+    'https://www.secret-santa24.ru',
 ]
 
 # ═══ Telegram Bot ═══

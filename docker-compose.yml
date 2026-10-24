@@ -23,6 +23,15 @@ services:
     volumes:
       - ./static:/app/static
       - ./media:/app/media
+  bot:
+    build:
+      context: .                  # <--- КОНТЕКСТ: корень проекта (/opt/santa_test)
+      dockerfile: santa_bot/Dockerfile  # <--- Путь к Dockerfile бота
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - db
 
 volumes:
   mysql_data:
