@@ -10,6 +10,7 @@ import logging
 import asyncio
 import threading
 import aiohttp
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -146,9 +147,45 @@ async def _notify_participant_async(room_id, participant_name):
 
 
 def notify_new_participant(room_id, participant_name):
-    """Обёртка для вызова из синхронного Django"""
-    thread = threading.Thread(
-        target=lambda: asyncio.run(_notify_participant_async(room_id, participant_name)),
-        daemon=True,
-    )
-    thread.start()
+    """
+    Синхронная версия. Вызывается из views.py.
+    Никаких async/await, никаких потоков — только обычные запросы к БД.
+    """
+    from .models import Room, TelegramChat, Participant
+
+    logger.info(f"🔔 notify_new_participant: room_id={room_id}, name={participant_name}")
+
+    try:
+        # ⚠️ Теперь это работает, потому что функция синхронная!
+        room = Room.objects.get(id=room_id)
+        tg_chat = TelegramChat.objects.filter(
+            room=room, is_active=True, notify_new_member=True
+        ).first()
+
+        if not tg_chat:
+            logger.warning(f"⚠️ Нет привязанной группы для комнаты «{room.name}»")
+            return
+
+        total = Participant.objects.filter(room=room).count()
+
+        url = f"{TELEGRAM_WORKER_URL}/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            'chat_id': tg_chat.chat_id,
+            'text': (
+                f"👋 <b>Новый участник!</b>\n\n"
+                f"<b>{participant_name}</b> присоединился к комнате «{room.name}»\n"
+                f"👥 Всего: <b>{total}</b>"
+            ),
+            'parse_mode': 'HTML',
+        }
+
+        # Синхронный POST-запрос
+        response = requests.post(url, json=payload, timeout=10)
+        
+        if response.status_code == 200:
+            logger.info(f"✅ Уведомление отправлено в группу «{tg_chat.chat_title}»")
+        else:
+            logger.error(f"❌ Telegram вернул ошибку {response.status_code}: {response.text}")
+
+    except Exception as e:
+        logger.exception(f"💥 Ошибка при отправке уведомления: {e}")
